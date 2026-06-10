@@ -181,6 +181,7 @@ input[type=file]{display:none}
   <div class="tabs">
     <button class="tab active" id="tab-btn-scan">📸 Чек</button>
     <button class="tab" id="tab-btn-manual">✏️ Вручную</button>
+    <button class="tab" id="tab-btn-import">📥 Импорт</button>
     <button class="tab" id="tab-btn-history">📋 История</button>
     <button class="tab" id="tab-btn-stats">📊 Статистика</button>
     <button class="tab" id="tab-btn-products">🛒 Товары</button>
@@ -208,6 +209,17 @@ input[type=file]{display:none}
       <div class="fg"><label>Дата</label><input type="date" id="mDate"></div>
     </div>
     <button class="btn primary" id="addManualBtn">Добавить запись</button>
+  </div>
+
+  <div class="section" id="tab-import">
+    <div class="upload-zone" id="xlsxDropZone">
+      <div class="upload-icon">📥</div>
+      <div class="upload-title">Загрузить XLSX файл</div>
+      <div class="upload-sub">Нажмите или перетащите файл с данными Ирит</div>
+    </div>
+    <input type="file" id="xlsxFile" accept=".xlsx,.xls">
+    <div id="xlsxStatus"></div>
+    <div id="xlsxPreview"></div>
   </div>
 
   <div class="section" id="tab-history">
@@ -255,6 +267,7 @@ input[type=file]{display:none}
 <div class="sync-indicator" id="syncInd"><div class="sync-dot"></div>Синхронизация...</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -658,7 +671,7 @@ function confirmAI(store,date,detCur){
   });
 }
 
-['scan','manual','history','stats','products'].forEach(function(id){
+['scan','manual','import','history','stats','products'].forEach(function(id){
   document.getElementById('tab-btn-'+id).addEventListener('click',function(){
     document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
     document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active');});
@@ -684,6 +697,228 @@ function renderAll(){
   if(document.getElementById('tab-history').classList.contains('active'))renderHistory();
   if(document.getElementById('tab-stats').classList.contains('active'))renderStats();
   if(document.getElementById('tab-products').classList.contains('active'))renderProducts();
+}
+
+// Excel import
+var xlsxFi=document.getElementById('xlsxFile'),xlsxDz=document.getElementById('xlsxDropZone');
+var parsedImportData=null;
+
+xlsxDz.addEventListener('click',function(){xlsxFi.click();});
+xlsxDz.addEventListener('dragover',function(e){e.preventDefault();xlsxDz.style.borderColor='var(--accent)';});
+xlsxDz.addEventListener('dragleave',function(){xlsxDz.style.borderColor='';});
+xlsxDz.addEventListener('drop',function(e){e.preventDefault();xlsxDz.style.borderColor='';if(e.dataTransfer.files[0])processXLSX(e.dataTransfer.files[0]);});
+xlsxFi.addEventListener('change',function(){if(xlsxFi.files[0])processXLSX(xlsxFi.files[0]);});
+
+function processXLSX(file){
+  var st=document.getElementById('xlsxStatus');
+  st.innerHTML='<div class="spinner-row"><div class="spinner"></div>Парсинг Excel файла...</div>';
+  document.getElementById('xlsxPreview').innerHTML='';
+
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var data=new Uint8Array(e.target.result);
+      var workbook=XLSX.read(data,{type:'array'});
+
+      // Маппинг названий листов на даты
+      var sheetDateMap={
+        'decemver.25':'2025-12-15',
+        'jan26':'2026-01-15',
+        'FEB26':'2026-02-15',
+        'MART26':'2026-03-15',
+        'apr26':'2026-04-15',
+        'may26':'2026-05-15',
+        'JUNE26':'2026-06-15'
+      };
+
+      // Маппинг колонок RSD блока (строки 2-16, все в RSD)
+      var rsdCols=[
+        {col:0,cat:'freelance'},{col:1,cat:'education'},{col:2,cat:'education'},{col:3,cat:'education'},
+        {col:4,cat:'education'},{col:5,cat:'food'},{col:6,cat:'food'},{col:7,cat:'food'},
+        {col:8,cat:'entertainment'},{col:9,cat:'shopping'},{col:10,cat:'other'},{col:11,cat:'entertainment'},
+        {col:12,cat:'utilities'},{col:13,cat:'utilities'},{col:14,cat:'utilities'},{col:15,cat:'utilities'},
+        {col:16,cat:'shopping'},{col:17,cat:'housing'}
+      ];
+
+      // Маппинг колонок ILS блока (строки 37-45)
+      var ilsCols=[
+        {col:0,cat:'freelance'},{col:9,cat:'utilities'},{col:10,cat:'entertainment'},{col:11,cat:'entertainment'},
+        {col:12,cat:'other'},{col:13,cat:'health'},{col:14,cat:'health'},{col:15,cat:'utilities'},{col:16,cat:'shopping'}
+      ];
+
+      var allTransactions=[];
+
+      workbook.SheetNames.forEach(function(sheetName){
+        var date=sheetDateMap[sheetName];
+        if(!date)return;
+
+        var sheet=workbook.Sheets[sheetName];
+        var jsonData=XLSX.utils.sheet_to_json(sheet,{header:1,defval:null});
+
+        // RSD блок: строки 2-16 (индексы 1-15)
+        for(var row=1;row<=15;row++){
+          if(!jsonData[row])continue;
+          rsdCols.forEach(function(mapping){
+            var val=jsonData[row][mapping.col];
+            if(val&&!isNaN(parseFloat(val))&&parseFloat(val)>0){
+              allTransactions.push({
+                desc:sheetName+' '+mapping.cat+' строка '+(row+1),
+                amount:parseFloat(val),
+                currency:'RSD',
+                type:'expense',
+                category:mapping.cat,
+                date:date,
+                month:sheetName
+              });
+            }
+          });
+        }
+
+        // ILS блок: строки 37-45 (индексы 36-44)
+        for(var row=36;row<=44;row++){
+          if(!jsonData[row])continue;
+          ilsCols.forEach(function(mapping){
+            var val=jsonData[row][mapping.col];
+            if(val&&!isNaN(parseFloat(val))&&parseFloat(val)>0){
+              allTransactions.push({
+                desc:sheetName+' '+mapping.cat+' строка '+(row+1),
+                amount:parseFloat(val),
+                currency:'ILS',
+                type:'expense',
+                category:mapping.cat,
+                date:date,
+                month:sheetName
+              });
+            }
+          });
+        }
+
+        // Доход: строка 1, колонка 22
+        if(jsonData[0]&&jsonData[0][22]){
+          var incVal=parseFloat(jsonData[0][22]);
+          if(!isNaN(incVal)&&incVal>0){
+            allTransactions.push({
+              desc:'הכנסות '+sheetName,
+              amount:incVal,
+              currency:'ILS',
+              type:'income',
+              category:'salary',
+              date:date,
+              month:sheetName
+            });
+          }
+        }
+      });
+
+      parsedImportData=allTransactions;
+      showXLSXPreview(allTransactions);
+      st.innerHTML='<div class="notice ok">✓ Файл распознан: '+allTransactions.length+' транзакций</div>';
+    }catch(err){
+      st.innerHTML='<div class="notice err">Ошибка парсинга: '+err.message+'</div>';
+      console.error(err);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function showXLSXPreview(txs){
+  // Группировка по месяцам
+  var byMonth={};
+  txs.forEach(function(t){
+    if(!byMonth[t.month])byMonth[t.month]={rsd:0,ils:0,incIls:0,items:[]};
+    if(t.type==='income'){
+      byMonth[t.month].incIls+=t.amount;
+    }else{
+      if(t.currency==='RSD')byMonth[t.month].rsd+=t.amount;
+      else byMonth[t.month].ils+=t.amount;
+    }
+    byMonth[t.month].items.push(t);
+  });
+
+  var html='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px">';
+  html+='<div style="font-size:13px;font-weight:600;margin-bottom:12px">Превью импорта ('+txs.length+' транзакций)</div>';
+
+  Object.keys(byMonth).sort().forEach(function(month){
+    var m=byMonth[month];
+    html+='<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:10px">';
+    html+='<div style="font-size:12px;font-weight:600;color:var(--accent);margin-bottom:6px">'+month+'</div>';
+    html+='<div style="font-size:11px;color:var(--text2);display:flex;gap:12px;margin-bottom:6px">';
+    html+='<span>Расходы RSD: '+m.rsd.toFixed(2)+'</span>';
+    html+='<span>Расходы ILS: '+m.ils.toFixed(2)+'</span>';
+    if(m.incIls>0)html+='<span style="color:var(--green)">Доходы ILS: +'+m.incIls.toFixed(2)+'</span>';
+    html+='</div>';
+
+    // Группировка по категориям
+    var byCat={};
+    m.items.forEach(function(t){
+      var key=t.category+'-'+t.currency;
+      if(!byCat[key])byCat[key]={cat:t.category,cur:t.currency,sum:0,count:0};
+      byCat[key].sum+=t.amount;
+      byCat[key].count++;
+    });
+
+    html+='<div style="font-size:11px;display:flex;flex-wrap:wrap;gap:6px">';
+    Object.values(byCat).forEach(function(c){
+      var catObj=catById(c.cat);
+      html+='<span style="background:'+catObj.color+'22;color:'+catObj.color+';padding:2px 7px;border-radius:10px;font-size:10px">'+catObj.label+' '+SYMS[c.cur]+' '+c.sum.toFixed(0)+' ('+c.count+')</span>';
+    });
+    html+='</div></div>';
+  });
+
+  html+='</div>';
+  html+='<div style="display:flex;gap:8px">';
+  html+='<button class="btn primary" id="importToFirebaseBtn">Импортировать в базу ('+txs.length+')</button>';
+  html+='<button class="btn ghost" id="cancelImportBtn">Отменить</button>';
+  html+='</div>';
+
+  document.getElementById('xlsxPreview').innerHTML=html;
+
+  document.getElementById('importToFirebaseBtn').addEventListener('click',importToFirebase);
+  document.getElementById('cancelImportBtn').addEventListener('click',function(){
+    document.getElementById('xlsxPreview').innerHTML='';
+    parsedImportData=null;
+    xlsxFi.value='';
+  });
+}
+
+function importToFirebase(){
+  if(!parsedImportData||!parsedImportData.length)return;
+
+  showSync(true);
+  document.getElementById('xlsxStatus').innerHTML='<div class="spinner-row"><div class="spinner"></div>Импорт в Firebase...</div>';
+
+  var chain=Promise.resolve();
+  var imported=0;
+
+  parsedImportData.forEach(function(tx){
+    chain=chain.then(function(){
+      return db.collection('families').doc(FAM).collection('transactions').add({
+        desc:tx.desc,
+        amount:tx.amount,
+        currency:tx.currency,
+        type:tx.type,
+        category:tx.category,
+        date:tx.date,
+        store:'',
+        source:'excel_import',
+        addedBy:'Ирит',
+        addedAt:new Date().toISOString()
+      }).then(function(){imported++;});
+    });
+  });
+
+  chain.then(function(){
+    showSync(false);
+    document.getElementById('xlsxStatus').innerHTML='<div class="notice ok">✓ Импортировано '+imported+' транзакций</div>';
+    document.getElementById('xlsxPreview').innerHTML='';
+    parsedImportData=null;
+    xlsxFi.value='';
+    renderAll();
+  }).catch(function(err){
+    showSync(false);
+    document.getElementById('xlsxStatus').innerHTML='<div class="notice err">Ошибка: '+err.message+'</div>';
+    console.error(err);
+  });
 }
 </script>
 </body>
