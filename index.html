@@ -85,24 +85,27 @@ body{max-width:430px;margin:0 auto;padding:0 0 80px;position:relative}
 
 /* Transaction List */
 .tx-list{display:flex;flex-direction:column;gap:8px}
-.tx-item{background:var(--bg-secondary);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:14px;display:flex;align-items:center;gap:12px;transition:all .2s;position:relative}
+.tx-item-wrap{position:relative;overflow:hidden;border-radius:var(--radius-md)}
+.tx-item{background:var(--bg-secondary);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:14px;display:flex;align-items:center;gap:12px;transition:transform .3s cubic-bezier(0.2, 0, 0, 1);position:relative;touch-action:pan-y;user-select:none}
 .tx-item:active{transform:scale(0.98)}
-.tx-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
-.tx-info{flex:1;min-width:0}
+.tx-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;pointer-events:none}
+.tx-info{flex:1;min-width:0;pointer-events:none}
 .tx-name{font-size:15px;font-weight:600;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tx-meta{font-size:12px;color:var(--text-tertiary);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
 .tx-meta span{display:flex;align-items:center}
 .tx-meta span:not(:last-child)::after{content:'·';margin-left:6px;color:var(--text-tertiary)}
-.tx-amount-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.tx-amount-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:3px;pointer-events:none}
 .tx-amount{font-size:16px;font-weight:700;font-family:'JetBrains Mono',monospace}
 .tx-amount.income{color:var(--accent-green)}
 .tx-amount.expense{color:var(--text-primary)}
 .tx-converted{font-size:11px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace}
-.tx-actions{position:absolute;top:12px;right:12px;display:flex;gap:4px;opacity:0;transition:opacity .2s}
-.tx-item:hover .tx-actions{opacity:1}
-.tx-action-btn{width:28px;height:28px;border-radius:8px;border:none;background:var(--bg-elevated);color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .2s}
-.tx-action-btn:hover{background:var(--bg-tertiary);color:var(--text-primary)}
-.tx-action-btn.danger:hover{background:var(--accent-red-bg);color:var(--accent-red)}
+.tx-swipe-actions{position:absolute;top:0;right:0;height:100%;display:flex;gap:0;pointer-events:none}
+.tx-swipe-actions.active{pointer-events:auto}
+.tx-swipe-btn{width:70px;height:100%;border:none;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:20px;gap:4px;transition:all .2s;color:#fff;font-family:'Inter',sans-serif;font-weight:600}
+.tx-swipe-btn span{font-size:11px}
+.tx-swipe-btn.edit{background:var(--accent-blue)}
+.tx-swipe-btn.delete{background:var(--accent-red)}
+.tx-swipe-btn:active{opacity:0.8}
 
 /* Empty State */
 .empty-state{text-align:center;padding:48px 24px;color:var(--text-tertiary)}
@@ -176,11 +179,11 @@ input[type=file]{display:none}
 .category-bar-fill{height:100%;border-radius:4px;transition:width .4s ease}
 
 /* Bottom Nav */
-.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--bg-secondary);border-top:1px solid var(--border-subtle);display:flex;justify-content:space-around;padding:8px 0 calc(8px + env(safe-area-inset-bottom));backdrop-filter:blur(20px);z-index:100}
-.nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 16px;cursor:pointer;border:none;background:none;color:var(--text-secondary);transition:all .2s;font-family:'Inter',sans-serif;text-decoration:none}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--bg-secondary);border-top:1px solid var(--border-subtle);display:flex;justify-content:space-around;padding:6px 0 calc(6px + env(safe-area-inset-bottom));backdrop-filter:blur(20px);z-index:100}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 8px;cursor:pointer;border:none;background:none;color:var(--text-secondary);transition:all .2s;font-family:'Inter',sans-serif;text-decoration:none;min-width:0}
 .nav-item.active{color:var(--accent-blue)}
-.nav-icon{font-size:24px}
-.nav-label{font-size:11px;font-weight:600}
+.nav-icon{font-size:20px}
+.nav-label{font-size:9px;font-weight:600;white-space:nowrap}
 
 /* Spinner */
 .spinner-wrap{display:flex;align-items:center;justify-content:center;gap:10px;padding:20px;color:var(--text-secondary)}
@@ -199,6 +202,23 @@ input[type=file]{display:none}
 @keyframes slideUp{from{transform:translateX(-50%) translateY(20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
 .snackbar-text{flex:1;font-size:14px;font-weight:500}
 .snackbar-btn{padding:6px 12px;border-radius:8px;background:var(--accent-blue);color:#000;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif}
+
+/* Bottom Sheet */
+.bottom-sheet-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:300;display:none;opacity:0;transition:opacity .3s}
+.bottom-sheet-overlay.show{display:block;opacity:1}
+.bottom-sheet{position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);width:100%;max-width:430px;background:var(--bg-secondary);border-radius:var(--radius-xl) var(--radius-xl) 0 0;padding:24px 20px calc(24px + env(safe-area-inset-bottom));z-index:301;transition:transform .3s cubic-bezier(0.2, 0, 0, 1);max-height:90vh;overflow-y:auto}
+.bottom-sheet.show{transform:translateX(-50%) translateY(0)}
+.bottom-sheet-header{font-size:20px;font-weight:700;margin-bottom:20px;text-align:center;letter-spacing:-0.02em}
+.bottom-sheet-actions{display:flex;gap:12px;margin-top:20px}
+
+/* Delete Dialog */
+.delete-dialog-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:300;display:none;opacity:0;transition:opacity .3s;align-items:center;justify-content:center}
+.delete-dialog-overlay.show{display:flex;opacity:1}
+.delete-dialog{background:var(--bg-secondary);border:1px solid var(--border-medium);border-radius:var(--radius-lg);padding:24px;width:calc(100% - 48px);max-width:320px;text-align:center;transform:scale(0.9);transition:transform .3s}
+.delete-dialog-overlay.show .delete-dialog{transform:scale(1)}
+.delete-dialog-title{font-size:18px;font-weight:700;margin-bottom:8px}
+.delete-dialog-text{font-size:14px;color:var(--text-secondary);margin-bottom:20px}
+.delete-dialog-actions{display:flex;gap:12px}
 
 /* Sync Indicator */
 .sync-indicator{position:fixed;top:16px;right:16px;background:var(--bg-elevated);border:1px solid var(--border-medium);border-radius:20px;padding:6px 12px;font-size:12px;color:var(--text-secondary);display:none;align-items:center;gap:6px;z-index:200;box-shadow:var(--shadow-sm)}
@@ -457,7 +477,7 @@ input[type=file]{display:none}
     </button>
     <button class="nav-item" data-nav="stats">
       <div class="nav-icon">📊</div>
-      <div class="nav-label">Статистика</div>
+      <div class="nav-label">Статы</div>
     </button>
     <button class="nav-item" data-nav="more">
       <div class="nav-icon">⚙️</div>
@@ -476,6 +496,67 @@ input[type=file]{display:none}
 <div class="sync-indicator" id="syncIndicator">
   <div class="sync-dot"></div>
   Синхронизация...
+</div>
+
+<!-- Bottom Sheet Edit Modal -->
+<div class="bottom-sheet-overlay" id="editOverlay"></div>
+<div class="bottom-sheet" id="editSheet">
+  <div class="bottom-sheet-header">Редактировать</div>
+  <div class="form-group full">
+    <label class="form-label">Описание</label>
+    <input type="text" class="form-input" id="e-desc" placeholder="Описание...">
+  </div>
+  <div class="form-grid">
+    <div class="form-group">
+      <label class="form-label">Сумма</label>
+      <input type="number" class="form-input" id="e-amount" placeholder="0.00" step="0.01">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Валюта</label>
+      <select class="form-select" id="e-currency">
+        <option value="ILS">₪ Шекель</option>
+        <option value="EUR">€ Евро</option>
+        <option value="RSD">din Динар</option>
+      </select>
+    </div>
+  </div>
+  <div class="form-grid">
+    <div class="form-group">
+      <label class="form-label">Тип</label>
+      <select class="form-select" id="e-type">
+        <option value="expense">Расход</option>
+        <option value="income">Доход</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Категория</label>
+      <select class="form-select" id="e-category"></select>
+    </div>
+  </div>
+  <div class="form-group full">
+    <label class="form-label">Магазин</label>
+    <input type="text" class="form-input" id="e-store" placeholder="Shufersal...">
+  </div>
+  <div class="form-group full">
+    <label class="form-label">Дата</label>
+    <input type="date" class="form-input" id="e-date">
+  </div>
+  <div class="bottom-sheet-actions">
+    <button class="btn btn-secondary btn-full" id="editCancelBtn">Отмена</button>
+    <button class="btn btn-primary btn-full" id="editSaveBtn">Сохранить</button>
+  </div>
+</div>
+
+<!-- Delete Confirmation Dialog -->
+<div class="delete-dialog-overlay" id="deleteDialog">
+  <div class="delete-dialog">
+    <div class="delete-dialog-title">Удалить запись?</div>
+    <div class="delete-dialog-text">Вы сможете восстановить её в течение 5 секунд</div>
+    <div class="delete-dialog-actions">
+      <button class="btn btn-secondary btn-full" id="deleteCancelBtn">Отмена</button>
+      <button class="btn btn-danger btn-full" id="deleteConfirmBtn">Да</button>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -1106,26 +1187,32 @@ function renderTxItem(tx) {
     '<div class="tx-converted">' + formatAmount(tx.amount, origCur) + '</div>' : '';
 
   return `
-    <div class="tx-item">
-      <div class="tx-icon" style="background:${cat.color}22">${cat.icon}</div>
-      <div class="tx-info">
-        <div class="tx-name">${tx.desc}</div>
-        <div class="tx-meta">
-          <span>${cat.label}</span>
-          ${tx.store ? '<span>' + tx.store + '</span>' : ''}
-          <span>${date}</span>
-          ${who ? '<span>' + who + '</span>' : ''}
-        </div>
+    <div class="tx-item-wrap" data-tx-id="${tx.id}">
+      <div class="tx-swipe-actions">
+        <button class="tx-swipe-btn edit" data-action="edit" data-tx-id="${tx.id}">
+          ✏️<span>Изменить</span>
+        </button>
+        <button class="tx-swipe-btn delete" data-action="delete" data-tx-id="${tx.id}">
+          🗑️<span>Удалить</span>
+        </button>
       </div>
-      <div class="tx-amount-wrap">
-        <div class="tx-amount ${tx.type}">
-          ${tx.type === 'income' ? '+' : '-'}${formatAmount(amount, displayCurrency)}
+      <div class="tx-item" data-tx-id="${tx.id}">
+        <div class="tx-icon" style="background:${cat.color}22">${cat.icon}</div>
+        <div class="tx-info">
+          <div class="tx-name">${tx.desc}</div>
+          <div class="tx-meta">
+            <span>${cat.label}</span>
+            ${tx.store ? '<span>' + tx.store + '</span>' : ''}
+            <span>${date}</span>
+            ${who ? '<span>' + who + '</span>' : ''}
+          </div>
         </div>
-        ${converted}
-      </div>
-      <div class="tx-actions">
-        <button class="tx-action-btn" onclick="editTx('${tx.id}')">✏️</button>
-        <button class="tx-action-btn danger" onclick="softDeleteTx('${tx.id}')">🗑️</button>
+        <div class="tx-amount-wrap">
+          <div class="tx-amount ${tx.type}">
+            ${tx.type === 'income' ? '+' : '-'}${formatAmount(amount, displayCurrency)}
+          </div>
+          ${converted}
+        </div>
       </div>
     </div>
   `;
@@ -1343,13 +1430,241 @@ document.getElementById('f-category').addEventListener('change', renderHistory);
 document.getElementById('f-who').addEventListener('change', renderHistory);
 document.getElementById('s-month').addEventListener('change', renderStats);
 
-// Placeholder functions for future implementation
-function editTx(id) {
-  alert('Редактирование будет реализовано в следующей версии');
+// Swipe & Touch Handlers
+let currentSwipedItem = null;
+let swipeStartX = 0;
+let swipeStartY = 0;
+let swipeStartTime = 0;
+let longPressTimer = null;
+let isSwiping = false;
+
+function setupTxSwipe() {
+  document.addEventListener('touchstart', handleTouchStart, {passive: true});
+  document.addEventListener('touchmove', handleTouchMove, {passive: false});
+  document.addEventListener('touchend', handleTouchEnd, {passive: true});
+
+  // Close swipe on click outside
+  document.addEventListener('click', e => {
+    if (currentSwipedItem && !e.target.closest('.tx-item-wrap')) {
+      closeSwipe();
+    }
+  });
+
+  // Handle swipe action buttons
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('.tx-swipe-btn');
+    if (!btn) return;
+
+    const action = btn.dataset.action;
+    const txId = btn.dataset.txId;
+
+    if (action === 'edit') openEditModal(txId);
+    if (action === 'delete') openDeleteDialog(txId);
+
+    closeSwipe();
+  });
 }
+
+function handleTouchStart(e) {
+  const txItem = e.target.closest('.tx-item');
+  if (!txItem) return;
+
+  const wrap = txItem.closest('.tx-item-wrap');
+  if (!wrap) return;
+
+  swipeStartX = e.touches[0].clientX;
+  swipeStartY = e.touches[0].clientY;
+  swipeStartTime = Date.now();
+  isSwiping = false;
+
+  // Long press detection
+  longPressTimer = setTimeout(() => {
+    if (!isSwiping) {
+      openSwipe(wrap);
+      navigator.vibrate && navigator.vibrate(50);
+    }
+  }, 500);
+}
+
+function handleTouchMove(e) {
+  if (!swipeStartX) return;
+
+  const txItem = e.target.closest('.tx-item');
+  if (!txItem) return;
+
+  const wrap = txItem.closest('.tx-item-wrap');
+  if (!wrap) return;
+
+  const deltaX = e.touches[0].clientX - swipeStartX;
+  const deltaY = e.touches[0].clientY - swipeStartY;
+
+  // Detect horizontal swipe
+  if (Math.abs(deltaX) > 10 && Math.abs(deltaX) > Math.abs(deltaY)) {
+    isSwiping = true;
+    clearTimeout(longPressTimer);
+    e.preventDefault();
+
+    // Swipe left to reveal actions
+    if (deltaX < 0) {
+      const offset = Math.min(Math.abs(deltaX), 140);
+      txItem.style.transform = `translateX(-${offset}px)`;
+
+      if (offset > 50) {
+        wrap.querySelector('.tx-swipe-actions').classList.add('active');
+      }
+    }
+    // Swipe right to close
+    else if (currentSwipedItem === wrap) {
+      const offset = Math.max(140 - deltaX, 0);
+      txItem.style.transform = `translateX(-${offset}px)`;
+    }
+  }
+}
+
+function handleTouchEnd(e) {
+  clearTimeout(longPressTimer);
+
+  if (!swipeStartX || !isSwiping) {
+    swipeStartX = 0;
+    return;
+  }
+
+  const txItem = e.target.closest('.tx-item');
+  if (!txItem) return;
+
+  const wrap = txItem.closest('.tx-item-wrap');
+  if (!wrap) return;
+
+  const deltaX = (e.changedTouches[0]?.clientX || swipeStartX) - swipeStartX;
+
+  // Threshold: 50px
+  if (deltaX < -50) {
+    openSwipe(wrap);
+  } else {
+    closeSwipe();
+  }
+
+  swipeStartX = 0;
+  isSwiping = false;
+}
+
+function openSwipe(wrap) {
+  if (currentSwipedItem && currentSwipedItem !== wrap) {
+    closeSwipe();
+  }
+
+  currentSwipedItem = wrap;
+  const txItem = wrap.querySelector('.tx-item');
+  txItem.style.transform = 'translateX(-140px)';
+  wrap.querySelector('.tx-swipe-actions').classList.add('active');
+}
+
+function closeSwipe() {
+  if (!currentSwipedItem) return;
+
+  const txItem = currentSwipedItem.querySelector('.tx-item');
+  txItem.style.transform = 'translateX(0)';
+  currentSwipedItem.querySelector('.tx-swipe-actions').classList.remove('active');
+  currentSwipedItem = null;
+}
+
+// Edit Modal
+let editingTxId = null;
+
+function openEditModal(txId) {
+  const tx = transactions.find(t => t.id === txId);
+  if (!tx) return;
+
+  editingTxId = txId;
+
+  document.getElementById('e-desc').value = tx.desc || '';
+  document.getElementById('e-amount').value = tx.amount || '';
+  document.getElementById('e-currency').value = tx.currency || 'ILS';
+  document.getElementById('e-type').value = tx.type || 'expense';
+  document.getElementById('e-store').value = tx.store || '';
+  document.getElementById('e-date').value = tx.date || today();
+
+  populateEditCategories();
+  document.getElementById('e-category').value = tx.category || '';
+
+  document.getElementById('editOverlay').classList.add('show');
+  document.getElementById('editSheet').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeEditModal() {
+  document.getElementById('editOverlay').classList.remove('show');
+  document.getElementById('editSheet').classList.remove('show');
+  document.body.style.overflow = '';
+  editingTxId = null;
+}
+
+function saveEdit() {
+  if (!editingTxId) return;
+
+  const desc = document.getElementById('e-desc').value.trim();
+  const amount = parseFloat(document.getElementById('e-amount').value);
+  const currency = document.getElementById('e-currency').value;
+  const type = document.getElementById('e-type').value;
+  const category = document.getElementById('e-category').value;
+  const store = document.getElementById('e-store').value.trim();
+  const date = document.getElementById('e-date').value || today();
+
+  if (!desc || !amount || amount <= 0) {
+    alert('Заполните описание и сумму');
+    return;
+  }
+
+  updateTx(editingTxId, {
+    desc, amount, currency, type, category, store, date
+  }).then(() => {
+    closeEditModal();
+  });
+}
+
+function populateEditCategories() {
+  const type = document.getElementById('e-type').value;
+  const cats = type === 'income' ? INCOME_CATS : EXPENSE_CATS;
+
+  document.getElementById('e-category').innerHTML = cats
+    .map(c => '<option value="' + c.id + '">' + c.label + '</option>')
+    .join('');
+}
+
+document.getElementById('e-type').addEventListener('change', populateEditCategories);
+document.getElementById('editOverlay').addEventListener('click', closeEditModal);
+document.getElementById('editCancelBtn').addEventListener('click', closeEditModal);
+document.getElementById('editSaveBtn').addEventListener('click', saveEdit);
+
+// Delete Dialog
+let deletingTxId = null;
+
+function openDeleteDialog(txId) {
+  deletingTxId = txId;
+  document.getElementById('deleteDialog').classList.add('show');
+}
+
+function closeDeleteDialog() {
+  document.getElementById('deleteDialog').classList.remove('show');
+  deletingTxId = null;
+}
+
+function confirmDelete() {
+  if (!deletingTxId) return;
+
+  softDeleteTx(deletingTxId);
+  closeDeleteDialog();
+}
+
+document.getElementById('deleteCancelBtn').addEventListener('click', closeDeleteDialog);
+document.getElementById('deleteConfirmBtn').addEventListener('click', confirmDelete);
+document.getElementById('deleteDialog').addEventListener('click', e => {
+  if (e.target.id === 'deleteDialog') closeDeleteDialog();
+});
 
 // Init
 populateCategorySelects();
+setupTxSwipe();
 </script>
 </body>
 </html>
