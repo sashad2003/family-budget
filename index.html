@@ -4,276 +4,486 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Семейный бюджет</title>
-<link href="https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0f0f11;--bg2:#17171a;--bg3:#1e1e22;--bg4:#26262b;--border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);--text:#f0f0f0;--text2:#8a8a94;--text3:#555560;--green:#2dd98a;--green-dim:rgba(45,217,138,0.12);--red:#ff5b5b;--red-dim:rgba(255,91,91,0.12);--blue:#5b9fff;--blue-dim:rgba(91,159,255,0.12);--accent:#2dd98a;--radius:12px;--radius-sm:8px}
+:root{
+  --bg-primary:#0a0b0d;
+  --bg-secondary:#13151a;
+  --bg-tertiary:#1a1d24;
+  --bg-elevated:#21252e;
+  --border-subtle:rgba(255,255,255,0.06);
+  --border-medium:rgba(255,255,255,0.1);
+  --text-primary:#f5f5f7;
+  --text-secondary:#8e8e93;
+  --text-tertiary:#636366;
+  --accent-blue:#0a84ff;
+  --accent-blue-bg:rgba(10,132,255,0.15);
+  --accent-green:#30d158;
+  --accent-green-bg:rgba(48,209,88,0.15);
+  --accent-red:#ff453a;
+  --accent-red-bg:rgba(255,69,58,0.15);
+  --accent-orange:#ff9f0a;
+  --accent-purple:#bf5af2;
+  --accent-pink:#ff375f;
+  --accent-teal:#64d2ff;
+  --accent-indigo:#5e5ce6;
+  --gradient-blue:linear-gradient(135deg,#0a84ff 0%,#5e5ce6 100%);
+  --gradient-green:linear-gradient(135deg,#30d158 0%,#34c759 100%);
+  --shadow-sm:0 2px 8px rgba(0,0,0,0.25);
+  --shadow-md:0 4px 16px rgba(0,0,0,0.35);
+  --radius-sm:10px;
+  --radius-md:14px;
+  --radius-lg:18px;
+  --radius-xl:24px;
+}
 *{box-sizing:border-box;margin:0;padding:0}
-html{background:var(--bg);color:var(--text);font-family:'Geologica',sans-serif;min-height:100vh}
-body{max-width:520px;margin:0 auto;padding:0 0 80px}
-#authScreen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem}
-.auth-logo{font-size:48px;margin-bottom:1rem}
-.auth-title{font-size:24px;font-weight:600;margin-bottom:8px}
-.auth-sub{font-size:14px;color:var(--text2);margin-bottom:2rem;text-align:center}
-.auth-btn{display:flex;align-items:center;gap:10px;padding:14px 28px;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);cursor:pointer;font-family:'Geologica',sans-serif;font-size:15px;font-weight:500;color:var(--text);transition:background .15s;width:100%;max-width:280px;justify-content:center}
-.auth-btn:hover{background:var(--bg4)}
-.auth-btn svg{width:20px;height:20px}
+html{background:var(--bg-primary);color:var(--text-primary);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;min-height:100vh}
+body{max-width:430px;margin:0 auto;padding:0 0 80px;position:relative}
+
+/* Auth Screen */
+#authScreen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center}
+.auth-logo{font-size:64px;margin-bottom:1.5rem;filter:drop-shadow(0 8px 24px rgba(10,132,255,0.4))}
+.auth-title{font-size:28px;font-weight:700;margin-bottom:8px;letter-spacing:-0.02em}
+.auth-subtitle{font-size:15px;color:var(--text-secondary);margin-bottom:2.5rem;line-height:1.5}
+.auth-btn{display:flex;align-items:center;justify-content:center;gap:12px;padding:16px 32px;background:var(--bg-elevated);border:1px solid var(--border-medium);border-radius:var(--radius-md);cursor:pointer;font-family:'Inter',sans-serif;font-size:16px;font-weight:600;color:var(--text-primary);transition:all .2s;width:100%;max-width:320px;box-shadow:var(--shadow-sm)}
+.auth-btn:hover{background:var(--bg-tertiary);transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.auth-btn svg{width:24px;height:24px}
+.access-denied{padding:20px;background:var(--accent-red-bg);border:1px solid var(--accent-red);border-radius:var(--radius-md);color:var(--accent-red);font-size:14px;margin-top:1rem;max-width:320px}
+
+/* App Layout */
 #app{display:none}
-.topbar{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--border);padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
-.app-title{font-size:15px;font-weight:600;letter-spacing:-0.02em}
-.topbar-right{display:flex;align-items:center;gap:8px}
-.cur-grp{display:flex;gap:3px;background:var(--bg2);border-radius:20px;padding:3px}
-.cur-btn{padding:3px 9px;font-size:11px;font-family:'JetBrains Mono',monospace;border:none;border-radius:16px;cursor:pointer;background:none;color:var(--text2);transition:all .15s}
-.cur-btn.active{background:var(--accent);color:#000;font-weight:500}
-.avatar-ph{width:30px;height:30px;border-radius:50%;background:var(--bg3);border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;cursor:pointer;color:var(--accent)}
-.avatar-wrap{width:30px;height:30px;border-radius:50%;overflow:hidden;cursor:pointer;border:1.5px solid var(--border2)}
-.avatar-wrap img{width:100%;height:100%;object-fit:cover}
-.metrics{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 16px}
-.metric{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px}
-.metric.wide{grid-column:1/-1}
-.metric-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
-.metric-value{font-size:18px;font-weight:600;font-family:'JetBrains Mono',monospace}
-.metric-value.g{color:var(--green)}.metric-value.r{color:var(--red)}
-.metric-sub{font-size:10px;color:var(--text3);margin-top:3px;font-family:'JetBrains Mono',monospace}
-.tabs{display:flex;overflow-x:auto;border-bottom:1px solid var(--border);padding:0 16px;scrollbar-width:none}
-.tabs::-webkit-scrollbar{display:none}
-.tab{padding:10px 14px;font-size:12px;font-weight:500;cursor:pointer;border:none;background:none;color:var(--text2);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;font-family:'Geologica',sans-serif;transition:color .15s;flex-shrink:0}
-.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
-.section{display:none;padding:16px}.section.active{display:block}
-.btn{padding:9px 16px;border-radius:var(--radius-sm);font-size:13px;font-weight:500;cursor:pointer;border:1px solid var(--border2);background:var(--bg3);color:var(--text);font-family:'Geologica',sans-serif;transition:all .15s}
-.btn:hover{background:var(--bg4)}
-.btn.primary{background:var(--accent);color:#000;border-color:var(--accent)}
-.btn.primary:hover{opacity:.88}
-.btn.sm{padding:5px 11px;font-size:11px}
-.btn.danger{color:var(--red);border-color:var(--red)}
-.btn.danger:hover{background:var(--red-dim)}
-.btn.ghost{border-color:transparent;background:transparent}
-.btn.ghost:hover{background:var(--bg3)}
-.upload-zone{border:1.5px dashed var(--border2);border-radius:var(--radius);padding:2rem;text-align:center;cursor:pointer;transition:all .15s;margin-bottom:12px}
-.upload-zone:hover{border-color:var(--accent);background:rgba(45,217,138,0.04)}
-.upload-icon{font-size:32px;margin-bottom:8px}
-.upload-title{font-size:14px;font-weight:500;margin-bottom:4px}
-.upload-sub{font-size:12px;color:var(--text2)}
-input[type=file]{display:none}
-.spinner-row{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2);padding:10px 0}
-.spinner{width:16px;height:16px;border:2px solid var(--bg4);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
-@keyframes spin{to{transform:rotate(360deg)}}
-.notice{font-size:12px;padding:10px 14px;border-radius:var(--radius-sm);margin-bottom:12px;border:1px solid var(--border)}
-.notice.ok{color:var(--green);border-color:rgba(45,217,138,0.3);background:var(--green-dim)}
-.notice.err{color:var(--red);border-color:rgba(255,91,91,0.3);background:var(--red-dim)}
-.notice.info{color:var(--text2);background:var(--bg2)}
-.ai-box{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);overflow:hidden;margin-bottom:12px}
-.ai-box-head{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.ai-head-input{flex:1;min-width:100px;padding:5px 9px;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'Geologica',sans-serif}
-.ai-head-input:focus{outline:none;border-color:var(--accent)}
-.ai-head-date{width:130px;padding:5px 9px;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'Geologica',sans-serif}
-.ai-head-date:focus{outline:none;border-color:var(--accent)}
-.ai-hint{font-size:11px;color:var(--text3);padding:7px 14px}
-.ai-items-list{padding:0 8px 8px;display:flex;flex-direction:column;gap:4px}
-.ai-item-wrap{border-radius:var(--radius-sm);overflow:hidden}
-.ai-item-row{display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--bg3)}
-.cat-pill{font-size:10px;padding:2px 7px;border-radius:20px;font-weight:600;flex-shrink:0}
-.ai-item-name{flex:1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ai-item-amt{font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace;flex-shrink:0;color:var(--text2)}
-.ai-edit-btn{font-size:13px;cursor:pointer;padding:2px 4px;flex-shrink:0;opacity:.5;transition:opacity .15s}
-.ai-edit-btn:hover{opacity:1}
-.ai-item-edit{display:none;padding:8px 10px;background:var(--bg4);border-top:1px solid var(--border);gap:6px;flex-wrap:wrap}
-.ai-item-edit.open{display:flex}
-.ai-edit-field{padding:6px 9px;font-size:12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:'Geologica',sans-serif}
-.ai-edit-field:focus{outline:none;border-color:var(--accent)}
-.ai-edit-field.wide{flex:1;min-width:110px}
-.ai-edit-field.narrow{width:85px}
-.ai-actions{padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
-.fg{display:flex;flex-direction:column;gap:4px}
-.fg.full{grid-column:1/-1}
-.fg label{font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
-.fg input,.fg select{padding:9px 11px;font-size:13px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);font-family:'Geologica',sans-serif;transition:border .15s}
-.fg input:focus,.fg select:focus{outline:none;border-color:var(--accent)}
-.fg select option{background:var(--bg2)}
-.filter-row{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
-.filter-row label{font-size:11px;color:var(--text3)}
-.filter-row select{padding:5px 8px;font-size:12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);font-family:'Geologica',sans-serif}
-.tx-list{display:flex;flex-direction:column;gap:5px}
-.tx-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);transition:border .15s}
-.tx-item:hover{border-color:var(--border2)}
-.tx-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.section{display:none;padding:20px 16px 16px}
+.section.active{display:block}
+
+/* Top Bar */
+.top-bar{padding:16px 16px 12px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border-subtle)}
+.greeting{font-size:24px;font-weight:700;letter-spacing:-0.02em}
+.currency-toggle{display:flex;gap:4px;background:var(--bg-secondary);border-radius:20px;padding:3px}
+.currency-btn{padding:6px 12px;font-size:13px;font-family:'JetBrains Mono',monospace;font-weight:600;border:none;border-radius:16px;cursor:pointer;background:none;color:var(--text-secondary);transition:all .2s}
+.currency-btn.active{background:var(--accent-blue);color:#000}
+
+/* Balance Card */
+.balance-card{background:var(--gradient-blue);border-radius:var(--radius-xl);padding:24px;margin:16px 0;box-shadow:var(--shadow-md);position:relative;overflow:hidden}
+.balance-card::before{content:'';position:absolute;top:-50%;right:-20%;width:200px;height:200px;background:rgba(255,255,255,0.1);border-radius:50%;filter:blur(60px)}
+.balance-label{font-size:14px;opacity:0.85;margin-bottom:8px;font-weight:500}
+.balance-amount{font-size:42px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:-0.02em;margin-bottom:4px}
+.balance-month{font-size:13px;opacity:0.75;font-weight:500}
+
+/* Stat Pills */
+.stat-pills{display:flex;gap:8px;margin-bottom:24px}
+.stat-pill{flex:1;background:var(--bg-secondary);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:14px;display:flex;flex-direction:column;gap:6px}
+.stat-pill-label{font-size:12px;color:var(--text-tertiary);font-weight:600;text-transform:uppercase;letter-spacing:0.06em}
+.stat-pill-value{font-size:20px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.stat-pill-value.green{color:var(--accent-green)}
+.stat-pill-value.red{color:var(--accent-red)}
+.stat-pill-value.blue{color:var(--accent-blue)}
+
+/* Section Title */
+.section-title{font-size:18px;font-weight:700;margin-bottom:12px;letter-spacing:-0.01em}
+
+/* Transaction List */
+.tx-list{display:flex;flex-direction:column;gap:8px}
+.tx-item{background:var(--bg-secondary);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:14px;display:flex;align-items:center;gap:12px;transition:all .2s;position:relative}
+.tx-item:active{transform:scale(0.98)}
+.tx-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
 .tx-info{flex:1;min-width:0}
-.tx-name{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tx-meta{font-size:11px;color:var(--text3);margin-top:2px}
-.tx-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0}
-.tx-amt{font-size:13px;font-weight:600;font-family:'JetBrains Mono',monospace}
-.tx-amt.income{color:var(--green)}.tx-amt.expense{color:var(--text)}
-.tx-conv{font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace}
-.tx-del{font-size:15px;cursor:pointer;color:var(--text3);padding:0 3px;flex-shrink:0;opacity:0;transition:opacity .15s}
-.tx-item:hover .tx-del{opacity:1}
-.who-badge{font-size:10px;padding:2px 6px;border-radius:10px;background:var(--blue-dim);color:var(--blue);font-weight:600;flex-shrink:0}
-.empty{padding:2.5rem;text-align:center;color:var(--text3);font-size:13px}
-.stat-section-title{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:10px}
-.cat-bar{margin-bottom:10px}
-.cat-bar-top{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;color:var(--text2)}
-.cat-bar-top span:first-child{color:var(--text)}
-.cat-bar-track{height:4px;background:var(--bg4);border-radius:2px;overflow:hidden}
-.cat-bar-fill{height:100%;border-radius:2px;transition:width .4s ease}
-.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px}
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
-.chart-wrap{position:relative;width:100%;height:180px}
-.search-row{display:flex;gap:8px;margin-bottom:12px}
-.search-row input{flex:1;padding:9px 12px;font-size:13px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg2);color:var(--text);font-family:'Geologica',sans-serif}
-.search-row input:focus{outline:none;border-color:var(--accent)}
-.new-prod-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px}
-.prod-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:6px;transition:border .15s}
-.prod-card:hover{border-color:var(--border2)}
-.prod-header{display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer}
-.prod-heart{font-size:15px;cursor:pointer;flex-shrink:0;user-select:none}
-.prod-name{flex:1;font-size:13px;font-weight:500}
-.prod-best{font-size:11px;color:var(--green);font-family:'JetBrains Mono',monospace;font-weight:500;flex-shrink:0}
-.prod-arrow{font-size:10px;color:var(--text3);flex-shrink:0;transition:transform .2s;display:inline-block}
-.prod-arrow.open{transform:rotate(180deg)}
-.prod-body{border-top:1px solid var(--border);padding:12px 14px;display:none}
-.prod-body.open{display:block}
-.price-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px}
-.price-table th{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:0 0 6px;text-align:left;border-bottom:1px solid var(--border)}
-.price-table th:last-child{text-align:right}
-.price-table td{padding:7px 0;border-bottom:1px solid var(--border);color:var(--text2)}
-.price-table td:last-child{text-align:right;font-family:'JetBrains Mono',monospace}
-.price-table tr:last-child td{border-bottom:none}
-.best-row td{color:var(--text)}
-.best-price{color:var(--green)!important;font-weight:700}
-.add-price-row{display:grid;grid-template-columns:1fr 1fr auto;gap:6px;margin-bottom:10px}
-.add-price-row input{padding:7px 9px;font-size:12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg3);color:var(--text);font-family:'Geologica',sans-serif}
-.add-price-row input:focus{outline:none;border-color:var(--accent)}
-.prod-status-row{display:flex;align-items:center;gap:8px;padding-top:10px;border-top:1px solid var(--border)}
-.prod-status-row label{font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase}
-.prod-status-row select{flex:1;padding:5px 8px;font-size:12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--bg3);color:var(--text);font-family:'Geologica',sans-serif}
-.sync-indicator{position:fixed;bottom:20px;right:16px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:11px;color:var(--text3);display:none;align-items:center;gap:5px;z-index:200}
+.tx-name{font-size:15px;font-weight:600;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tx-meta{font-size:12px;color:var(--text-tertiary);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.tx-meta span{display:flex;align-items:center}
+.tx-meta span:not(:last-child)::after{content:'·';margin-left:6px;color:var(--text-tertiary)}
+.tx-amount-wrap{display:flex;flex-direction:column;align-items:flex-end;gap:3px}
+.tx-amount{font-size:16px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.tx-amount.income{color:var(--accent-green)}
+.tx-amount.expense{color:var(--text-primary)}
+.tx-converted{font-size:11px;color:var(--text-tertiary);font-family:'JetBrains Mono',monospace}
+.tx-actions{position:absolute;top:12px;right:12px;display:flex;gap:4px;opacity:0;transition:opacity .2s}
+.tx-item:hover .tx-actions{opacity:1}
+.tx-action-btn{width:28px;height:28px;border-radius:8px;border:none;background:var(--bg-elevated);color:var(--text-secondary);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .2s}
+.tx-action-btn:hover{background:var(--bg-tertiary);color:var(--text-primary)}
+.tx-action-btn.danger:hover{background:var(--accent-red-bg);color:var(--accent-red)}
+
+/* Empty State */
+.empty-state{text-align:center;padding:48px 24px;color:var(--text-tertiary)}
+.empty-state-icon{font-size:48px;margin-bottom:12px;opacity:0.5}
+.empty-state-text{font-size:15px;line-height:1.5}
+
+/* Tabs */
+.tabs{display:flex;gap:8px;margin-bottom:20px;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab-btn{padding:10px 18px;border-radius:var(--radius-sm);font-size:14px;font-weight:600;cursor:pointer;border:none;background:var(--bg-secondary);color:var(--text-secondary);transition:all .2s;white-space:nowrap;font-family:'Inter',sans-serif}
+.tab-btn.active{background:var(--accent-blue);color:#000}
+
+/* Upload Zone */
+.upload-zone{border:2px dashed var(--border-medium);border-radius:var(--radius-lg);padding:48px 24px;text-align:center;cursor:pointer;transition:all .2s;margin-bottom:16px}
+.upload-zone:hover,.upload-zone.drag-over{border-color:var(--accent-blue);background:var(--accent-blue-bg)}
+.upload-icon{font-size:48px;margin-bottom:12px}
+.upload-title{font-size:16px;font-weight:600;margin-bottom:6px}
+.upload-subtitle{font-size:13px;color:var(--text-secondary)}
+input[type=file]{display:none}
+
+/* Form */
+.form-group{margin-bottom:16px}
+.form-label{font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:8px;display:block}
+.form-input,.form-select{width:100%;padding:14px;font-size:15px;border:1px solid var(--border-medium);border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-primary);font-family:'Inter',sans-serif;transition:all .2s}
+.form-input:focus,.form-select:focus{outline:none;border-color:var(--accent-blue);background:var(--bg-tertiary)}
+.form-select option{background:var(--bg-secondary)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-group.full{grid-column:1/-1}
+
+/* Button */
+.btn{padding:14px 24px;border-radius:var(--radius-md);font-size:15px;font-weight:600;cursor:pointer;border:none;font-family:'Inter',sans-serif;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-primary{background:var(--accent-blue);color:#000}
+.btn-primary:hover{opacity:0.9;transform:translateY(-1px)}
+.btn-secondary{background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border-medium)}
+.btn-secondary:hover{background:var(--bg-tertiary)}
+.btn-danger{background:var(--accent-red-bg);color:var(--accent-red);border:1px solid var(--accent-red)}
+.btn-danger:hover{background:var(--accent-red);color:#fff}
+.btn-full{width:100%}
+.btn-sm{padding:8px 14px;font-size:13px}
+
+/* AI Result Editor */
+.ai-result{background:var(--bg-secondary);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:16px}
+.ai-result-header{padding:16px;border-bottom:1px solid var(--border-subtle);display:flex;gap:12px}
+.ai-result-header input{flex:1}
+.ai-result-items{padding:8px}
+.ai-item{background:var(--bg-tertiary);border:1px solid var(--border-subtle);border-radius:var(--radius-md);margin-bottom:8px;overflow:hidden}
+.ai-item-row{padding:12px;display:flex;align-items:center;gap:10px}
+.ai-item-cat{font-size:10px;padding:4px 8px;border-radius:6px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em}
+.ai-item-desc{flex:1;font-size:14px;font-weight:500}
+.ai-item-amount{font-size:15px;font-weight:700;font-family:'JetBrains Mono',monospace}
+.ai-item-actions{display:flex;gap:6px}
+.ai-item-edit-form{padding:12px;border-top:1px solid var(--border-subtle);background:var(--bg-elevated);display:none;gap:8px;flex-wrap:wrap}
+.ai-item-edit-form.open{display:flex}
+.ai-result-footer{padding:12px;border-top:1px solid var(--border-subtle);display:flex;gap:8px}
+
+/* Filters */
+.filter-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.filter-label{font-size:12px;color:var(--text-tertiary);font-weight:600}
+.filter-select{padding:8px 12px;font-size:13px;border:1px solid var(--border-medium);border-radius:var(--radius-sm);background:var(--bg-secondary);color:var(--text-primary);font-family:'Inter',sans-serif;font-weight:500}
+
+/* Stats */
+.chart-container{background:var(--bg-secondary);border:1px solid var(--border-subtle);border-radius:var(--radius-lg);padding:20px;margin-bottom:16px}
+.chart-title{font-size:14px;font-weight:700;margin-bottom:16px;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.06em}
+.chart-wrap{position:relative;height:240px}
+.category-bars{display:flex;flex-direction:column;gap:12px}
+.category-bar{display:flex;flex-direction:column;gap:6px}
+.category-bar-top{display:flex;justify-content:space-between;align-items:center}
+.category-bar-name{font-size:14px;font-weight:600}
+.category-bar-value{font-size:13px;font-family:'JetBrains Mono',monospace;color:var(--text-secondary)}
+.category-bar-track{height:8px;background:var(--bg-tertiary);border-radius:4px;overflow:hidden}
+.category-bar-fill{height:100%;border-radius:4px;transition:width .4s ease}
+
+/* Bottom Nav */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--bg-secondary);border-top:1px solid var(--border-subtle);display:flex;justify-content:space-around;padding:8px 0 calc(8px + env(safe-area-inset-bottom));backdrop-filter:blur(20px);z-index:100}
+.nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 16px;cursor:pointer;border:none;background:none;color:var(--text-secondary);transition:all .2s;font-family:'Inter',sans-serif;text-decoration:none}
+.nav-item.active{color:var(--accent-blue)}
+.nav-icon{font-size:24px}
+.nav-label{font-size:11px;font-weight:600}
+
+/* Spinner */
+.spinner-wrap{display:flex;align-items:center;justify-content:center;gap:10px;padding:20px;color:var(--text-secondary)}
+.spinner{width:20px;height:20px;border:2px solid var(--bg-elevated);border-top-color:var(--accent-blue);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Notice */
+.notice{padding:14px;border-radius:var(--radius-md);margin-bottom:16px;font-size:14px;font-weight:500;border:1px solid}
+.notice.success{background:var(--accent-green-bg);border-color:var(--accent-green);color:var(--accent-green)}
+.notice.error{background:var(--accent-red-bg);border-color:var(--accent-red);color:var(--accent-red)}
+.notice.info{background:var(--accent-blue-bg);border-color:var(--accent-blue);color:var(--accent-blue)}
+
+/* Snackbar */
+.snackbar{position:fixed;bottom:calc(80px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);background:var(--bg-elevated);border:1px solid var(--border-medium);border-radius:var(--radius-md);padding:14px 20px;display:none;align-items:center;gap:12px;box-shadow:var(--shadow-md);z-index:200;max-width:calc(100% - 32px)}
+.snackbar.show{display:flex;animation:slideUp .3s ease}
+@keyframes slideUp{from{transform:translateX(-50%) translateY(20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+.snackbar-text{flex:1;font-size:14px;font-weight:500}
+.snackbar-btn{padding:6px 12px;border-radius:8px;background:var(--accent-blue);color:#000;border:none;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif}
+
+/* Sync Indicator */
+.sync-indicator{position:fixed;top:16px;right:16px;background:var(--bg-elevated);border:1px solid var(--border-medium);border-radius:20px;padding:6px 12px;font-size:12px;color:var(--text-secondary);display:none;align-items:center;gap:6px;z-index:200;box-shadow:var(--shadow-sm)}
 .sync-indicator.show{display:flex}
-.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 1s infinite}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--accent-blue);animation:pulse 1.5s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* Trash Section */
+.trash-item{opacity:0.7;position:relative}
+.trash-item::before{content:'';position:absolute;top:50%;left:0;right:0;height:1px;background:var(--text-tertiary)}
+
+/* Settings Group */
+.settings-group{margin-bottom:24px}
+.settings-group-title{font-size:12px;font-weight:700;color:var(--text-tertiary);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px}
+.settings-item{background:var(--bg-secondary);border:1px solid var(--border-subtle);border-radius:var(--radius-md);padding:16px;margin-bottom:8px;cursor:pointer;transition:all .2s}
+.settings-item:hover{background:var(--bg-tertiary)}
+.settings-item-title{font-size:15px;font-weight:600;margin-bottom:4px}
+.settings-item-subtitle{font-size:13px;color:var(--text-secondary)}
+
+/* Products */
+.product-card{background:var(--bg-secondary);border:1px solid var(--border-subtle);border-radius:var(--radius-md);overflow:hidden;margin-bottom:8px}
+.product-header{padding:14px;display:flex;align-items:center;gap:12px;cursor:pointer}
+.product-status{font-size:20px}
+.product-name{flex:1;font-size:15px;font-weight:600}
+.product-best-price{font-size:13px;font-family:'JetBrains Mono',monospace;color:var(--accent-green);font-weight:600}
+.product-arrow{font-size:12px;color:var(--text-tertiary);transition:transform .2s}
+.product-arrow.open{transform:rotate(180deg)}
+.product-body{border-top:1px solid var(--border-subtle);padding:14px;display:none}
+.product-body.open{display:block}
+.price-table{width:100%;font-size:13px;margin-bottom:12px}
+.price-table th{text-align:left;font-weight:600;color:var(--text-tertiary);padding-bottom:8px;font-size:11px;text-transform:uppercase;letter-spacing:0.05em}
+.price-table td{padding:8px 0;border-top:1px solid var(--border-subtle);color:var(--text-secondary)}
+.price-table td:last-child{text-align:right;font-family:'JetBrains Mono',monospace;font-weight:600}
+.price-table .best-row td{color:var(--text-primary)}
+.price-table .best-price{color:var(--accent-green)!important}
 </style>
 </head>
 <body>
 
+<!-- Auth Screen -->
 <div id="authScreen">
   <div class="auth-logo">💰</div>
   <div class="auth-title">Семейный бюджет</div>
-  <div class="auth-sub">Войдите через Google чтобы синхронизировать данные в реальном времени</div>
+  <div class="auth-subtitle">Войдите через Google для синхронизации данных в реальном времени</div>
   <button class="auth-btn" id="signInBtn">
     <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
     Войти через Google
   </button>
+  <div id="accessDenied" class="access-denied" style="display:none">
+    ⛔ Доступ запрещён. Обратитесь к администратору.
+  </div>
 </div>
 
+<!-- App -->
 <div id="app">
-  <div class="topbar">
-    <div class="app-title">💰 Семейный бюджет</div>
-    <div class="topbar-right">
-      <div class="cur-grp">
-        <button class="cur-btn active" id="curILS" onclick="setCur('ILS')">₪</button>
-        <button class="cur-btn" id="curEUR" onclick="setCur('EUR')">€</button>
-        <button class="cur-btn" id="curRSD" onclick="setCur('RSD')">din</button>
+  <!-- Top Bar -->
+  <div class="top-bar">
+    <div class="greeting" id="greeting">Привет!</div>
+    <div class="currency-toggle">
+      <button class="currency-btn active" id="cur-ILS" data-cur="ILS">₪</button>
+      <button class="currency-btn" id="cur-EUR" data-cur="EUR">€</button>
+      <button class="currency-btn" id="cur-RSD" data-cur="RSD">din</button>
+    </div>
+  </div>
+
+  <!-- Home Section -->
+  <div class="section active" id="sec-home">
+    <div class="balance-card">
+      <div class="balance-label">Баланс месяца</div>
+      <div class="balance-amount" id="balanceAmount">₪ 0.00</div>
+      <div class="balance-month" id="balanceMonth">Июнь 2026</div>
+    </div>
+    <div class="stat-pills">
+      <div class="stat-pill">
+        <div class="stat-pill-label">Доходы</div>
+        <div class="stat-pill-value green" id="incomeAmount">₪ 0</div>
       </div>
-      <div id="avatarEl" class="avatar-ph"></div>
+      <div class="stat-pill">
+        <div class="stat-pill-label">Расходы</div>
+        <div class="stat-pill-value red" id="expenseAmount">₪ 0</div>
+      </div>
     </div>
+    <div class="section-title">Последние транзакции</div>
+    <div class="tx-list" id="recentTxList"></div>
   </div>
 
-  <div class="metrics" id="metricsRow"></div>
-
-  <div class="tabs">
-    <button class="tab active" id="tab-btn-scan">📸 Чек</button>
-    <button class="tab" id="tab-btn-manual">✏️ Вручную</button>
-    <button class="tab" id="tab-btn-import">📥 Импорт</button>
-    <button class="tab" id="tab-btn-history">📋 История</button>
-    <button class="tab" id="tab-btn-stats">📊 Статистика</button>
-    <button class="tab" id="tab-btn-products">🛒 Товары</button>
-  </div>
-
-  <div class="section active" id="tab-scan">
-    <div class="upload-zone" id="dropZone">
-      <div class="upload-icon">📸</div>
-      <div class="upload-title">Загрузить чек</div>
-      <div class="upload-sub">Нажмите или перетащите фото</div>
+  <!-- Add Section -->
+  <div class="section" id="sec-add">
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-scan">📸 Чек</button>
+      <button class="tab-btn" id="tab-manual">✏️ Вручную</button>
     </div>
-    <input type="file" id="fi" accept="image/*,application/pdf">
-    <div id="scanStatus"></div>
-    <div id="aiBox"></div>
-  </div>
 
-  <div class="section" id="tab-manual">
-    <div class="form-grid">
-      <div class="fg full"><label>Описание</label><input type="text" id="mDesc" placeholder="Продукты, аренда, зарплата..."></div>
-      <div class="fg"><label>Сумма</label><input type="number" id="mAmt" placeholder="0.00" step="0.01"></div>
-      <div class="fg"><label>Валюта</label><select id="mCurSel"><option value="ILS">₪ Шекель</option><option value="EUR">€ Евро</option><option value="RSD">din Динар</option></select></div>
-      <div class="fg"><label>Тип</label><select id="mType"><option value="expense">Расход</option><option value="income">Доход</option></select></div>
-      <div class="fg"><label>Категория</label><select id="mCat"></select></div>
-      <div class="fg"><label>Магазин</label><input type="text" id="mStore" placeholder="Shufersal..."></div>
-      <div class="fg"><label>Дата</label><input type="date" id="mDate"></div>
+    <!-- Scan Tab -->
+    <div id="scan-content">
+      <div class="upload-zone" id="uploadZone">
+        <div class="upload-icon">📸</div>
+        <div class="upload-title">Загрузить чек</div>
+        <div class="upload-subtitle">Нажмите или перетащите фото</div>
+      </div>
+      <input type="file" id="fileInput" accept="image/*">
+      <div id="scanStatus"></div>
+      <div id="aiResult"></div>
     </div>
-    <button class="btn primary" id="addManualBtn">Добавить запись</button>
-  </div>
 
-  <div class="section" id="tab-import">
-    <div class="upload-zone" id="xlsxDropZone">
-      <div class="upload-icon">📥</div>
-      <div class="upload-title">Загрузить XLSX файл</div>
-      <div class="upload-sub">Нажмите или перетащите файл с данными Ирит</div>
-    </div>
-    <input type="file" id="xlsxFile" accept=".xlsx,.xls">
-    <div id="xlsxStatus"></div>
-    <div id="xlsxPreview"></div>
-  </div>
-
-  <div class="section" id="tab-history">
-    <div class="filter-row">
-      <label>Период:</label>
-      <select id="fPeriod"><option value="month" selected>Текущий месяц</option><option value="week">Неделя</option><option value="all">Всё время</option></select>
-      <select id="fMonth" style="display:none"></select>
-      <label>Тип:</label>
-      <select id="fType"><option value="">Все</option><option value="expense">Расходы</option><option value="income">Доходы</option></select>
-    </div>
-    <div class="tx-list" id="txList"></div>
-  </div>
-
-  <div class="section" id="tab-stats">
-    <div class="filter-row">
-      <label>Период:</label>
-      <select id="sPeriod"><option value="month" selected>Текущий месяц</option><option value="week">Неделя</option><option value="all">Всё время</option></select>
-      <select id="sMonth" style="display:none"></select>
-    </div>
-    <div class="two-col" id="statsCards"></div>
-    <div class="stat-card"><div class="stat-section-title">По категориям</div><div id="catBars"></div></div>
-    <div class="stat-card" style="margin-top:10px"><div class="stat-section-title">По магазинам</div><div id="storeBars"></div></div>
-    <div class="stat-card" style="margin-top:10px"><div class="stat-section-title">Расходы по месяцам</div><div class="chart-wrap"><canvas id="statsChart"></canvas></div></div>
-  </div>
-
-  <div class="section" id="tab-products">
-    <div class="search-row">
-      <input type="text" id="prodSearch" placeholder="Найти товар...">
-      <button class="btn primary" id="newProdToggleBtn">+ Товар</button>
-    </div>
-    <div class="new-prod-box" id="newProdForm" style="display:none">
-      <div style="font-size:12px;font-weight:600;color:var(--text2);margin-bottom:10px">Новый товар</div>
+    <!-- Manual Tab -->
+    <div id="manual-content" style="display:none">
+      <div class="form-group full">
+        <label class="form-label">Описание</label>
+        <input type="text" class="form-input" id="m-desc" placeholder="Продукты, аренда, зарплата...">
+      </div>
       <div class="form-grid">
-        <div class="fg full"><label>Название</label><input type="text" id="npName" placeholder="Молоко Тнува 1л"></div>
-        <div class="fg"><label>Категория</label><select id="npCat"></select></div>
-        <div class="fg"><label>Статус</label><select id="npStatus"><option value="fav">❤️ Любимый</option><option value="ok" selected>👍 Нормально</option><option value="no">🚫 Не брать</option></select></div>
+        <div class="form-group">
+          <label class="form-label">Сумма</label>
+          <input type="number" class="form-input" id="m-amount" placeholder="0.00" step="0.01">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Валюта</label>
+          <select class="form-select" id="m-currency">
+            <option value="ILS">₪ Шекель</option>
+            <option value="EUR">€ Евро</option>
+            <option value="RSD">din Динар</option>
+          </select>
+        </div>
       </div>
-      <div style="display:flex;gap:8px">
-        <button class="btn primary" id="addProdBtn">Добавить</button>
-        <button class="btn ghost" id="cancelProdBtn">Отмена</button>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Тип</label>
+          <select class="form-select" id="m-type">
+            <option value="expense">Расход</option>
+            <option value="income">Доход</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Категория</label>
+          <select class="form-select" id="m-category"></select>
+        </div>
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Магазин</label>
+        <input type="text" class="form-input" id="m-store" placeholder="Shufersal...">
+      </div>
+      <div class="form-group full">
+        <label class="form-label">Дата</label>
+        <input type="date" class="form-input" id="m-date">
+      </div>
+      <button class="btn btn-primary btn-full" id="addManualBtn">Добавить</button>
+    </div>
+  </div>
+
+  <!-- History Section -->
+  <div class="section" id="sec-history">
+    <div class="filter-bar">
+      <span class="filter-label">Месяц:</span>
+      <select class="filter-select" id="f-month"></select>
+      <span class="filter-label">Тип:</span>
+      <select class="filter-select" id="f-type">
+        <option value="">Все</option>
+        <option value="expense">Расходы</option>
+        <option value="income">Доходы</option>
+      </select>
+    </div>
+    <div class="filter-bar">
+      <span class="filter-label">Категория:</span>
+      <select class="filter-select" id="f-category">
+        <option value="">Все</option>
+      </select>
+      <span class="filter-label">Кто:</span>
+      <select class="filter-select" id="f-who">
+        <option value="">Все</option>
+        <option value="Саша">Саша</option>
+        <option value="Ирит">Ирит</option>
+      </select>
+    </div>
+    <div class="tx-list" id="historyTxList"></div>
+  </div>
+
+  <!-- Stats Section -->
+  <div class="section" id="sec-stats">
+    <div class="filter-bar">
+      <span class="filter-label">Период:</span>
+      <select class="filter-select" id="s-month"></select>
+    </div>
+    <div class="stat-pills">
+      <div class="stat-pill">
+        <div class="stat-pill-label">Доходы</div>
+        <div class="stat-pill-value green" id="s-income">₪ 0</div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-pill-label">Расходы</div>
+        <div class="stat-pill-value red" id="s-expense">₪ 0</div>
+      </div>
+      <div class="stat-pill">
+        <div class="stat-pill-label">Баланс</div>
+        <div class="stat-pill-value blue" id="s-balance">₪ 0</div>
       </div>
     </div>
-    <div id="prodGrid"></div>
+    <div class="chart-container">
+      <div class="chart-title">Расходы по категориям</div>
+      <div class="chart-wrap">
+        <canvas id="categoryChart"></canvas>
+      </div>
+    </div>
+    <div class="chart-container">
+      <div class="chart-title">Топ категорий</div>
+      <div class="category-bars" id="categoryBars"></div>
+    </div>
+    <div class="chart-container">
+      <div class="chart-title">Топ магазинов</div>
+      <div class="category-bars" id="storeBars"></div>
+    </div>
+    <div class="chart-container">
+      <div class="chart-title">Расходы по месяцам</div>
+      <div class="chart-wrap">
+        <canvas id="monthChart"></canvas>
+      </div>
+    </div>
   </div>
+
+  <!-- More Section -->
+  <div class="section" id="sec-more">
+    <div class="settings-group">
+      <div class="settings-group-title">Настройки</div>
+      <div class="settings-item" id="currencySettingBtn">
+        <div class="settings-item-title">Валюта по умолчанию</div>
+        <div class="settings-item-subtitle" id="currentCurrency">Шекель (₪)</div>
+      </div>
+    </div>
+    <div class="settings-group">
+      <div class="settings-group-title">Данные</div>
+      <div class="settings-item" id="trashBtn">
+        <div class="settings-item-title">🗑️ Корзина</div>
+        <div class="settings-item-subtitle">Восстановить удалённые записи</div>
+      </div>
+      <div class="settings-item" id="productsBtn">
+        <div class="settings-item-title">🛒 Товары</div>
+        <div class="settings-item-subtitle">База товаров и цен</div>
+      </div>
+    </div>
+    <button class="btn btn-danger btn-full" id="signOutBtn">Выйти</button>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-nav="home">
+      <div class="nav-icon">🏠</div>
+      <div class="nav-label">Главная</div>
+    </button>
+    <button class="nav-item" data-nav="add">
+      <div class="nav-icon">➕</div>
+      <div class="nav-label">Добавить</div>
+    </button>
+    <button class="nav-item" data-nav="history">
+      <div class="nav-icon">📋</div>
+      <div class="nav-label">История</div>
+    </button>
+    <button class="nav-item" data-nav="stats">
+      <div class="nav-icon">📊</div>
+      <div class="nav-label">Статистика</div>
+    </button>
+    <button class="nav-item" data-nav="more">
+      <div class="nav-icon">⚙️</div>
+      <div class="nav-label">Ещё</div>
+    </button>
+  </nav>
 </div>
 
-<div class="sync-indicator" id="syncInd"><div class="sync-dot"></div>Синхронизация...</div>
+<!-- Snackbar -->
+<div class="snackbar" id="snackbar">
+  <div class="snackbar-text" id="snackbarText"></div>
+  <button class="snackbar-btn" id="snackbarBtn">Отменить</button>
+</div>
+
+<!-- Sync Indicator -->
+<div class="sync-indicator" id="syncIndicator">
+  <div class="sync-dot"></div>
+  Синхронизация...
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script>
+// Firebase Init
 firebase.initializeApp({
   apiKey:"AIzaSyAwBJgchwHOMiKAh1oIpV72euqNlK2wyhk",
   authDomain:"mony-y-hac-b-kormaney.firebaseapp.com",
@@ -282,722 +492,864 @@ firebase.initializeApp({
   messagingSenderId:"635303578955",
   appId:"1:635303578955:web:2c396be79027e854346cce"
 });
-var auth=firebase.auth(), db=firebase.firestore(), FAM='family_drutz';
 
-var CATS=[
-  {id:'food',label:'Еда',color:'#2dd98a'},{id:'transport',label:'Транспорт',color:'#5b9fff'},
-  {id:'housing',label:'Жильё',color:'#a78bfa'},{id:'health',label:'Здоровье',color:'#ff5b5b'},
-  {id:'entertainment',label:'Развлечения',color:'#ffb347'},{id:'shopping',label:'Покупки',color:'#ff7eb3'},
-  {id:'utilities',label:'Коммунальные',color:'#3de8d0'},{id:'education',label:'Образование',color:'#60c6ff'},
-  {id:'salary',label:'Зарплата',color:'#2dd98a'},{id:'freelance',label:'Фриланс',color:'#3de8d0'},
-  {id:'other',label:'Другое',color:'#555560'}
+const auth = firebase.auth();
+const db = firebase.firestore();
+const FAM = 'family_drutz';
+const ALLOWED_EMAILS = ['sashad2003@gmail.com', 'irit.drutz@gmail.com'];
+
+// Categories
+const EXPENSE_CATS = [
+  {id:'food',label:'Еда',icon:'🍕',color:'#ff9f0a'},
+  {id:'transport',label:'Транспорт',icon:'🚗',color:'#5e5ce6'},
+  {id:'housing',label:'Жильё',icon:'🏠',color:'#bf5af2'},
+  {id:'utilities',label:'Коммунальные',icon:'💡',color:'#64d2ff'},
+  {id:'health',label:'Здоровье',icon:'❤️',color:'#ff453a'},
+  {id:'education',label:'Образование',icon:'📚',color:'#30d158'},
+  {id:'shopping',label:'Покупки',icon:'🛍️',color:'#ff375f'},
+  {id:'entertainment',label:'Развлечения',icon:'🎉',color:'#ffb347'},
+  {id:'gifts',label:'Подарки',icon:'🎁',color:'#ff7eb3'},
+  {id:'business',label:'Бизнес',icon:'💼',color:'#0a84ff'},
+  {id:'other',label:'Другое',icon:'📦',color:'#8e8e93'}
 ];
 
-// Курсы относительно EUR
-var RATES={ILS:3.76,EUR:1.0,RSD:117.0};
-var SYMS={ILS:'₪',EUR:'€',RSD:'din'};
+const INCOME_CATS = [
+  {id:'salary',label:'Зарплата',icon:'💰',color:'#30d158'},
+  {id:'freelance',label:'Фриланс',icon:'💻',color:'#64d2ff'},
+  {id:'other_income',label:'Другое',icon:'💵',color:'#8e8e93'}
+];
 
-function toEUR(a,c){return a/RATES[c];}
-function fromEUR(a,c){return a*RATES[c];}
-function convert(a,from,to){if(from===to)return a;return fromEUR(toEUR(a,from),to);}
-function fmt(n,c){return (SYMS[c]||c)+'\u00a0'+parseFloat(n).toLocaleString('ru-RU',{minimumFractionDigits:2,maximumFractionDigits:2});}
+// Currency Rates (base EUR)
+const RATES = {ILS:3.76, EUR:1.0, RSD:117.0};
+const SYMBOLS = {ILS:'₪', EUR:'€', RSD:'din'};
 
-var displayCur='ILS';
-var transactions=[],products=[],openProds={},currentUser=null,statsChartInst=null,pendingAI=[],txUnsub=null,prodUnsub=null;
+// State
+let currentUser = null;
+let displayCurrency = 'ILS';
+let transactions = [];
+let pendingAI = null;
+let txUnsubscribe = null;
+let categoryChart = null;
+let monthChart = null;
+let lastDeletedTx = null;
 
-function catById(id){return CATS.find(function(c){return c.id===id;})||CATS[CATS.length-1];}
-function showSync(v){document.getElementById('syncInd').classList.toggle('show',v);}
-function today(){return new Date().toISOString().split('T')[0];}
-
-function setCur(c){
-  displayCur=c;
-  ['ILS','EUR','RSD'].forEach(function(x){document.getElementById('cur'+x).classList.toggle('active',x===c);});
-  renderAll();
+// Currency Conversion
+function toEUR(amount, currency) {
+  return amount / RATES[currency];
 }
 
-document.getElementById('signInBtn').addEventListener('click',function(){
-  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(function(e){alert('Ошибка: '+e.message);});
-});
-document.getElementById('avatarEl').addEventListener('click',function(){
-  if(confirm('Выйти?'))auth.signOut();
-});
-
-auth.onAuthStateChanged(function(user){
-  currentUser=user;
-  if(user){
-    document.getElementById('authScreen').style.display='none';
-    document.getElementById('app').style.display='block';
-    var av=document.getElementById('avatarEl');
-    if(user.photoURL){
-      av.className='avatar-wrap';
-      av.innerHTML='<img src="'+user.photoURL+'">';
-    } else {
-      av.textContent=(user.displayName||'U')[0].toUpperCase();
-    }
-    setupListeners(); renderCatSelects();
-    document.getElementById('mDate').value=today();
-  } else {
-    document.getElementById('authScreen').style.display='flex';
-    document.getElementById('app').style.display='none';
-    if(txUnsub)txUnsub(); if(prodUnsub)prodUnsub();
-  }
-});
-
-function setupListeners(){
-  if(txUnsub)txUnsub(); if(prodUnsub)prodUnsub();
-  txUnsub=db.collection('families').doc(FAM).collection('transactions').orderBy('date','desc')
-    .onSnapshot(function(snap){transactions=snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});renderAll();});
-  prodUnsub=db.collection('families').doc(FAM).collection('products')
-    .onSnapshot(function(snap){products=snap.docs.map(function(d){return Object.assign({id:d.id},d.data());});
-      if(document.getElementById('tab-products').classList.contains('active'))renderProducts();});
+function fromEUR(amount, currency) {
+  return amount * RATES[currency];
 }
 
-function saveTx(data){showSync(true);return db.collection('families').doc(FAM).collection('transactions').add(Object.assign({},data,{addedBy:currentUser.displayName||currentUser.email,addedAt:new Date().toISOString()})).finally(function(){showSync(false);});}
-function deleteTxDb(id){showSync(true);return db.collection('families').doc(FAM).collection('transactions').doc(id).delete().finally(function(){showSync(false);});}
-function saveProd(data){showSync(true);return db.collection('families').doc(FAM).collection('products').add(data).finally(function(){showSync(false);});}
-function updateProd(id,data){showSync(true);return db.collection('families').doc(FAM).collection('products').doc(id).update(data).finally(function(){showSync(false);});}
-function deleteProdDb(id){showSync(true);return db.collection('families').doc(FAM).collection('products').doc(id).delete().finally(function(){showSync(false);});}
+function convert(amount, from, to) {
+  if (from === to) return amount;
+  return fromEUR(toEUR(amount, from), to);
+}
 
-function getFilteredTx(period,specificMonth){
-  var now=new Date();
-  return transactions.filter(function(t){
-    var d=new Date(t.date);
-    if(period==='week'){var dow=now.getDay()||7;var mon=new Date(now);mon.setDate(now.getDate()-dow+1);mon.setHours(0,0,0,0);return d>=mon;}
-    if(period==='month'){
-      if(specificMonth){
-        var parts=specificMonth.split('-');
-        return d.getFullYear()===parseInt(parts[0])&&d.getMonth()===(parseInt(parts[1])-1);
-      }
-      return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();
-    }
-    return true;
+function formatAmount(amount, currency) {
+  const sym = SYMBOLS[currency] || currency;
+  return sym + ' ' + parseFloat(amount).toLocaleString('ru-RU', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
   });
 }
-function txInDisplay(t){return convert(t.amount,t.currency||'ILS',displayCur);}
 
-function renderMetrics(){
-  var t=getFilteredTx('month');
-  var inc=0,exp=0;
-  t.forEach(function(tx){var a=txInDisplay(tx);if(tx.type==='income')inc+=a;else exp+=a;});
-  var bal=inc-exp;
-  var sym=SYMS[displayCur];
-  // also show in other currencies
-  var others=Object.keys(SYMS).filter(function(c){return c!==displayCur;});
-  var otherStr=others.map(function(c){return SYMS[c]+'\u00a0'+convert(bal,displayCur,c).toLocaleString('ru-RU',{minimumFractionDigits:0,maximumFractionDigits:0});}).join(' · ');
-  document.getElementById('metricsRow').innerHTML=
-    '<div class="metric"><div class="metric-label">Доходы (месяц)</div><div class="metric-value g">'+fmt(inc,displayCur)+'</div></div>'+
-    '<div class="metric"><div class="metric-label">Расходы (месяц)</div><div class="metric-value r">'+fmt(exp,displayCur)+'</div></div>'+
-    '<div class="metric wide"><div class="metric-label">Баланс</div><div class="metric-value '+(bal>=0?'g':'r')+'">'+fmt(bal,displayCur)+'</div>'+
-    (otherStr?'<div class="metric-sub">≈ '+otherStr+'</div>':'')+
-    '<div class="metric-sub">'+transactions.length+' записей всего</div></div>';
+function getCategoryById(id, type = 'expense') {
+  const cats = type === 'income' ? INCOME_CATS : EXPENSE_CATS;
+  return cats.find(c => c.id === id) || cats[cats.length - 1];
 }
 
-function renderHistory(){
-  var period=document.getElementById('fPeriod').value;
-  var tf=document.getElementById('fType').value;
-  var monthSel=document.getElementById('fMonth');
-  var specificMonth=monthSel.style.display!=='none'?monthSel.value:null;
-  var t=getFilteredTx(period,specificMonth);
-  if(tf)t=t.filter(function(x){return x.type===tf;});
-  var el=document.getElementById('txList');
-  if(!t.length){el.innerHTML='<div class="empty">Нет записей за этот период</div>';return;}
-  el.innerHTML=t.map(function(tx){
-    var c=catById(tx.category);
-    var d=new Date(tx.date).toLocaleDateString('ru-RU',{day:'2-digit',month:'short'});
-    var origCur=tx.currency||'ILS';
-    var dispAmt=fmt(txInDisplay(tx),displayCur);
-    var convLine=(origCur!==displayCur)?fmt(tx.amount,origCur):'';
-    var who=tx.addedBy?'<span class="who-badge">'+tx.addedBy.split(' ')[0]+'</span>':'';
-    return '<div class="tx-item">'+
-      '<div class="tx-dot" style="background:'+c.color+'"></div>'+
-      '<div class="tx-info"><div class="tx-name">'+tx.desc+'</div><div class="tx-meta">'+c.label+(tx.store?' · '+tx.store:'')+' · '+d+'</div></div>'+
-      who+
-      '<div class="tx-right">'+
-        '<div class="tx-amt '+(tx.type)+'">'+(tx.type==='income'?'+':'-')+dispAmt+'</div>'+
-        (convLine?'<div class="tx-conv">'+convLine+'</div>':'')+
-      '</div>'+
-      '<div class="tx-del" data-id="'+tx.id+'">×</div>'+
-    '</div>';
-  }).join('');
-  document.querySelectorAll('.tx-del').forEach(function(el){el.addEventListener('click',function(){deleteTxDb(this.dataset.id);});});
+function today() {
+  return new Date().toISOString().split('T')[0];
 }
 
-function renderStats(){
-  var period=document.getElementById('sPeriod').value;
-  var monthSel=document.getElementById('sMonth');
-  var specificMonth=monthSel.style.display!=='none'?monthSel.value:null;
-  var t=getFilteredTx(period,specificMonth);
-  var expTx=t.filter(function(x){return x.type==='expense';});
-  var incTx=t.filter(function(x){return x.type==='income';});
-  var totalExp=expTx.reduce(function(s,x){return s+txInDisplay(x);},0);
-  var totalInc=incTx.reduce(function(s,x){return s+txInDisplay(x);},0);
-  document.getElementById('statsCards').innerHTML=
-    '<div class="metric"><div class="metric-label">Доходы</div><div class="metric-value g">'+fmt(totalInc,displayCur)+'</div></div>'+
-    '<div class="metric"><div class="metric-label">Расходы</div><div class="metric-value r">'+fmt(totalExp,displayCur)+'</div></div>';
-  var catMap={};expTx.forEach(function(x){catMap[x.category]=(catMap[x.category]||0)+txInDisplay(x);});
-  var sc=Object.entries(catMap).sort(function(a,b){return b[1]-a[1];});
-  document.getElementById('catBars').innerHTML=sc.length?sc.map(function(e){
-    var c=catById(e[0]);var pct=totalExp?Math.round(e[1]/totalExp*100):0;
-    return '<div class="cat-bar"><div class="cat-bar-top"><span>'+c.label+'</span><span>'+fmt(e[1],displayCur)+' · '+pct+'%</span></div><div class="cat-bar-track"><div class="cat-bar-fill" style="width:'+pct+'%;background:'+c.color+'"></div></div></div>';
-  }).join(''):'<div style="font-size:12px;color:var(--text3)">Нет данных</div>';
-  var storeMap={};expTx.forEach(function(x){if(x.store){storeMap[x.store]=(storeMap[x.store]||0)+txInDisplay(x);}});
-  var ss=Object.entries(storeMap).sort(function(a,b){return b[1]-a[1];});var maxS=ss[0]?ss[0][1]:1;
-  document.getElementById('storeBars').innerHTML=ss.length?ss.map(function(e){
-    var pct=Math.round(e[1]/maxS*100);
-    return '<div class="cat-bar"><div class="cat-bar-top"><span>'+e[0]+'</span><span>'+fmt(e[1],displayCur)+'</span></div><div class="cat-bar-track"><div class="cat-bar-fill" style="width:'+pct+'%;background:var(--blue)"></div></div></div>';
-  }).join(''):'<div style="font-size:12px;color:var(--text3)">Нет данных</div>';
-  var months={};
-  transactions.forEach(function(x){
-    if(x.type!=='expense')return;
-    var d=new Date(x.date);var k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-    months[k]=(months[k]||0)+convert(x.amount,x.currency||'ILS',displayCur);
-  });
-  var mKeys=Object.keys(months).sort().slice(-6);
-  var canvas=document.getElementById('statsChart');
-  if(statsChartInst){statsChartInst.destroy();statsChartInst=null;}
-  if(mKeys.length){
-    statsChartInst=new Chart(canvas,{type:'bar',
-      data:{labels:mKeys.map(function(k){var p=k.split('-');return new Date(p[0],p[1]-1).toLocaleDateString('ru-RU',{month:'short',year:'2-digit'});}),
-        datasets:[{data:mKeys.map(function(k){return parseFloat(months[k].toFixed(2));}),backgroundColor:'rgba(91,159,255,0.25)',borderColor:'#5b9fff',borderWidth:1.5,borderRadius:4}]},
-      options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
-        scales:{x:{ticks:{color:'#555560',font:{size:10}},grid:{display:false}},
-          y:{ticks:{color:'#555560',font:{size:10},callback:function(v){return SYMS[displayCur]+' '+v;}},grid:{color:'rgba(255,255,255,0.04)'}}}}});
-  }
+// Sync Indicator
+function showSync(show) {
+  document.getElementById('syncIndicator').classList.toggle('show', show);
 }
 
-function renderProducts(){
-  var q=document.getElementById('prodSearch').value.toLowerCase();
-  var prods=products.filter(function(p){return !q||p.name.toLowerCase().indexOf(q)>=0;});
-  prods=prods.slice().sort(function(a,b){var o={fav:0,ok:1,no:2};return(o[a.status]||1)-(o[b.status]||1)||a.name.localeCompare(b.name);});
-  var el=document.getElementById('prodGrid');
-  if(!prods.length){el.innerHTML='<div class="empty">Нет товаров. Появятся при сканировании чеков.</div>';return;}
-  el.innerHTML=prods.map(function(p){
-    var prices=p.prices||[];
-    var byStore={};
-    prices.forEach(function(pr){if(!byStore[pr.store]||new Date(pr.date)>new Date(byStore[pr.store].date))byStore[pr.store]=pr;});
-    var sl=Object.entries(byStore).sort(function(a,b){return convert(a[1].price,a[1].currency||'ILS',displayCur)-convert(b[1].price,b[1].currency||'ILS',displayCur);});
-    var best=sl[0];
-    var heart=p.status==='fav'?'❤️':p.status==='no'?'🚫':'🤍';
-    var isOpen=openProds[p.id];
-    var tableHtml=sl.length?
-      '<table class="price-table"><tr><th>Магазин</th><th>Дата</th><th>Цена</th></tr>'+
-      sl.map(function(e,i){
-        var pr=e[1];var d=new Date(pr.date).toLocaleDateString('ru-RU',{day:'2-digit',month:'short'});
-        var dispPrice=fmt(convert(pr.price,pr.currency||'ILS',displayCur),displayCur);
-        var origStr=(pr.currency&&pr.currency!==displayCur)?'<div style="font-size:10px;color:var(--text3)">'+fmt(pr.price,pr.currency)+'</div>':'';
-        return '<tr class="'+(i===0?'best-row':'')+'"><td>'+(i===0?'✓ ':'')+e[0]+'</td><td>'+d+'</td><td class="'+(i===0?'best-price':'')+'">'+dispPrice+origStr+'</td></tr>';
-      }).join('')+'</table>':'<div style="font-size:12px;color:var(--text3);margin-bottom:10px">Нет данных о ценах</div>';
-    var chartHtml=prices.length>1?'<div style="position:relative;width:100%;height:120px;margin-bottom:10px"><canvas id="pc_'+p.id+'"></canvas></div>':'';
-    return '<div class="prod-card">'+
-      '<div class="prod-header" data-prodid="'+p.id+'">'+
-        '<div class="prod-heart" data-heartid="'+p.id+'">'+heart+'</div>'+
-        '<div class="prod-name">'+p.name+'</div>'+
-        (best?'<div class="prod-best">'+best[0]+': '+fmt(convert(best[1].price,best[1].currency||'ILS',displayCur),displayCur)+'</div>':'')+
-        '<div class="prod-arrow'+(isOpen?' open':'')+'">▼</div>'+
-      '</div>'+
-      '<div class="prod-body'+(isOpen?' open':'')+'" id="pb_'+p.id+'">'+
-        tableHtml+chartHtml+
-        '<div style="font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.07em;margin-bottom:7px">Добавить цену вручную</div>'+
-        '<div class="add-price-row"><input type="text" id="ps_'+p.id+'" placeholder="Магазин"><input type="number" id="pp_'+p.id+'" placeholder="Цена" step="0.01"><button class="btn sm primary" data-addpriceid="'+p.id+'">+</button></div>'+
-        '<div class="prod-status-row"><label>Статус:</label>'+
-          '<select data-statusid="'+p.id+'"><option value="fav"'+(p.status==='fav'?' selected':'')+'>❤️ Любимый</option><option value="ok"'+(p.status==='ok'?' selected':'')+'>👍 Нормально</option><option value="no"'+(p.status==='no'?' selected':'')+'>🚫 Не брать</option></select>'+
-          '<button class="btn sm danger" data-deleteprodid="'+p.id+'">Удалить</button>'+
-        '</div>'+
-      '</div>'+
-    '</div>';
-  }).join('');
-  document.querySelectorAll('.prod-header').forEach(function(el){el.addEventListener('click',function(e){if(e.target.dataset.heartid)return;var id=this.dataset.prodid;openProds[id]=!openProds[id];renderProducts();});});
-  document.querySelectorAll('[data-heartid]').forEach(function(el){el.addEventListener('click',function(e){e.stopPropagation();var id=this.dataset.heartid;var p=products.find(function(x){return x.id===id;});if(!p)return;var o=['ok','fav','no'];updateProd(id,{status:o[(o.indexOf(p.status||'ok')+1)%3]});});});
-  document.querySelectorAll('[data-addpriceid]').forEach(function(btn){btn.addEventListener('click',function(){var id=this.dataset.addpriceid;var store=document.getElementById('ps_'+id).value.trim();var price=parseFloat(document.getElementById('pp_'+id).value);if(!store||!price||price<=0)return;var p=products.find(function(x){return x.id===id;});if(!p)return;var prices=(p.prices||[]).concat([{store:store,price:price,date:today(),currency:displayCur}]);updateProd(id,{prices:prices}).then(function(){openProds[id]=true;});});});
-  document.querySelectorAll('[data-statusid]').forEach(function(sel){sel.addEventListener('change',function(){updateProd(this.dataset.statusid,{status:this.value});});});
-  document.querySelectorAll('[data-deleteprodid]').forEach(function(btn){btn.addEventListener('click',function(){if(confirm('Удалить товар?'))deleteProdDb(this.dataset.deleteprodid);});});
-  prods.forEach(function(p){if(openProds[p.id]&&(p.prices||[]).length>1)setTimeout(function(){drawPriceChart(p);},60);});
-}
+// Snackbar
+function showSnackbar(text, actionFn) {
+  const snackbar = document.getElementById('snackbar');
+  const snackbarText = document.getElementById('snackbarText');
+  const snackbarBtn = document.getElementById('snackbarBtn');
 
-function drawPriceChart(p){
-  var canvas=document.getElementById('pc_'+p.id);if(!canvas)return;
-  if(canvas._ch)canvas._ch.destroy();
-  var sorted=(p.prices||[]).slice().sort(function(a,b){return new Date(a.date)-new Date(b.date);});
-  var stores=sorted.reduce(function(acc,x){if(acc.indexOf(x.store)<0)acc.push(x.store);return acc;},[]);
-  var colors=['#5b9fff','#2dd98a','#ffb347','#ff5b5b','#a78bfa'];
-  var datasets=stores.map(function(store,i){var pts=sorted.filter(function(x){return x.store===store;});return{label:store,data:pts.map(function(x){return{x:x.date,y:convert(x.price,x.currency||'ILS',displayCur)};}),borderColor:colors[i%colors.length],backgroundColor:colors[i%colors.length]+'33',tension:.3,pointRadius:4};});
-  canvas._ch=new Chart(canvas,{type:'line',data:{datasets:datasets},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:stores.length>1,labels:{color:'#8a8a94',boxWidth:10,font:{size:10}}}},scales:{x:{type:'category',ticks:{color:'#555560',font:{size:10}}},y:{ticks:{color:'#555560',font:{size:10},callback:function(v){return SYMS[displayCur]+' '+v.toFixed(0);}},grid:{color:'rgba(255,255,255,0.04)'}}}}});
-}
+  snackbarText.textContent = text;
+  snackbar.classList.add('show');
 
-document.getElementById('addManualBtn').addEventListener('click',function(){
-  var desc=document.getElementById('mDesc').value.trim();
-  var amt=parseFloat(document.getElementById('mAmt').value);
-  var txCur=document.getElementById('mCurSel').value;
-  var type=document.getElementById('mType').value;
-  var catId=document.getElementById('mCat').value;
-  var store=document.getElementById('mStore').value.trim();
-  var date=document.getElementById('mDate').value||today();
-  if(!desc||!amt||amt<=0){alert('Заполните описание и сумму');return;}
-  saveTx({desc:desc,amount:amt,currency:txCur,type:type,category:catId,store:store,date:date}).then(function(){
-    document.getElementById('mDesc').value='';document.getElementById('mAmt').value='';document.getElementById('mStore').value='';
-  });
-});
-
-document.getElementById('newProdToggleBtn').addEventListener('click',function(){var f=document.getElementById('newProdForm');f.style.display=f.style.display==='none'?'block':'none';});
-document.getElementById('cancelProdBtn').addEventListener('click',function(){document.getElementById('newProdForm').style.display='none';});
-document.getElementById('addProdBtn').addEventListener('click',function(){
-  var name=document.getElementById('npName').value.trim();
-  var status=document.getElementById('npStatus').value;
-  var catId=document.getElementById('npCat').value;
-  if(!name)return;
-  if(products.find(function(p){return p.name.toLowerCase()===name.toLowerCase();})){alert('Такой товар уже есть');return;}
-  saveProd({name:name,status:status,category:catId,prices:[]}).then(function(){document.getElementById('npName').value='';document.getElementById('newProdForm').style.display='none';});
-});
-document.getElementById('prodSearch').addEventListener('input',renderProducts);
-
-var fi=document.getElementById('fi'),dz=document.getElementById('dropZone');
-dz.addEventListener('click',function(){fi.click();});
-dz.addEventListener('dragover',function(e){e.preventDefault();dz.style.borderColor='var(--accent)';});
-dz.addEventListener('dragleave',function(){dz.style.borderColor='';});
-dz.addEventListener('drop',function(e){e.preventDefault();dz.style.borderColor='';if(e.dataTransfer.files[0])processFile(e.dataTransfer.files[0]);});
-fi.addEventListener('change',function(){if(fi.files[0])processFile(fi.files[0]);});
-
-function compressImage(file,cb){
-  var r=new FileReader();
-  r.onload=function(e){
-    var img=new Image();
-    img.onload=function(){
-      var c=document.createElement('canvas'),MAX=1200,w=img.width,h=img.height;
-      if(w>MAX||h>MAX){if(w>h){h=Math.round(h*MAX/w);w=MAX;}else{w=Math.round(w*MAX/h);h=MAX;}}
-      c.width=w;c.height=h;c.getContext('2d').drawImage(img,0,0,w,h);
-      var d=c.toDataURL('image/jpeg',0.7);
-      if(d.length>900000)d=c.toDataURL('image/jpeg',0.4);
-      cb(d.split(',')[1],'image/jpeg');
-    };
-    img.src=e.target.result;
+  snackbarBtn.onclick = () => {
+    if (actionFn) actionFn();
+    hideSnackbar();
   };
-  r.readAsDataURL(file);
+
+  setTimeout(hideSnackbar, 5000);
 }
 
-function processFile(file){
-  var st=document.getElementById('scanStatus'),ab=document.getElementById('aiBox');
-  ab.innerHTML='';
-  st.innerHTML='<div class="spinner-row"><div class="spinner"></div>ИИ анализирует чек...</div>';
-  compressImage(file,function(b64,mtype){
-    var prompt='Проанализируй чек и верни ТОЛЬКО JSON:\n{"store":"название","date":"YYYY-MM-DD или null","currency":"ILS или EUR или RSD","items":[{"desc":"название товара","amount":число,"category":"food|transport|housing|health|entertainment|shopping|utilities|education|other","unit_price":число}],"total":число}\nILS=шекель, EUR=евро, RSD=динар. Если не чек — {"error":"Не чек"}';
-    fetch('https://budget.sitemarket.co.il/api-proxy.php',{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({model:'claude-sonnet-4-5',max_tokens:1500,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mtype,data:b64}},{type:'text',text:prompt}]}]})
-    }).then(function(r){if(!r.ok)return r.text().then(function(t){throw new Error('HTTP '+r.status+': '+t);});return r.json();})
-    .then(function(data){
-      var text=(data.content||[]).map(function(c){return c.text||'';}).join('');
-      var parsed=JSON.parse(text.replace(/```json|```/g,'').trim());
-      st.innerHTML='';
-      if(parsed.error){st.innerHTML='<div class="notice info">'+parsed.error+'</div>';return;}
-      showAIResult(parsed);
-    }).catch(function(e){st.innerHTML='<div class="notice err">Ошибка: '+e.message+'</div>';console.error(e);});
-  });
+function hideSnackbar() {
+  document.getElementById('snackbar').classList.remove('show');
 }
 
-function showAIResult(data){
-  pendingAI=data.items||[];
-  var detCur=data.currency||'ILS';
-  var sym=SYMS[detCur]||detCur;
-  var catOpts=CATS.map(function(c){return '<option value="'+c.id+'">'+c.label+'</option>';}).join('');
+// Auth
+document.getElementById('signInBtn').addEventListener('click', () => {
+  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
+    .catch(err => alert('Ошибка: ' + err.message));
+});
 
-  function buildItem(item,idx){
-    var c=catById(item.category);
-    return '<div class="ai-item-wrap">'+
-      '<div class="ai-item-row">'+
-        '<span class="cat-pill" style="background:'+c.color+'22;color:'+c.color+'">'+c.label+'</span>'+
-        '<span class="ai-item-name">'+item.desc+'</span>'+
-        '<span class="ai-item-amt">'+sym+' '+parseFloat(item.amount).toFixed(2)+'</span>'+
-        '<span class="ai-edit-btn" data-editidx="'+idx+'">✏️</span>'+
-        '<span class="ai-edit-btn" data-delidx="'+idx+'" style="color:var(--red)">×</span>'+
-      '</div>'+
-      '<div class="ai-item-edit" id="aiedit_'+idx+'">'+
-        '<input class="ai-edit-field wide" type="text" id="ei_desc_'+idx+'" value="'+item.desc+'" placeholder="Название">'+
-        '<input class="ai-edit-field narrow" type="number" id="ei_amt_'+idx+'" value="'+parseFloat(item.amount).toFixed(2)+'" step="0.01">'+
-        '<select class="ai-edit-field" id="ei_cat_'+idx+'">'+catOpts.replace('value="'+item.category+'"','value="'+item.category+'" selected')+'</select>'+
-        '<button class="btn sm primary" data-saveidx="'+idx+'">OK</button>'+
-      '</div>'+
-    '</div>';
+document.getElementById('signOutBtn').addEventListener('click', () => {
+  if (confirm('Выйти из приложения?')) auth.signOut();
+});
+
+auth.onAuthStateChanged(user => {
+  currentUser = user;
+
+  if (user) {
+    if (!ALLOWED_EMAILS.includes(user.email)) {
+      document.getElementById('accessDenied').style.display = 'block';
+      auth.signOut();
+      return;
+    }
+
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+
+    const firstName = user.displayName ? user.displayName.split(' ')[0] : 'Пользователь';
+    document.getElementById('greeting').textContent = `Привет, ${firstName}!`;
+
+    setupFirestoreListeners();
+    populateCategorySelects();
+    document.getElementById('m-date').value = today();
+  } else {
+    document.getElementById('authScreen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+    if (txUnsubscribe) txUnsubscribe();
   }
+});
 
-  var storeVal=data.store||'',dateVal=data.date||today();
-  document.getElementById('aiBox').innerHTML=
-    '<div class="ai-box">'+
-      '<div class="ai-box-head">'+
-        '<input class="ai-head-input" id="ai_store" value="'+storeVal+'" placeholder="Магазин">'+
-        '<input class="ai-head-date" id="ai_date" type="date" value="'+dateVal+'">'+
-        '<span style="font-size:11px;color:var(--text2)">'+sym+'</span>'+
-      '</div>'+
-      '<div class="ai-hint">✏️ — редактировать &nbsp;·&nbsp; × — удалить строку</div>'+
-      '<div class="ai-items-list" id="aiItemsList">'+pendingAI.map(function(item,i){return buildItem(item,i);}).join('')+'</div>'+
-      '<div class="ai-actions">'+
-        '<button class="btn primary" id="confirmAIBtn">Сохранить ('+pendingAI.length+')</button>'+
-        '<button class="btn ghost" id="addAIItemBtn">+ Строка</button>'+
-        '<button class="btn danger" id="cancelAIBtn">Отменить</button>'+
-      '</div>'+
-    '</div>';
+// Firestore
+function setupFirestoreListeners() {
+  if (txUnsubscribe) txUnsubscribe();
 
-  function bindEvents(){
-    document.querySelectorAll('[data-editidx]').forEach(function(btn){btn.addEventListener('click',function(){document.getElementById('aiedit_'+this.dataset.editidx).classList.toggle('open');});});
-    document.querySelectorAll('[data-delidx]').forEach(function(btn){btn.addEventListener('click',function(){pendingAI.splice(parseInt(this.dataset.delidx),1);showAIResult(data);});});
-    document.querySelectorAll('[data-saveidx]').forEach(function(btn){
-      btn.addEventListener('click',function(){
-        var idx=parseInt(this.dataset.saveidx);
-        var nd=document.getElementById('ei_desc_'+idx).value.trim();
-        var na=parseFloat(document.getElementById('ei_amt_'+idx).value);
-        var nc=document.getElementById('ei_cat_'+idx).value;
-        if(nd)pendingAI[idx].desc=nd;
-        if(!isNaN(na)&&na>0){pendingAI[idx].amount=na;pendingAI[idx].unit_price=na;}
-        pendingAI[idx].category=nc;
-        showAIResult(Object.assign({},data,{store:document.getElementById('ai_store').value,date:document.getElementById('ai_date').value}));
-      });
+  txUnsubscribe = db.collection('families').doc(FAM).collection('transactions')
+    .orderBy('date', 'desc')
+    .onSnapshot(snap => {
+      transactions = snap.docs.map(doc => ({id: doc.id, ...doc.data()}));
+      renderAll();
     });
-  }
-  bindEvents();
-  document.getElementById('addAIItemBtn').addEventListener('click',function(){
-    pendingAI.push({desc:'Новый товар',amount:0,category:'other',unit_price:0});
-    showAIResult(Object.assign({},data,{store:document.getElementById('ai_store').value,date:document.getElementById('ai_date').value}));
-    setTimeout(function(){var ed=document.getElementById('aiedit_'+(pendingAI.length-1));if(ed)ed.classList.add('open');},50);
-  });
-  document.getElementById('cancelAIBtn').addEventListener('click',function(){document.getElementById('aiBox').innerHTML='';});
-  document.getElementById('confirmAIBtn').addEventListener('click',function(){
-    confirmAI(document.getElementById('ai_store').value||'',document.getElementById('ai_date').value||today(),detCur);
-  });
 }
 
-function confirmAI(store,date,detCur){
+function saveTx(data) {
   showSync(true);
-  var chain=Promise.resolve();
-  pendingAI.forEach(function(item){
-    chain=chain.then(function(){
-      return saveTx({desc:item.desc,amount:item.amount,currency:detCur,type:'expense',category:item.category,store:store,date:date,aiScan:true});
-    }).then(function(){
-      var unitPrice=item.unit_price||item.amount;if(!store||!unitPrice)return;
-      var prod=products.find(function(p){return p.name.toLowerCase()===item.desc.toLowerCase();});
-      if(!prod)return saveProd({name:item.desc,status:'ok',category:item.category,prices:[{store:store,price:unitPrice,date:date,currency:detCur}]});
-      return updateProd(prod.id,{prices:(prod.prices||[]).concat([{store:store,price:unitPrice,date:date,currency:detCur}])});
+  return db.collection('families').doc(FAM).collection('transactions')
+    .add({
+      ...data,
+      deleted: false,
+      addedBy: currentUser.displayName || currentUser.email,
+      addedAt: new Date().toISOString()
+    })
+    .finally(() => showSync(false));
+}
+
+function updateTx(id, data) {
+  showSync(true);
+  return db.collection('families').doc(FAM).collection('transactions')
+    .doc(id).update(data)
+    .finally(() => showSync(false));
+}
+
+function softDeleteTx(id) {
+  const tx = transactions.find(t => t.id === id);
+  if (!tx) return;
+
+  lastDeletedTx = tx;
+  updateTx(id, {deleted: true}).then(() => {
+    showSnackbar('Удалено. Отменить?', () => {
+      updateTx(id, {deleted: false});
     });
-  });
-  chain.finally(function(){
-    showSync(false);
-    document.getElementById('aiBox').innerHTML='<div class="notice ok">✓ Сохранено и синхронизировано</div>';
-    fi.value='';pendingAI=[];
   });
 }
 
-['scan','manual','import','history','stats','products'].forEach(function(id){
-  document.getElementById('tab-btn-'+id).addEventListener('click',function(){
-    document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
-    document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active');});
-    document.getElementById('tab-btn-'+id).classList.add('active');
-    document.getElementById('tab-'+id).classList.add('active');
-    if(id==='stats'){
-      if(document.getElementById('sPeriod').value==='month'){
-        populateMonthDropdown('sMonth');
-        document.getElementById('sMonth').style.display='inline-block';
-      }
-      renderStats();
-    }
-    if(id==='history'){
-      if(document.getElementById('fPeriod').value==='month'){
-        populateMonthDropdown('fMonth');
-        document.getElementById('fMonth').style.display='inline-block';
-      }
-      renderHistory();
-    }
-    if(id==='products')renderProducts();
+function hardDeleteTx(id) {
+  if (!confirm('Удалить навсегда? Это действие нельзя отменить.')) return;
+  showSync(true);
+  return db.collection('families').doc(FAM).collection('transactions')
+    .doc(id).delete()
+    .finally(() => showSync(false));
+}
+
+// Navigation
+document.querySelectorAll('.nav-item').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.dataset.nav;
+
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById('sec-' + target).classList.add('active');
+
+    if (target === 'home') renderHome();
+    if (target === 'history') renderHistory();
+    if (target === 'stats') renderStats();
   });
 });
-document.getElementById('fPeriod').addEventListener('change',function(){
-  var val=this.value;
-  var monthSel=document.getElementById('fMonth');
-  if(val==='month'){
-    populateMonthDropdown('fMonth');
-    monthSel.style.display='inline-block';
-  }else{
-    monthSel.style.display='none';
-  }
-  renderHistory();
-});
-document.getElementById('fMonth').addEventListener('change',renderHistory);
-document.getElementById('fType').addEventListener('change',renderHistory);
-document.getElementById('sPeriod').addEventListener('change',function(){
-  var val=this.value;
-  var monthSel=document.getElementById('sMonth');
-  if(val==='month'){
-    populateMonthDropdown('sMonth');
-    monthSel.style.display='inline-block';
-  }else{
-    monthSel.style.display='none';
-  }
-  renderStats();
-});
-document.getElementById('sMonth').addEventListener('change',renderStats);
 
-function populateMonthDropdown(selectId){
-  var months={};
-  var now=new Date();
-  var currentKey=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+// Currency Toggle
+document.querySelectorAll('.currency-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    displayCurrency = btn.dataset.cur;
+    document.querySelectorAll('.currency-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
 
-  transactions.forEach(function(t){
-    var d=new Date(t.date);
-    var key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
-    if(!months[key]){
-      months[key]={year:d.getFullYear(),month:d.getMonth()};
-    }
+    const labels = {ILS: 'Шекель (₪)', EUR: 'Евро (€)', RSD: 'Динар (din)'};
+    document.getElementById('currentCurrency').textContent = labels[displayCurrency];
+
+    renderAll();
+  });
+});
+
+// Add Tab Toggle
+document.getElementById('tab-scan').addEventListener('click', () => {
+  document.getElementById('tab-scan').classList.add('active');
+  document.getElementById('tab-manual').classList.remove('active');
+  document.getElementById('scan-content').style.display = 'block';
+  document.getElementById('manual-content').style.display = 'none';
+});
+
+document.getElementById('tab-manual').addEventListener('click', () => {
+  document.getElementById('tab-manual').classList.add('active');
+  document.getElementById('tab-scan').classList.remove('active');
+  document.getElementById('manual-content').style.display = 'block';
+  document.getElementById('scan-content').style.display = 'none';
+});
+
+// File Upload
+const fileInput = document.getElementById('fileInput');
+const uploadZone = document.getElementById('uploadZone');
+
+uploadZone.addEventListener('click', () => fileInput.click());
+
+uploadZone.addEventListener('dragover', e => {
+  e.preventDefault();
+  uploadZone.classList.add('drag-over');
+});
+
+uploadZone.addEventListener('dragleave', () => {
+  uploadZone.classList.remove('drag-over');
+});
+
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('drag-over');
+  if (e.dataTransfer.files[0]) processImage(e.dataTransfer.files[0]);
+});
+
+fileInput.addEventListener('change', () => {
+  if (fileInput.files[0]) processImage(fileInput.files[0]);
+});
+
+// Image Processing
+function compressImage(file, callback) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const MAX = 1200;
+      let w = img.width, h = img.height;
+
+      if (w > MAX || h > MAX) {
+        if (w > h) {
+          h = Math.round(h * MAX / w);
+          w = MAX;
+        } else {
+          w = Math.round(w * MAX / h);
+          h = MAX;
+        }
+      }
+
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+
+      let data = canvas.toDataURL('image/jpeg', 0.7);
+      if (data.length > 900000) data = canvas.toDataURL('image/jpeg', 0.4);
+
+      callback(data.split(',')[1], 'image/jpeg');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function processImage(file) {
+  const status = document.getElementById('scanStatus');
+  const result = document.getElementById('aiResult');
+
+  result.innerHTML = '';
+  status.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div>ИИ анализирует чек...</div>';
+
+  compressImage(file, (base64, mimeType) => {
+    const prompt = `Проанализируй чек и верни ТОЛЬКО JSON:
+{"store":"название","date":"YYYY-MM-DD или null","currency":"ILS или EUR или RSD","items":[{"desc":"название товара","amount":число,"category":"food|transport|housing|utilities|health|education|shopping|entertainment|gifts|business|other","unit_price":число}],"total":число}
+ILS=шекель, EUR=евро, RSD=динар. Если не чек — {"error":"Не чек"}`;
+
+    fetch('https://budget.sitemarket.co.il/api-proxy.php', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 1500,
+        messages: [{
+          role: 'user',
+          content: [
+            {type: 'image', source: {type: 'base64', media_type: mimeType, data: base64}},
+            {type: 'text', text: prompt}
+          ]
+        }]
+      })
+    })
+    .then(r => {
+      if (!r.ok) return r.text().then(t => {throw new Error('HTTP ' + r.status + ': ' + t)});
+      return r.json();
+    })
+    .then(data => {
+      const text = (data.content || []).map(c => c.text || '').join('');
+      const parsed = JSON.parse(text.replace(/```json|```/g, '').trim());
+
+      status.innerHTML = '';
+
+      if (parsed.error) {
+        status.innerHTML = '<div class="notice info">' + parsed.error + '</div>';
+        return;
+      }
+
+      pendingAI = parsed;
+      showAIResult(parsed);
+    })
+    .catch(err => {
+      status.innerHTML = '<div class="notice error">Ошибка: ' + err.message + '</div>';
+      console.error(err);
+    });
+  });
+}
+
+// AI Result Editor
+function showAIResult(data) {
+  const currency = data.currency || 'ILS';
+  const sym = SYMBOLS[currency];
+
+  let html = '<div class="ai-result">';
+  html += '<div class="ai-result-header">';
+  html += '<input class="form-input" id="ai-store" value="' + (data.store || '') + '" placeholder="Магазин">';
+  html += '<input class="form-input" type="date" id="ai-date" value="' + (data.date || today()) + '">';
+  html += '</div>';
+
+  html += '<div class="ai-result-items">';
+  (data.items || []).forEach((item, idx) => {
+    const cat = getCategoryById(item.category);
+    html += '<div class="ai-item">';
+    html += '<div class="ai-item-row">';
+    html += '<span class="ai-item-cat" style="background:' + cat.color + '22;color:' + cat.color + '">' + cat.icon + '</span>';
+    html += '<span class="ai-item-desc">' + item.desc + '</span>';
+    html += '<span class="ai-item-amount">' + sym + ' ' + item.amount.toFixed(2) + '</span>';
+    html += '<div class="ai-item-actions">';
+    html += '<button class="btn-sm btn-secondary" data-edit="' + idx + '">✏️</button>';
+    html += '<button class="btn-sm btn-danger" data-delete="' + idx + '">×</button>';
+    html += '</div>';
+    html += '</div>';
+    html += '<div class="ai-item-edit-form" id="ai-edit-' + idx + '">';
+    html += '<input class="form-input" id="ai-desc-' + idx + '" value="' + item.desc + '" placeholder="Название" style="flex:1;min-width:150px">';
+    html += '<input class="form-input" type="number" id="ai-amount-' + idx + '" value="' + item.amount + '" step="0.01" style="width:100px">';
+    html += '<select class="form-select" id="ai-cat-' + idx + '" style="width:120px">';
+    EXPENSE_CATS.forEach(c => {
+      html += '<option value="' + c.id + '"' + (c.id === item.category ? ' selected' : '') + '>' + c.label + '</option>';
+    });
+    html += '</select>';
+    html += '<button class="btn-sm btn-primary" data-save="' + idx + '">OK</button>';
+    html += '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  html += '<div class="ai-result-footer">';
+  html += '<button class="btn btn-primary" id="ai-save-all">Сохранить (' + data.items.length + ')</button>';
+  html += '<button class="btn btn-secondary" id="ai-add-item">+ Строка</button>';
+  html += '<button class="btn btn-danger" id="ai-cancel">Отменить</button>';
+  html += '</div>';
+  html += '</div>';
+
+  document.getElementById('aiResult').innerHTML = html;
+
+  // Edit handlers
+  document.querySelectorAll('[data-edit]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const form = document.getElementById('ai-edit-' + btn.dataset.edit);
+      form.classList.toggle('open');
+    });
   });
 
-  var sorted=Object.keys(months).sort().reverse();
-  if(!sorted.includes(currentKey)){
-    sorted.unshift(currentKey);
+  // Delete handlers
+  document.querySelectorAll('[data-delete]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      pendingAI.items.splice(parseInt(btn.dataset.delete), 1);
+      showAIResult(pendingAI);
+    });
+  });
+
+  // Save handlers
+  document.querySelectorAll('[data-save]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idx = parseInt(btn.dataset.save);
+      const desc = document.getElementById('ai-desc-' + idx).value.trim();
+      const amount = parseFloat(document.getElementById('ai-amount-' + idx).value);
+      const category = document.getElementById('ai-cat-' + idx).value;
+
+      if (desc) pendingAI.items[idx].desc = desc;
+      if (!isNaN(amount) && amount > 0) {
+        pendingAI.items[idx].amount = amount;
+        pendingAI.items[idx].unit_price = amount;
+      }
+      pendingAI.items[idx].category = category;
+
+      pendingAI.store = document.getElementById('ai-store').value;
+      pendingAI.date = document.getElementById('ai-date').value;
+
+      showAIResult(pendingAI);
+    });
+  });
+
+  // Add item
+  document.getElementById('ai-add-item').addEventListener('click', () => {
+    pendingAI.items.push({desc: 'Новый товар', amount: 0, category: 'other', unit_price: 0});
+    pendingAI.store = document.getElementById('ai-store').value;
+    pendingAI.date = document.getElementById('ai-date').value;
+    showAIResult(pendingAI);
+    setTimeout(() => {
+      const lastIdx = pendingAI.items.length - 1;
+      document.getElementById('ai-edit-' + lastIdx).classList.add('open');
+    }, 50);
+  });
+
+  // Cancel
+  document.getElementById('ai-cancel').addEventListener('click', () => {
+    document.getElementById('aiResult').innerHTML = '';
+    pendingAI = null;
+  });
+
+  // Save all
+  document.getElementById('ai-save-all').addEventListener('click', () => {
+    const store = document.getElementById('ai-store').value.trim();
+    const date = document.getElementById('ai-date').value || today();
+
+    showSync(true);
+
+    let chain = Promise.resolve();
+
+    pendingAI.items.forEach(item => {
+      chain = chain.then(() =>
+        saveTx({
+          desc: item.desc,
+          amount: item.amount,
+          currency: currency,
+          type: 'expense',
+          category: item.category,
+          store: store,
+          date: date,
+          source: 'ai_scan'
+        })
+      );
+    });
+
+    chain.finally(() => {
+      showSync(false);
+      document.getElementById('aiResult').innerHTML = '<div class="notice success">✓ Сохранено и синхронизировано</div>';
+      fileInput.value = '';
+      pendingAI = null;
+      setTimeout(() => {
+        document.getElementById('aiResult').innerHTML = '';
+      }, 2000);
+    });
+  });
+}
+
+// Manual Add
+document.getElementById('addManualBtn').addEventListener('click', () => {
+  const desc = document.getElementById('m-desc').value.trim();
+  const amount = parseFloat(document.getElementById('m-amount').value);
+  const currency = document.getElementById('m-currency').value;
+  const type = document.getElementById('m-type').value;
+  const category = document.getElementById('m-category').value;
+  const store = document.getElementById('m-store').value.trim();
+  const date = document.getElementById('m-date').value || today();
+
+  if (!desc || !amount || amount <= 0) {
+    alert('Заполните описание и сумму');
+    return;
   }
 
-  var sel=document.getElementById(selectId);
-  var currentVal=sel.value||currentKey;
+  saveTx({
+    desc, amount, currency, type, category, store, date, source: 'manual'
+  }).then(() => {
+    document.getElementById('m-desc').value = '';
+    document.getElementById('m-amount').value = '';
+    document.getElementById('m-store').value = '';
 
-  sel.innerHTML=sorted.map(function(key){
-    var parts=key.split('-');
-    var d=new Date(parts[0],parts[1]-1);
-    var label=d.toLocaleDateString('ru-RU',{month:'long',year:'numeric'});
-    var selected=key===currentVal?' selected':'';
-    return '<option value="'+key+'"'+selected+'>'+label+'</option>';
+    const notification = document.createElement('div');
+    notification.className = 'notice success';
+    notification.textContent = '✓ Транзакция добавлена';
+    document.getElementById('manual-content').insertBefore(
+      notification,
+      document.getElementById('manual-content').firstChild
+    );
+    setTimeout(() => notification.remove(), 2000);
+  });
+});
+
+// Category type change
+document.getElementById('m-type').addEventListener('change', () => {
+  populateCategorySelects();
+});
+
+function populateCategorySelects() {
+  const type = document.getElementById('m-type').value;
+  const cats = type === 'income' ? INCOME_CATS : EXPENSE_CATS;
+
+  document.getElementById('m-category').innerHTML = cats
+    .map(c => '<option value="' + c.id + '">' + c.label + '</option>')
+    .join('');
+
+  document.getElementById('f-category').innerHTML =
+    '<option value="">Все</option>' +
+    cats.map(c => '<option value="' + c.id + '">' + c.label + '</option>').join('');
+}
+
+// Render Functions
+function getActiveTx() {
+  return transactions.filter(t => !t.deleted);
+}
+
+function getDeletedTx() {
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  return transactions.filter(t =>
+    t.deleted && new Date(t.addedAt) >= thirtyDaysAgo
+  );
+}
+
+function getCurrentMonthTx() {
+  const now = new Date();
+  return getActiveTx().filter(t => {
+    const d = new Date(t.date);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  });
+}
+
+function getMonthTx(yearMonth) {
+  if (yearMonth === 'all') return getActiveTx();
+
+  const [year, month] = yearMonth.split('-');
+  return getActiveTx().filter(t => {
+    const d = new Date(t.date);
+    return d.getFullYear() === parseInt(year) && d.getMonth() === parseInt(month) - 1;
+  });
+}
+
+function renderAll() {
+  if (document.getElementById('sec-home').classList.contains('active')) renderHome();
+  if (document.getElementById('sec-history').classList.contains('active')) renderHistory();
+  if (document.getElementById('sec-stats').classList.contains('active')) renderStats();
+  populateMonthSelects();
+}
+
+function renderHome() {
+  const monthTx = getCurrentMonthTx();
+
+  let income = 0, expense = 0;
+  monthTx.forEach(tx => {
+    const amount = convert(tx.amount, tx.currency || 'ILS', displayCurrency);
+    if (tx.type === 'income') income += amount;
+    else expense += amount;
+  });
+
+  const balance = income - expense;
+
+  document.getElementById('balanceAmount').textContent = formatAmount(balance, displayCurrency);
+  document.getElementById('incomeAmount').textContent = formatAmount(income, displayCurrency);
+  document.getElementById('expenseAmount').textContent = formatAmount(expense, displayCurrency);
+
+  const now = new Date();
+  document.getElementById('balanceMonth').textContent =
+    now.toLocaleDateString('ru-RU', {month: 'long', year: 'numeric'});
+
+  // Recent transactions
+  const recent = getActiveTx().slice(0, 5);
+  const list = document.getElementById('recentTxList');
+
+  if (!recent.length) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📭</div><div class="empty-state-text">Нет транзакций</div></div>';
+    return;
+  }
+
+  list.innerHTML = recent.map(tx => renderTxItem(tx)).join('');
+}
+
+function renderTxItem(tx) {
+  const cat = getCategoryById(tx.category, tx.type);
+  const amount = convert(tx.amount, tx.currency || 'ILS', displayCurrency);
+  const date = new Date(tx.date).toLocaleDateString('ru-RU', {day: '2-digit', month: 'short'});
+  const who = tx.addedBy ? tx.addedBy.split(' ')[0] : '';
+
+  const origCur = tx.currency || 'ILS';
+  const converted = origCur !== displayCurrency ?
+    '<div class="tx-converted">' + formatAmount(tx.amount, origCur) + '</div>' : '';
+
+  return `
+    <div class="tx-item">
+      <div class="tx-icon" style="background:${cat.color}22">${cat.icon}</div>
+      <div class="tx-info">
+        <div class="tx-name">${tx.desc}</div>
+        <div class="tx-meta">
+          <span>${cat.label}</span>
+          ${tx.store ? '<span>' + tx.store + '</span>' : ''}
+          <span>${date}</span>
+          ${who ? '<span>' + who + '</span>' : ''}
+        </div>
+      </div>
+      <div class="tx-amount-wrap">
+        <div class="tx-amount ${tx.type}">
+          ${tx.type === 'income' ? '+' : '-'}${formatAmount(amount, displayCurrency)}
+        </div>
+        ${converted}
+      </div>
+      <div class="tx-actions">
+        <button class="tx-action-btn" onclick="editTx('${tx.id}')">✏️</button>
+        <button class="tx-action-btn danger" onclick="softDeleteTx('${tx.id}')">🗑️</button>
+      </div>
+    </div>
+  `;
+}
+
+function renderHistory() {
+  const month = document.getElementById('f-month').value;
+  const type = document.getElementById('f-type').value;
+  const category = document.getElementById('f-category').value;
+  const who = document.getElementById('f-who').value;
+
+  let filtered = getMonthTx(month);
+
+  if (type) filtered = filtered.filter(t => t.type === type);
+  if (category) filtered = filtered.filter(t => t.category === category);
+  if (who) filtered = filtered.filter(t => t.addedBy && t.addedBy.includes(who));
+
+  const list = document.getElementById('historyTxList');
+
+  if (!filtered.length) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🔍</div><div class="empty-state-text">Нет транзакций по заданным фильтрам</div></div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(tx => renderTxItem(tx)).join('');
+}
+
+function renderStats() {
+  const month = document.getElementById('s-month').value;
+  const filtered = getMonthTx(month);
+
+  const expenseTx = filtered.filter(t => t.type === 'expense');
+  const incomeTx = filtered.filter(t => t.type === 'income');
+
+  const totalExpense = expenseTx.reduce((sum, t) =>
+    sum + convert(t.amount, t.currency || 'ILS', displayCurrency), 0);
+  const totalIncome = incomeTx.reduce((sum, t) =>
+    sum + convert(t.amount, t.currency || 'ILS', displayCurrency), 0);
+  const balance = totalIncome - totalExpense;
+
+  document.getElementById('s-income').textContent = formatAmount(totalIncome, displayCurrency);
+  document.getElementById('s-expense').textContent = formatAmount(totalExpense, displayCurrency);
+  document.getElementById('s-balance').textContent = formatAmount(balance, displayCurrency);
+  document.getElementById('s-balance').className = 'stat-pill-value ' +
+    (balance >= 0 ? 'green' : 'red');
+
+  // Category breakdown
+  const categoryMap = {};
+  expenseTx.forEach(tx => {
+    const cat = tx.category;
+    const amount = convert(tx.amount, tx.currency || 'ILS', displayCurrency);
+    categoryMap[cat] = (categoryMap[cat] || 0) + amount;
+  });
+
+  const sorted = Object.entries(categoryMap).sort((a, b) => b[1] - a[1]);
+
+  // Donut chart
+  if (categoryChart) categoryChart.destroy();
+
+  if (sorted.length) {
+    const ctx = document.getElementById('categoryChart').getContext('2d');
+    categoryChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: sorted.map(e => getCategoryById(e[0]).label),
+        datasets: [{
+          data: sorted.map(e => e[1].toFixed(2)),
+          backgroundColor: sorted.map(e => getCategoryById(e[0]).color),
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '72%',
+        plugins: {
+          legend: {display: false}
+        }
+      }
+    });
+  }
+
+  // Category bars
+  document.getElementById('categoryBars').innerHTML = sorted.slice(0, 5).map(e => {
+    const cat = getCategoryById(e[0]);
+    const pct = totalExpense ? Math.round(e[1] / totalExpense * 100) : 0;
+    return `
+      <div class="category-bar">
+        <div class="category-bar-top">
+          <div class="category-bar-name">${cat.icon} ${cat.label}</div>
+          <div class="category-bar-value">${formatAmount(e[1], displayCurrency)} · ${pct}%</div>
+        </div>
+        <div class="category-bar-track">
+          <div class="category-bar-fill" style="width:${pct}%;background:${cat.color}"></div>
+        </div>
+      </div>
+    `;
   }).join('');
 
-  if(!sel.value)sel.value=currentKey;
-}
+  // Store bars
+  const storeMap = {};
+  expenseTx.forEach(tx => {
+    if (!tx.store) return;
+    const amount = convert(tx.amount, tx.currency || 'ILS', displayCurrency);
+    storeMap[tx.store] = (storeMap[tx.store] || 0) + amount;
+  });
 
-function renderCatSelects(){
-  var opts=CATS.map(function(c){return '<option value="'+c.id+'">'+c.label+'</option>';}).join('');
-  document.getElementById('mCat').innerHTML=opts;
-  document.getElementById('npCat').innerHTML=opts;
-}
+  const storeSorted = Object.entries(storeMap).sort((a, b) => b[1] - a[1]);
+  const maxStore = storeSorted[0] ? storeSorted[0][1] : 1;
 
-function renderAll(){
-  renderMetrics();
-  if(document.getElementById('tab-history').classList.contains('active'))renderHistory();
-  if(document.getElementById('tab-stats').classList.contains('active'))renderStats();
-  if(document.getElementById('tab-products').classList.contains('active'))renderProducts();
-}
+  document.getElementById('storeBars').innerHTML = storeSorted.slice(0, 5).map(e => {
+    const pct = Math.round(e[1] / maxStore * 100);
+    return `
+      <div class="category-bar">
+        <div class="category-bar-top">
+          <div class="category-bar-name">${e[0]}</div>
+          <div class="category-bar-value">${formatAmount(e[1], displayCurrency)}</div>
+        </div>
+        <div class="category-bar-track">
+          <div class="category-bar-fill" style="width:${pct}%;background:var(--accent-blue)"></div>
+        </div>
+      </div>
+    `;
+  }).join('');
 
-// Excel import
-var xlsxFi=document.getElementById('xlsxFile'),xlsxDz=document.getElementById('xlsxDropZone');
-var parsedImportData=null;
+  // Month chart
+  const monthMap = {};
+  getActiveTx().forEach(tx => {
+    if (tx.type !== 'expense') return;
+    const d = new Date(tx.date);
+    const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    const amount = convert(tx.amount, tx.currency || 'ILS', displayCurrency);
+    monthMap[key] = (monthMap[key] || 0) + amount;
+  });
 
-xlsxDz.addEventListener('click',function(){xlsxFi.click();});
-xlsxDz.addEventListener('dragover',function(e){e.preventDefault();xlsxDz.style.borderColor='var(--accent)';});
-xlsxDz.addEventListener('dragleave',function(){xlsxDz.style.borderColor='';});
-xlsxDz.addEventListener('drop',function(e){e.preventDefault();xlsxDz.style.borderColor='';if(e.dataTransfer.files[0])processXLSX(e.dataTransfer.files[0]);});
-xlsxFi.addEventListener('change',function(){if(xlsxFi.files[0])processXLSX(xlsxFi.files[0]);});
+  const monthKeys = Object.keys(monthMap).sort().slice(-6);
 
-function processXLSX(file){
-  var st=document.getElementById('xlsxStatus');
-  st.innerHTML='<div class="spinner-row"><div class="spinner"></div>Парсинг Excel файла...</div>';
-  document.getElementById('xlsxPreview').innerHTML='';
+  if (monthChart) monthChart.destroy();
 
-  var reader=new FileReader();
-  reader.onload=function(e){
-    try{
-      var data=new Uint8Array(e.target.result);
-      var workbook=XLSX.read(data,{type:'array'});
-
-      // Маппинг названий листов на даты
-      var sheetDateMap={
-        'decemver.25':'2025-12-15',
-        'jan26':'2026-01-15',
-        'FEB26':'2026-02-15',
-        'MART26':'2026-03-15',
-        'apr26':'2026-04-15',
-        'may26':'2026-05-15',
-        'JUNE26':'2026-06-15'
-      };
-
-      // Маппинг колонок RSD блока (строки 2-16, все в RSD)
-      var rsdCols=[
-        {col:0,cat:'freelance'},{col:1,cat:'education'},{col:2,cat:'education'},{col:3,cat:'education'},
-        {col:4,cat:'education'},{col:5,cat:'food'},{col:6,cat:'food'},{col:7,cat:'food'},
-        {col:8,cat:'entertainment'},{col:9,cat:'shopping'},{col:10,cat:'other'},{col:11,cat:'entertainment'},
-        {col:12,cat:'utilities'},{col:13,cat:'utilities'},{col:14,cat:'utilities'},{col:15,cat:'utilities'},
-        {col:16,cat:'shopping'},{col:17,cat:'housing'}
-      ];
-
-      // Маппинг колонок ILS блока (строки 37-45)
-      var ilsCols=[
-        {col:0,cat:'freelance'},{col:9,cat:'utilities'},{col:10,cat:'entertainment'},{col:11,cat:'entertainment'},
-        {col:12,cat:'other'},{col:13,cat:'health'},{col:14,cat:'health'},{col:15,cat:'utilities'},{col:16,cat:'shopping'}
-      ];
-
-      var allTransactions=[];
-
-      workbook.SheetNames.forEach(function(sheetName){
-        var date=sheetDateMap[sheetName];
-        if(!date)return;
-
-        var sheet=workbook.Sheets[sheetName];
-        var jsonData=XLSX.utils.sheet_to_json(sheet,{header:1,defval:null});
-
-        // RSD блок: строки 2-16 (индексы 1-15)
-        for(var row=1;row<=15;row++){
-          if(!jsonData[row])continue;
-          rsdCols.forEach(function(mapping){
-            var val=jsonData[row][mapping.col];
-            if(val&&!isNaN(parseFloat(val))&&parseFloat(val)>0){
-              allTransactions.push({
-                desc:sheetName+' '+mapping.cat+' строка '+(row+1),
-                amount:parseFloat(val),
-                currency:'RSD',
-                type:'expense',
-                category:mapping.cat,
-                date:date,
-                month:sheetName
-              });
-            }
-          });
-        }
-
-        // ILS блок: строки 37-45 (индексы 36-44)
-        for(var row=36;row<=44;row++){
-          if(!jsonData[row])continue;
-          ilsCols.forEach(function(mapping){
-            var val=jsonData[row][mapping.col];
-            if(val&&!isNaN(parseFloat(val))&&parseFloat(val)>0){
-              allTransactions.push({
-                desc:sheetName+' '+mapping.cat+' строка '+(row+1),
-                amount:parseFloat(val),
-                currency:'ILS',
-                type:'expense',
-                category:mapping.cat,
-                date:date,
-                month:sheetName
-              });
-            }
-          });
-        }
-
-        // Доход: строка 1, колонка 22
-        if(jsonData[0]&&jsonData[0][22]){
-          var incVal=parseFloat(jsonData[0][22]);
-          if(!isNaN(incVal)&&incVal>0){
-            allTransactions.push({
-              desc:'הכנסות '+sheetName,
-              amount:incVal,
-              currency:'ILS',
-              type:'income',
-              category:'salary',
-              date:date,
-              month:sheetName
-            });
+  if (monthKeys.length) {
+    const ctx = document.getElementById('monthChart').getContext('2d');
+    monthChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: monthKeys.map(k => {
+          const [y, m] = k.split('-');
+          return new Date(y, m - 1).toLocaleDateString('ru-RU', {month: 'short', year: '2-digit'});
+        }),
+        datasets: [{
+          data: monthKeys.map(k => monthMap[k].toFixed(2)),
+          backgroundColor: 'rgba(10,132,255,0.25)',
+          borderColor: '#0a84ff',
+          borderWidth: 2,
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {legend: {display: false}},
+        scales: {
+          x: {
+            ticks: {color: '#8e8e93', font: {size: 11}},
+            grid: {display: false}
+          },
+          y: {
+            ticks: {
+              color: '#8e8e93',
+              font: {size: 11},
+              callback: v => SYMBOLS[displayCurrency] + ' ' + v
+            },
+            grid: {color: 'rgba(255,255,255,0.05)'}
           }
         }
+      }
+    });
+  }
+}
+
+function populateMonthSelects() {
+  const monthSet = new Set();
+  const now = new Date();
+  const currentKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+
+  monthSet.add(currentKey);
+
+  getActiveTx().forEach(tx => {
+    const d = new Date(tx.date);
+    const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    monthSet.add(key);
+  });
+
+  const sorted = Array.from(monthSet).sort().reverse();
+
+  const options = [
+    '<option value="all">Всё время</option>',
+    ...sorted.map(key => {
+      const [y, m] = key.split('-');
+      const label = new Date(y, m - 1).toLocaleDateString('ru-RU', {
+        month: 'long', year: 'numeric'
       });
+      return '<option value="' + key + '"' + (key === currentKey ? ' selected' : '') + '>' +
+        label + '</option>';
+    })
+  ];
 
-      parsedImportData=allTransactions;
-      showXLSXPreview(allTransactions);
-      st.innerHTML='<div class="notice ok">✓ Файл распознан: '+allTransactions.length+' транзакций</div>';
-    }catch(err){
-      st.innerHTML='<div class="notice err">Ошибка парсинга: '+err.message+'</div>';
-      console.error(err);
-    }
-  };
-  reader.readAsArrayBuffer(file);
+  document.getElementById('f-month').innerHTML = options.join('');
+  document.getElementById('s-month').innerHTML = options.join('');
 }
 
-function showXLSXPreview(txs){
-  // Группировка по месяцам
-  var byMonth={};
-  txs.forEach(function(t){
-    if(!byMonth[t.month])byMonth[t.month]={rsd:0,ils:0,incIls:0,items:[]};
-    if(t.type==='income'){
-      byMonth[t.month].incIls+=t.amount;
-    }else{
-      if(t.currency==='RSD')byMonth[t.month].rsd+=t.amount;
-      else byMonth[t.month].ils+=t.amount;
-    }
-    byMonth[t.month].items.push(t);
-  });
+// Filter change handlers
+document.getElementById('f-month').addEventListener('change', renderHistory);
+document.getElementById('f-type').addEventListener('change', renderHistory);
+document.getElementById('f-category').addEventListener('change', renderHistory);
+document.getElementById('f-who').addEventListener('change', renderHistory);
+document.getElementById('s-month').addEventListener('change', renderStats);
 
-  var html='<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px">';
-  html+='<div style="font-size:13px;font-weight:600;margin-bottom:12px">Превью импорта ('+txs.length+' транзакций)</div>';
-
-  Object.keys(byMonth).sort().forEach(function(month){
-    var m=byMonth[month];
-    html+='<div style="border-top:1px solid var(--border);padding-top:10px;margin-top:10px">';
-    html+='<div style="font-size:12px;font-weight:600;color:var(--accent);margin-bottom:6px">'+month+'</div>';
-    html+='<div style="font-size:11px;color:var(--text2);display:flex;gap:12px;margin-bottom:6px">';
-    html+='<span>Расходы RSD: '+m.rsd.toFixed(2)+'</span>';
-    html+='<span>Расходы ILS: '+m.ils.toFixed(2)+'</span>';
-    if(m.incIls>0)html+='<span style="color:var(--green)">Доходы ILS: +'+m.incIls.toFixed(2)+'</span>';
-    html+='</div>';
-
-    // Группировка по категориям
-    var byCat={};
-    m.items.forEach(function(t){
-      var key=t.category+'-'+t.currency;
-      if(!byCat[key])byCat[key]={cat:t.category,cur:t.currency,sum:0,count:0};
-      byCat[key].sum+=t.amount;
-      byCat[key].count++;
-    });
-
-    html+='<div style="font-size:11px;display:flex;flex-wrap:wrap;gap:6px">';
-    Object.values(byCat).forEach(function(c){
-      var catObj=catById(c.cat);
-      html+='<span style="background:'+catObj.color+'22;color:'+catObj.color+';padding:2px 7px;border-radius:10px;font-size:10px">'+catObj.label+' '+SYMS[c.cur]+' '+c.sum.toFixed(0)+' ('+c.count+')</span>';
-    });
-    html+='</div></div>';
-  });
-
-  html+='</div>';
-  html+='<div style="display:flex;gap:8px">';
-  html+='<button class="btn primary" id="importToFirebaseBtn">Импортировать в базу ('+txs.length+')</button>';
-  html+='<button class="btn ghost" id="cancelImportBtn">Отменить</button>';
-  html+='</div>';
-
-  document.getElementById('xlsxPreview').innerHTML=html;
-
-  document.getElementById('importToFirebaseBtn').addEventListener('click',importToFirebase);
-  document.getElementById('cancelImportBtn').addEventListener('click',function(){
-    document.getElementById('xlsxPreview').innerHTML='';
-    parsedImportData=null;
-    xlsxFi.value='';
-  });
+// Placeholder functions for future implementation
+function editTx(id) {
+  alert('Редактирование будет реализовано в следующей версии');
 }
 
-function importToFirebase(){
-  if(!parsedImportData||!parsedImportData.length)return;
-
-  showSync(true);
-  document.getElementById('xlsxStatus').innerHTML='<div class="spinner-row"><div class="spinner"></div>Импорт в Firebase...</div>';
-
-  var chain=Promise.resolve();
-  var imported=0;
-
-  parsedImportData.forEach(function(tx){
-    chain=chain.then(function(){
-      return db.collection('families').doc(FAM).collection('transactions').add({
-        desc:tx.desc,
-        amount:tx.amount,
-        currency:tx.currency,
-        type:tx.type,
-        category:tx.category,
-        date:tx.date,
-        store:'',
-        source:'excel_import',
-        addedBy:'Ирит',
-        addedAt:new Date().toISOString()
-      }).then(function(){imported++;});
-    });
-  });
-
-  chain.then(function(){
-    showSync(false);
-    document.getElementById('xlsxStatus').innerHTML='<div class="notice ok">✓ Импортировано '+imported+' транзакций</div>';
-    document.getElementById('xlsxPreview').innerHTML='';
-    parsedImportData=null;
-    xlsxFi.value='';
-    renderAll();
-  }).catch(function(err){
-    showSync(false);
-    document.getElementById('xlsxStatus').innerHTML='<div class="notice err">Ошибка: '+err.message+'</div>';
-    console.error(err);
-  });
-}
+// Init
+populateCategorySelects();
 </script>
 </body>
 </html>
