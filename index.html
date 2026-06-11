@@ -225,7 +225,8 @@ input[type=file]{display:none}
   <div class="section" id="tab-history">
     <div class="filter-row">
       <label>Период:</label>
-      <select id="fPeriod"><option value="month" selected>Месяц</option><option value="week">Неделя</option><option value="all">Всё время</option></select>
+      <select id="fPeriod"><option value="month" selected>Текущий месяц</option><option value="week">Неделя</option><option value="all">Всё время</option></select>
+      <select id="fMonth" style="display:none"></select>
       <label>Тип:</label>
       <select id="fType"><option value="">Все</option><option value="expense">Расходы</option><option value="income">Доходы</option></select>
     </div>
@@ -235,7 +236,8 @@ input[type=file]{display:none}
   <div class="section" id="tab-stats">
     <div class="filter-row">
       <label>Период:</label>
-      <select id="sPeriod"><option value="month" selected>Месяц</option><option value="week">Неделя</option><option value="all">Всё время</option></select>
+      <select id="sPeriod"><option value="month" selected>Текущий месяц</option><option value="week">Неделя</option><option value="all">Всё время</option></select>
+      <select id="sMonth" style="display:none"></select>
     </div>
     <div class="two-col" id="statsCards"></div>
     <div class="stat-card"><div class="stat-section-title">По категориям</div><div id="catBars"></div></div>
@@ -356,12 +358,18 @@ function saveProd(data){showSync(true);return db.collection('families').doc(FAM)
 function updateProd(id,data){showSync(true);return db.collection('families').doc(FAM).collection('products').doc(id).update(data).finally(function(){showSync(false);});}
 function deleteProdDb(id){showSync(true);return db.collection('families').doc(FAM).collection('products').doc(id).delete().finally(function(){showSync(false);});}
 
-function getFilteredTx(period){
+function getFilteredTx(period,specificMonth){
   var now=new Date();
   return transactions.filter(function(t){
     var d=new Date(t.date);
     if(period==='week'){var dow=now.getDay()||7;var mon=new Date(now);mon.setDate(now.getDate()-dow+1);mon.setHours(0,0,0,0);return d>=mon;}
-    if(period==='month'){return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();}
+    if(period==='month'){
+      if(specificMonth){
+        var parts=specificMonth.split('-');
+        return d.getFullYear()===parseInt(parts[0])&&d.getMonth()===(parseInt(parts[1])-1);
+      }
+      return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();
+    }
     return true;
   });
 }
@@ -387,7 +395,9 @@ function renderMetrics(){
 function renderHistory(){
   var period=document.getElementById('fPeriod').value;
   var tf=document.getElementById('fType').value;
-  var t=getFilteredTx(period);
+  var monthSel=document.getElementById('fMonth');
+  var specificMonth=monthSel.style.display!=='none'?monthSel.value:null;
+  var t=getFilteredTx(period,specificMonth);
   if(tf)t=t.filter(function(x){return x.type===tf;});
   var el=document.getElementById('txList');
   if(!t.length){el.innerHTML='<div class="empty">Нет записей за этот период</div>';return;}
@@ -414,7 +424,9 @@ function renderHistory(){
 
 function renderStats(){
   var period=document.getElementById('sPeriod').value;
-  var t=getFilteredTx(period);
+  var monthSel=document.getElementById('sMonth');
+  var specificMonth=monthSel.style.display!=='none'?monthSel.value:null;
+  var t=getFilteredTx(period,specificMonth);
   var expTx=t.filter(function(x){return x.type==='expense';});
   var incTx=t.filter(function(x){return x.type==='income';});
   var totalExp=expTx.reduce(function(s,x){return s+txInDisplay(x);},0);
@@ -677,14 +689,80 @@ function confirmAI(store,date,detCur){
     document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active');});
     document.getElementById('tab-btn-'+id).classList.add('active');
     document.getElementById('tab-'+id).classList.add('active');
-    if(id==='stats')renderStats();
-    if(id==='history')renderHistory();
+    if(id==='stats'){
+      if(document.getElementById('sPeriod').value==='month'){
+        populateMonthDropdown('sMonth');
+        document.getElementById('sMonth').style.display='inline-block';
+      }
+      renderStats();
+    }
+    if(id==='history'){
+      if(document.getElementById('fPeriod').value==='month'){
+        populateMonthDropdown('fMonth');
+        document.getElementById('fMonth').style.display='inline-block';
+      }
+      renderHistory();
+    }
     if(id==='products')renderProducts();
   });
 });
-document.getElementById('fPeriod').addEventListener('change',renderHistory);
+document.getElementById('fPeriod').addEventListener('change',function(){
+  var val=this.value;
+  var monthSel=document.getElementById('fMonth');
+  if(val==='month'){
+    populateMonthDropdown('fMonth');
+    monthSel.style.display='inline-block';
+  }else{
+    monthSel.style.display='none';
+  }
+  renderHistory();
+});
+document.getElementById('fMonth').addEventListener('change',renderHistory);
 document.getElementById('fType').addEventListener('change',renderHistory);
-document.getElementById('sPeriod').addEventListener('change',renderStats);
+document.getElementById('sPeriod').addEventListener('change',function(){
+  var val=this.value;
+  var monthSel=document.getElementById('sMonth');
+  if(val==='month'){
+    populateMonthDropdown('sMonth');
+    monthSel.style.display='inline-block';
+  }else{
+    monthSel.style.display='none';
+  }
+  renderStats();
+});
+document.getElementById('sMonth').addEventListener('change',renderStats);
+
+function populateMonthDropdown(selectId){
+  var months={};
+  var now=new Date();
+  var currentKey=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+
+  transactions.forEach(function(t){
+    var d=new Date(t.date);
+    var key=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    if(!months[key]){
+      months[key]={year:d.getFullYear(),month:d.getMonth()};
+    }
+  });
+
+  var sorted=Object.keys(months).sort().reverse();
+  if(!sorted.includes(currentKey)){
+    sorted.unshift(currentKey);
+  }
+
+  var sel=document.getElementById(selectId);
+  var currentVal=sel.value||currentKey;
+
+  sel.innerHTML=sorted.map(function(key){
+    var parts=key.split('-');
+    var d=new Date(parts[0],parts[1]-1);
+    var label=d.toLocaleDateString('ru-RU',{month:'long',year:'numeric'});
+    var selected=key===currentVal?' selected':'';
+    return '<option value="'+key+'"'+selected+'>'+label+'</option>';
+  }).join('');
+
+  if(!sel.value)sel.value=currentKey;
+}
 
 function renderCatSelects(){
   var opts=CATS.map(function(c){return '<option value="'+c.id+'">'+c.label+'</option>';}).join('');
