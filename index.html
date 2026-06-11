@@ -107,6 +107,19 @@ body{max-width:430px;margin:0 auto;padding:0 0 80px;position:relative}
 .tx-swipe-btn.delete{background:var(--accent-red)}
 .tx-swipe-btn:active{opacity:0.8}
 
+/* Desktop Hover Support */
+@media (hover: hover) and (pointer: fine) {
+  .tx-item-wrap:hover .tx-item{
+    transform:translateX(-140px);
+  }
+  .tx-item-wrap:hover .tx-swipe-actions{
+    pointer-events:auto;
+  }
+  .tx-item{
+    transition:transform .2s ease;
+  }
+}
+
 /* Empty State */
 .empty-state{text-align:center;padding:48px 24px;color:var(--text-tertiary)}
 .empty-state-icon{font-size:48px;margin-bottom:12px;opacity:0.5}
