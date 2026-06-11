@@ -107,17 +107,22 @@ body{max-width:430px;margin:0 auto;padding:0 0 80px;position:relative}
 .tx-swipe-btn.delete{background:var(--accent-red)}
 .tx-swipe-btn:active{opacity:0.8}
 
-/* Desktop Hover Support */
+/* Desktop Hover Buttons */
+.tx-desktop-actions{position:absolute;top:50%;right:12px;transform:translateY(-50%);display:none;gap:6px;opacity:0;transition:opacity .2s;z-index:10}
+.tx-desktop-btn{width:36px;height:36px;border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all .2s;box-shadow:0 2px 8px rgba(0,0,0,0.2)}
+.tx-desktop-btn.edit{background:var(--accent-blue);color:#fff}
+.tx-desktop-btn.delete{background:var(--accent-red);color:#fff}
+.tx-desktop-btn:hover{transform:scale(1.1)}
+.tx-desktop-btn:active{transform:scale(0.95)}
+
 @media (hover: hover) and (pointer: fine) {
-  .tx-item-wrap:hover .tx-item{
-    transform:translateX(-140px);
-  }
-  .tx-item-wrap:hover .tx-swipe-actions{
-    pointer-events:auto;
-  }
-  .tx-item{
-    transition:transform .2s ease;
-  }
+  .tx-desktop-actions{display:flex}
+  .tx-item-wrap:hover .tx-desktop-actions{opacity:1}
+  .tx-swipe-actions{display:none}
+}
+
+@media (pointer: coarse) {
+  .tx-desktop-actions{display:none!important}
 }
 
 /* Empty State */
@@ -1226,6 +1231,10 @@ function renderTxItem(tx) {
           </div>
           ${converted}
         </div>
+        <div class="tx-desktop-actions">
+          <button class="tx-desktop-btn edit" data-action="edit" data-tx-id="${tx.id}">✏️</button>
+          <button class="tx-desktop-btn delete" data-action="delete" data-tx-id="${tx.id}">🗑️</button>
+        </div>
       </div>
     </div>
   `;
@@ -1475,6 +1484,18 @@ function setupTxSwipe() {
     if (action === 'delete') openDeleteDialog(txId);
 
     closeSwipe();
+  });
+
+  // Handle desktop action buttons
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('.tx-desktop-btn');
+    if (!btn) return;
+
+    const action = btn.dataset.action;
+    const txId = btn.dataset.txId;
+
+    if (action === 'edit') openEditModal(txId);
+    if (action === 'delete') openDeleteDialog(txId);
   });
 }
 
