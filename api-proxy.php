@@ -18,8 +18,10 @@ declare(strict_types=1);
 ini_set('display_errors', '0');
 error_reporting(E_ALL);
 
-const MAX_IMAGE_BYTES = 5 * 1024 * 1024;   // 5 МБ на base64-картинку
-const MAX_PAGE_BYTES  = 512 * 1024;        // 512 КБ с чужой страницы
+const MAX_IMAGE_BYTES  = 5 * 1024 * 1024;   // 5 МБ на base64-картинку
+const MAX_IMAGES       = 6;                 // длинный чек разрешаем снять частями
+const MAX_IMAGES_BYTES = 12 * 1024 * 1024;  // суммарный потолок на все кадры
+const MAX_PAGE_BYTES   = 512 * 1024;        // 512 КБ с чужой страницы
 const MAX_TOKENS      = 8000;
 
 // Публичные ключи, которыми Google подписывает Firebase ID-токены
@@ -84,18 +86,20 @@ switch ($action) {
         respond(200, fetchRates());
 
     case 'receipt_image':
-        $media = (string)($req['media_type'] ?? '');
-        $data  = (string)($req['image_base64'] ?? '');
-        if (!in_array($media, ['image/jpeg', 'image/png', 'image/webp'], true)) {
-            respond(400, ['error' => 'unsupported_media_type']);
+        $images = collectImages($req);
+        $content = [];
+        foreach ($images as $image) {
+            $content[] = [
+                'type'   => 'image',
+                'source' => ['type' => 'base64', 'media_type' => $image['media_type'], 'data' => $image['data']],
+            ];
         }
-        if ($data === '' || strlen($data) > MAX_IMAGE_BYTES) {
-            respond(400, ['error' => 'image_size']);
-        }
-        respond(200, extractReceipt($config, [
-            ['type' => 'image', 'source' => ['type' => 'base64', 'media_type' => $media, 'data' => $data]],
-            ['type' => 'text',  'text' => 'Извлеки данные из этого чека.'],
-        ]));
+        $content[] = ['type' => 'text', 'text' => count($images) > 1
+            ? 'Это ' . count($images) . ' фотографии одного чека (части длинной ленты или несколько страниц), '
+              . 'снятые по порядку. Собери один общий список товаров без повторов на стыках кадров '
+              . 'и один итог — тот, что напечатан на последнем фото.'
+            : 'Извлеки данные из этого чека.'];
+        respond(200, extractReceipt($config, $content));
 
     case 'receipt_url':
         $url = (string)($req['url'] ?? '');
@@ -218,6 +222,42 @@ function firebaseCerts(bool $force): array
 
     @file_put_contents($file, json_encode($certs));
     return $certs;
+}
+
+/**
+ * Кадры чека из запроса. Новый формат — массив images,
+ * старый (одна картинка) поддерживается для совместимости.
+ */
+function collectImages(array $req): array
+{
+    $raw = $req['images'] ?? null;
+    if (!is_array($raw)) {
+        $raw = [['media_type' => $req['media_type'] ?? '', 'data' => $req['image_base64'] ?? '']];
+    }
+    if (count($raw) < 1 || count($raw) > MAX_IMAGES) {
+        respond(400, ['error' => 'image_count']);
+    }
+
+    $images = [];
+    $totalBytes = 0;
+    foreach ($raw as $item) {
+        $media = is_array($item) ? (string)($item['media_type'] ?? '') : '';
+        $data  = is_array($item) ? (string)($item['data'] ?? '') : '';
+
+        if (!in_array($media, ['image/jpeg', 'image/png', 'image/webp'], true)) {
+            respond(400, ['error' => 'unsupported_media_type']);
+        }
+        if ($data === '' || strlen($data) > MAX_IMAGE_BYTES) {
+            respond(400, ['error' => 'image_size']);
+        }
+        $totalBytes += strlen($data);
+        if ($totalBytes > MAX_IMAGES_BYTES) {
+            respond(400, ['error' => 'images_too_large']);
+        }
+        $images[] = ['media_type' => $media, 'data' => $data];
+    }
+
+    return $images;
 }
 
 function b64urlDecode(string $value): string

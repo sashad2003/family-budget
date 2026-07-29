@@ -13,9 +13,21 @@ import { normalizeDate, today } from '../core/dates.js';
 const MAX_EDGE = 1600;
 const JPEG_QUALITY = 0.82;
 
-export async function scanReceiptImage(file) {
-  const { base64, mediaType } = await prepareImage(file);
-  const data = await callProxy({ action: 'receipt_image', image_base64: base64, media_type: mediaType });
+/** Сколько кадров одного чека принимаем за раз (совпадает с лимитом прокси). */
+export const MAX_RECEIPT_IMAGES = 6;
+
+/** Одно или несколько фото одного чека — модель собирает из них общий список. */
+export async function scanReceiptImages(files) {
+  const list = Array.from(files || []).slice(0, MAX_RECEIPT_IMAGES);
+  if (!list.length) throw new Error('Не выбрано ни одного файла');
+
+  const images = [];
+  for (const file of list) {
+    const { base64, mediaType } = await prepareImage(file);
+    images.push({ data: base64, media_type: mediaType });
+  }
+
+  const data = await callProxy({ action: 'receipt_image', images });
   return normalizeReceipt(data.receipt, 'receipt-photo');
 }
 
@@ -52,6 +64,9 @@ function errorText(code, status) {
     page_fetch_failed: 'Не удалось открыть страницу чека',
     page_empty: 'На странице не нашлось текста',
     image_size: 'Фото слишком большое',
+    image_count: `Можно отправить от 1 до ${MAX_RECEIPT_IMAGES} фото`,
+    images_too_large: 'Фотографии в сумме слишком тяжёлые, попробуйте меньше кадров',
+    unsupported_media_type: 'Такой формат файла не поддерживается',
     claude_unparsable: 'Не удалось разобрать ответ AI',
     refused: 'AI отказался обрабатывать это изображение',
     config_missing: 'На сервере не настроен config.php',
@@ -61,7 +76,13 @@ function errorText(code, status) {
 
 /** Сжимает фото в браузере: экономит трафик и укладывается в лимит прокси. */
 async function prepareImage(file) {
-  const bitmap = await createImageBitmap(file);
+  let bitmap;
+  try {
+    bitmap = await createImageBitmap(file);
+  } catch {
+    // Браузер не умеет декодировать формат — чаще всего это HEIC из галереи iPhone.
+    throw new Error(`Файл «${file.name || 'без имени'}» не открылся. Снимите чек камерой или сохраните фото в JPEG.`);
+  }
   const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height));
   const width = Math.round(bitmap.width * scale);
   const height = Math.round(bitmap.height * scale);

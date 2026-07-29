@@ -6,7 +6,7 @@
 import { el, render } from '../core/dom.js';
 import { openSheet, closeSheet } from '../ui/sheet.js';
 import { toastError } from '../ui/toast.js';
-import { scanReceiptImage, scanReceiptUrl } from '../services/receipts.js';
+import { scanReceiptImages, scanReceiptUrl, MAX_RECEIPT_IMAGES } from '../services/receipts.js';
 
 /** openScanSheet(onDraft) — onDraft получает распознанный черновик. */
 export function openScanSheet(onDraft) {
@@ -31,15 +31,34 @@ export function openScanSheet(onDraft) {
     }
   };
 
-  const fileInput = el('input', {
+  // Два отдельных input: с capture телефон открывает камеру и не пускает в галерею.
+  const runScan = (files) => {
+    const list = Array.from(files || []);
+    if (!list.length) return;
+    if (list.length > MAX_RECEIPT_IMAGES) {
+      toastError(`Не больше ${MAX_RECEIPT_IMAGES} фото за раз`);
+      return;
+    }
+    handle(
+      () => scanReceiptImages(list),
+      list.length > 1 ? `Распознаём чек, ${list.length} фото…` : 'Распознаём чек…',
+    );
+  };
+
+  const cameraInput = el('input', {
     type: 'file',
     accept: 'image/*',
     capture: 'environment',
     style: 'display:none',
-    onchange: (e) => {
-      const file = e.target.files?.[0];
-      if (file) handle(() => scanReceiptImage(file), 'Распознаём чек…');
-    },
+    onchange: (e) => { runScan(e.target.files); e.target.value = ''; },
+  });
+
+  const galleryInput = el('input', {
+    type: 'file',
+    accept: 'image/*',
+    multiple: true,
+    style: 'display:none',
+    onchange: (e) => { runScan(e.target.files); e.target.value = ''; },
   });
 
   function showForm() {
@@ -53,14 +72,24 @@ export function openScanSheet(onDraft) {
     render(body, [
       el('div', {
         class: 'scan-drop',
-        onclick: () => fileInput.click(),
+        onclick: () => cameraInput.click(),
       }, [
         el('span', { class: 'scan-drop__ico' }, '🧾'),
-        el('div', {}, 'Сфотографировать или выбрать чек'),
+        el('div', {}, 'Сфотографировать чек'),
         el('div', { class: 'hint' }, 'AI прочитает магазин, товары, цены и итог'),
       ]),
 
-      fileInput,
+      el('button', {
+        class: 'btn btn--ghost btn--wide',
+        style: 'margin-top:10px',
+        onclick: () => galleryInput.click(),
+      }, '🖼  Выбрать из галереи'),
+
+      el('p', { class: 'hint' },
+        `Можно выбрать до ${MAX_RECEIPT_IMAGES} фото одного чека — длинную ленту снимайте частями по порядку.`),
+
+      cameraInput,
+      galleryInput,
 
       el('div', { class: 'divider' }, 'или ссылка из QR-кода'),
 
