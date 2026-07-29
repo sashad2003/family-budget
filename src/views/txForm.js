@@ -3,17 +3,17 @@
  * после сканирования каждое поле и каждая строка товара остаются редактируемыми.
  */
 
-import { el, render } from '../core/dom.js';
-import { state } from '../core/store.js';
-import { CURRENCY_CODES } from '../config.js';
-import { formatAmount, parseAmount, round, convert, currencyInfo } from '../core/money.js';
-import { today } from '../core/dates.js';
-import { guessCategory } from '../data/categories.js';
-import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js';
-import { tileGradient } from './list.js';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js';
-import { toastOk, toastError } from '../ui/toast.js';
-import { scanFromCamera, scanFromGallery, openScanUrlSheet } from './scan.js';
+import { el, render } from '../core/dom.js?v=2';
+import { state } from '../core/store.js?v=2';
+import { CURRENCY_CODES } from '../config.js?v=2';
+import { formatAmount, parseAmount, round, convert, currencyInfo } from '../core/money.js?v=2';
+import { today } from '../core/dates.js?v=2';
+import { guessCategory } from '../data/categories.js?v=2';
+import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=2';
+import { tileGradient } from './list.js?v=2';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=2';
+import { toastOk, toastError } from '../ui/toast.js?v=2';
+import { scanFromCamera, scanFromGallery, openScanUrlSheet } from './scan.js?v=2';
 
 /**
  * openTxForm({ tx })      — правка существующей операции
