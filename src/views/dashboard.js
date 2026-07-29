@@ -1,12 +1,13 @@
 /** Обзор: баланс месяца, доходы/расходы, разбивка по категориям, последние операции. */
 
-import { el } from '../core/dom.js?v=4';
-import { state } from '../core/store.js?v=4';
-import { formatAmount } from '../core/money.js?v=4';
-import { monthTransactions, totals, byCategory } from '../core/selectors.js?v=4';
-import { txRow, tileGradient } from './list.js?v=4';
-import { openTxForm } from './txForm.js?v=4';
-import { openScanSheet } from './scan.js?v=4';
+import { el } from '../core/dom.js?v=5';
+import { state } from '../core/store.js?v=5';
+import { formatAmount } from '../core/money.js?v=5';
+import { monthTransactions, totals, byCategory, unpaidBills } from '../core/selectors.js?v=5';
+import { set } from '../core/store.js?v=5';
+import { txRow, tileGradient } from './list.js?v=5';
+import { openTxForm } from './txForm.js?v=5';
+import { openScanSheet } from './scan.js?v=5';
 
 export function renderDashboard() {
   const list = monthTransactions(state);
@@ -15,6 +16,7 @@ export function renderDashboard() {
   if (!list.length) {
     return [
       balanceBlock(balance, income, expense),
+      billsReminder(),
       el('div', { class: 'empty' }, [
         el('span', { class: 'empty__ico' }, '🧾'),
         el('div', {}, 'В этом месяце пока пусто'),
@@ -35,6 +37,7 @@ export function renderDashboard() {
   return el('div', { class: 'dash' }, [
     el('div', { class: 'dash__main' }, [
       balanceBlock(balance, income, expense),
+      billsReminder(),
       categories.length ? categoriesCard(categories) : null,
     ]),
 
@@ -45,6 +48,23 @@ export function renderDashboard() {
       ]),
       ...recent.map((tx) => txRow(tx, () => openTxForm({ tx }))),
     ]),
+  ]);
+}
+
+/** Красное напоминание о неоплаченных счетах месяца. */
+function billsReminder() {
+  const unpaid = unpaidBills(state);
+  if (!unpaid.length) return null;
+
+  return el('button', {
+    class: 'card card--alert card--action',
+    onclick: () => set({ route: 'bills' }),
+  }, [
+    el('div', { class: 'card__label', style: 'color:#ffb3b3' },
+      `Не оплачено · ${unpaid.length}`),
+    el('div', { style: 'font-size:16px;line-height:1.4' },
+      unpaid.map((row) => row.bill.name).join(', ')),
+    el('div', { class: 'hint', style: 'margin-top:6px' }, 'Нажмите, чтобы записать оплату'),
   ]);
 }
 

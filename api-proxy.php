@@ -317,7 +317,7 @@ function fetchRates(): array
     if (!is_array($data) || ($data['result'] ?? '') !== 'success') {
         respond(502, ['error' => 'rates_bad_response']);
     }
-    $wanted = ['EUR', 'RSD', 'ILS'];
+    $wanted = ['EUR', 'RSD', 'ILS', 'USD'];
     $rates = [];
     foreach ($wanted as $code) {
         if (!isset($data['rates'][$code])) {
@@ -379,7 +379,7 @@ function extractReceipt(array $config, array $content): array
         'properties' => [
             'merchant'      => ['type' => 'string', 'description' => 'Название магазина, "" если не видно'],
             'date'          => ['type' => 'string', 'description' => 'Дата чека в формате YYYY-MM-DD, "" если не видно'],
-            'currency'      => ['type' => 'string', 'enum' => ['RSD', 'EUR', 'ILS', '']],
+            'currency'      => ['type' => 'string', 'enum' => ['RSD', 'EUR', 'ILS', 'USD', '']],
             'total'         => ['type' => 'number', 'description' => 'Итоговая сумма, 0 если не видно'],
             'category_hint' => ['type' => 'string', 'description' => 'Категория расхода одним словом по-русски'],
             'items' => [

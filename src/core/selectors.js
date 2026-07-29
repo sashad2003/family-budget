@@ -1,7 +1,7 @@
 /** Выборки и агрегаты над транзакциями. Чистые функции — их удобно переиспользовать. */
 
-import { txAmountIn } from './money.js?v=4';
-import { monthOf, shiftMonth } from './dates.js?v=4';
+import { txAmountIn } from './money.js?v=5';
+import { monthOf, shiftMonth } from './dates.js?v=5';
 
 /** Операции выбранного месяца с учётом фильтров экрана «Операции». */
 export function monthTransactions(state, filters = {}) {
@@ -121,6 +121,47 @@ export function quickItemSuggestions(state, currency, defaults = []) {
   }
 
   return [...seen.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+}
+
+/**
+ * Состояние регулярных платежей за месяц.
+ * Оплаченным считается счёт, по которому есть транзакция с его billId.
+ * Ожидаемая сумма: у постоянных — из счёта, у остальных — из прошлой оплаты.
+ */
+export function billsForMonth(state, month = state.month) {
+  const paidBy = new Map();
+  const lastAmount = new Map();
+
+  for (const tx of state.transactions) {
+    if (!tx.billId) continue;
+    if (monthOf(tx.date) === month) paidBy.set(tx.billId, tx);
+    // Транзакции отсортированы от новых к старым — первая встреченная свежайшая.
+    if (!lastAmount.has(tx.billId)) lastAmount.set(tx.billId, Number(tx.amount) || 0);
+  }
+
+  return state.bills
+    .filter((bill) => bill.active !== false || paidBy.has(bill.id))
+    .map((bill) => {
+      const tx = paidBy.get(bill.id) || null;
+      const expected = bill.fixed
+        ? Number(bill.amount) || 0
+        : lastAmount.get(bill.id) || Number(bill.amount) || 0;
+
+      return {
+        bill,
+        tx,
+        paid: Boolean(tx),
+        expected,
+        /** Месяц раньше начала слежения — не напоминаем и не подсвечиваем. */
+        tracked: !bill.startMonth || month >= bill.startMonth,
+      };
+    });
+}
+
+/** Неоплаченные счета месяца. Будущие месяцы не тревожим. */
+export function unpaidBills(state, month = state.month) {
+  if (month > monthOf(new Date().toISOString())) return [];
+  return billsForMonth(state, month).filter((row) => !row.paid && row.tracked);
 }
 
 /** Динамика доходов и расходов за последние N месяцев, включая выбранный. */

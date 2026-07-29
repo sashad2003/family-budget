@@ -26,6 +26,7 @@ export const CURRENCIES = [
   { code: 'RSD', symbol: 'дин', locale: 'sr-RS', decimals: 0 },
   { code: 'EUR', symbol: '€', locale: 'de-DE', decimals: 2 },
   { code: 'ILS', symbol: '₪', locale: 'he-IL', decimals: 2 },
+  { code: 'USD', symbol: '$', locale: 'en-US', decimals: 2 },
 ];
 
 export const CURRENCY_CODES = CURRENCIES.map((c) => c.code);
@@ -37,4 +38,4 @@ export const DEFAULT_BASE_CURRENCY = 'RSD';
  * и в базе ещё нет ни одного снимка. Порядок величины важнее точности:
  * реальные курсы подтягиваются при первом же успешном запросе.
  */
-export const FALLBACK_RATES = { EUR: 1, RSD: 117.2, ILS: 3.95 };
+export const FALLBACK_RATES = { EUR: 1, RSD: 117.2, ILS: 3.95, USD: 1.08 };

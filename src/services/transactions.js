@@ -4,9 +4,9 @@
  * families/{familyId}/transactions/{txId}
  *   type       'expense' | 'income'
  *   amount     число в валюте операции
- *   currency   'RSD' | 'EUR' | 'ILS'
- *   amounts    { RSD, EUR, ILS } — суммы, посчитанные в момент сохранения
- *   rates      { RSD, EUR, ILS } — снимок курсов к EUR на этот момент
+ *   currency   'RSD' | 'EUR' | 'ILS' | 'USD'
+ *   amounts    { RSD, EUR, ILS, USD } — суммы, посчитанные в момент сохранения
+ *   rates      { RSD, EUR, ILS, USD } — снимок курсов к EUR на этот момент
  *   rateDate   когда сняли курсы
  *   categoryId ссылка на categories/{id}
  *   date       'YYYY-MM-DD'
@@ -14,7 +14,8 @@
  *   note       комментарий
  *   merchant   магазин (с чека)
  *   items      [{ name, qty, price, total }] — строки чека, редактируемые
- *   source     'manual' | 'receipt-photo' | 'receipt-url'
+ *   source     'manual' | 'receipt-photo' | 'receipt-url' | 'bill'
+ *   billId     ссылка на bills/{id}, если это оплата регулярного платежа
  *   receiptUrl исходная ссылка на страницу чека
  *   createdBy  { uid, name, photo }
  */
@@ -35,11 +36,11 @@ import {
   writeBatch,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=4';
-import { FAMILY_ID } from '../config.js?v=4';
-import { DEFAULT_CATEGORIES } from '../data/categories.js?v=4';
-import { amountsInAllCurrencies, round } from '../core/money.js?v=4';
-import { monthOf } from '../core/dates.js?v=4';
+import { db } from '../core/firebase.js?v=5';
+import { FAMILY_ID } from '../config.js?v=5';
+import { DEFAULT_CATEGORIES } from '../data/categories.js?v=5';
+import { amountsInAllCurrencies, round } from '../core/money.js?v=5';
+import { monthOf } from '../core/dates.js?v=5';
 
 const txCollection = () => collection(db, 'families', FAMILY_ID, 'transactions');
 const catCollection = () => collection(db, 'families', FAMILY_ID, 'categories');
@@ -117,6 +118,8 @@ function buildTx(input, rates) {
     items,
     source: input.source || 'manual',
     receiptUrl: input.receiptUrl || '',
+    /** Ссылка на регулярный платёж — по ней считается «оплачено в этом месяце». */
+    billId: input.billId || null,
   };
 }
 

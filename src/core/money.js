@@ -5,11 +5,11 @@
  * Конвертация идёт через евро: сумма → EUR → целевая валюта.
  *
  * Важно: у каждой транзакции лежит собственный снимок курсов (tx.rates) и заранее
- * посчитанные суммы во всех трёх валютах (tx.amounts). Отчёты за прошлые месяцы
+ * посчитанные суммы во всех валютах (tx.amounts). Отчёты за прошлые месяцы
  * поэтому не «плывут», когда курс меняется.
  */
 
-import { CURRENCIES, CURRENCY_CODES, FALLBACK_RATES } from '../config.js?v=4';
+import { CURRENCIES, CURRENCY_CODES, FALLBACK_RATES } from '../config.js?v=5';
 
 const byCode = Object.fromEntries(CURRENCIES.map((c) => [c.code, c]));
 
@@ -42,7 +42,13 @@ export function amountsInAllCurrencies(amount, currency, rates) {
 export function txAmountIn(tx, code, fallbackRates) {
   const stored = tx?.amounts?.[code];
   if (Number.isFinite(stored)) return stored;
-  return convert(Number(tx?.amount) || 0, tx?.currency || 'RSD', code, tx?.rates || fallbackRates);
+
+  // Валюту могли добавить позже, чем записана операция: своих курсов у неё нет,
+  // поэтому недостающее берём из текущих, не трогая остальной снимок.
+  const snapshot = tx?.rates || {};
+  const rates = Number(snapshot[code]) ? snapshot : { ...fallbackRates, ...snapshot };
+
+  return convert(Number(tx?.amount) || 0, tx?.currency || 'RSD', code, rates);
 }
 
 export function round(value, code) {

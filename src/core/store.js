@@ -3,8 +3,8 @@
  * Никакой магии — set() сливает патч и уведомляет слушателей.
  */
 
-import { DEFAULT_BASE_CURRENCY, FALLBACK_RATES } from '../config.js?v=4';
-import { monthKey } from './dates.js?v=4';
+import { DEFAULT_BASE_CURRENCY, FALLBACK_RATES } from '../config.js?v=5';
+import { monthKey } from './dates.js?v=5';
 
 const listeners = new Set();
 
@@ -18,8 +18,10 @@ export const state = {
 
   categories: [],
   transactions: [],
+  /** Регулярные платежи (шаблоны счетов) */
+  bills: [],
 
-  /** Курсы к EUR: { EUR: 1, RSD: 117.2, ILS: 3.95 } */
+  /** Курсы к EUR: { EUR: 1, RSD: 117.2, ILS: 3.95, USD: 1.08 } */
   rates: { ...FALLBACK_RATES },
   ratesFetchedAt: null,
 

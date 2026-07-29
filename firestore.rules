@@ -4,6 +4,7 @@ rules_version = '2';
 //   families/{familyId}
 //     ├─ transactions/{txId}
 //     ├─ categories/{catId}
+//     ├─ bills/{billId}        (регулярные платежи)
 //     └─ meta/{docId}          (rates, settings)
 //
 // Доступ: только участники семьи (uid в memberUids).
@@ -56,6 +57,12 @@ service cloud.firestore {
       }
 
       match /categories/{catId} {
+        allow read, write: if isMember(familyId);
+      }
+
+      // Регулярные платежи: шаблон счёта. Сама оплата — обычная транзакция
+      // с полем billId, поэтому здесь только описание, без сумм за месяцы.
+      match /bills/{billId} {
         allow read, write: if isMember(familyId);
       }
 

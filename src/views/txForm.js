@@ -3,19 +3,19 @@
  * после сканирования каждое поле и каждая строка товара остаются редактируемыми.
  */
 
-import { el, render } from '../core/dom.js?v=4';
-import { state } from '../core/store.js?v=4';
-import { CURRENCY_CODES } from '../config.js?v=4';
-import { formatAmount, parseAmount, round, convert, currencyInfo } from '../core/money.js?v=4';
-import { today, dayLabel } from '../core/dates.js?v=4';
-import { guessCategory } from '../data/categories.js?v=4';
-import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=4';
-import { tileGradient } from './list.js?v=4';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=4';
-import { toastOk, toastError } from '../ui/toast.js?v=4';
-import { scanFromCamera, scanFromGallery, openScanUrlSheet } from './scan.js?v=4';
-import { openQuickPick } from './quickPick.js?v=4';
-import { findDuplicates } from '../core/selectors.js?v=4';
+import { el, render } from '../core/dom.js?v=5';
+import { state } from '../core/store.js?v=5';
+import { CURRENCY_CODES } from '../config.js?v=5';
+import { formatAmount, parseAmount, round, convert, currencyInfo } from '../core/money.js?v=5';
+import { today, dayLabel } from '../core/dates.js?v=5';
+import { guessCategory } from '../data/categories.js?v=5';
+import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=5';
+import { tileGradient } from './list.js?v=5';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=5';
+import { toastOk, toastError } from '../ui/toast.js?v=5';
+import { scanFromCamera, scanFromGallery, openScanUrlSheet } from './scan.js?v=5';
+import { openQuickPick } from './quickPick.js?v=5';
+import { findDuplicates } from '../core/selectors.js?v=5';
 
 /**
  * openTxForm({ tx })      — правка существующей операции
@@ -56,6 +56,8 @@ function fromTx(tx) {
     items: (tx.items || []).map((it) => ({ ...it })),
     source: tx.source || 'manual',
     receiptUrl: tx.receiptUrl || '',
+    // Связь с регулярным платежом при правке не теряем.
+    billId: tx.billId || null,
     showItems: (tx.items || []).length > 0,
     mismatch: false,
   };

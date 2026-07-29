@@ -2,26 +2,30 @@
  * Точка входа: авторизация → загрузка семьи → подписки на данные → роутинг.
  */
 
-import { $, render } from './core/dom.js?v=4';
-import { state, set, subscribe } from './core/store.js?v=4';
-import { CURRENCY_CODES } from './config.js?v=4';
-import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=4';
+import { $, render } from './core/dom.js?v=5';
+import { state, set, subscribe } from './core/store.js?v=5';
+import { CURRENCY_CODES } from './config.js?v=5';
+import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=5';
+import { unpaidBills } from './core/selectors.js?v=5';
 
-import { watchAuth, signIn, loadFamily } from './services/auth.js?v=4';
-import { watchTransactions, watchCategories, seedCategoriesIfEmpty } from './services/transactions.js?v=4';
-import { loadRates } from './services/rates.js?v=4';
+import { watchAuth, signIn, loadFamily } from './services/auth.js?v=5';
+import { watchTransactions, watchCategories, seedCategoriesIfEmpty } from './services/transactions.js?v=5';
+import { watchBills } from './services/bills.js?v=5';
+import { loadRates } from './services/rates.js?v=5';
 
-import { renderDashboard } from './views/dashboard.js?v=4';
-import { renderList } from './views/list.js?v=4';
-import { renderCharts, destroyCharts } from './views/charts.js?v=4';
-import { renderSettings } from './views/settings.js?v=4';
-import { openTxForm } from './views/txForm.js?v=4';
-import { closeSheet } from './ui/sheet.js?v=4';
-import { toastError } from './ui/toast.js?v=4';
+import { renderDashboard } from './views/dashboard.js?v=5';
+import { renderList } from './views/list.js?v=5';
+import { renderBills } from './views/bills.js?v=5';
+import { renderCharts, destroyCharts } from './views/charts.js?v=5';
+import { renderSettings } from './views/settings.js?v=5';
+import { openTxForm } from './views/txForm.js?v=5';
+import { closeSheet } from './ui/sheet.js?v=5';
+import { toastError } from './ui/toast.js?v=5';
 
 const ROUTES = {
   dashboard: renderDashboard,
   list: renderList,
+  bills: renderBills,
   charts: renderCharts,
   settings: renderSettings,
 };
@@ -80,6 +84,10 @@ async function startData() {
       (transactions) => set({ transactions, loading: false }),
       (error) => { console.error(error); toastError('Нет доступа к операциям'); },
     ),
+    watchBills(
+      (bills) => set({ bills }),
+      (error) => { console.error(error); toastError('Нет доступа к платежам'); },
+    ),
   );
 }
 
@@ -118,6 +126,13 @@ function drawChrome() {
 
   // Вперёд дальше текущего месяца не пускаем.
   $('#btn-next-month').disabled = state.month >= monthKey(new Date());
+
+  // Метка на вкладке платежей: сколько счетов месяца ещё не оплачено.
+  const overdue = unpaidBills(state).length;
+  const badge = $('#bills-badge');
+  badge.hidden = overdue === 0;
+  badge.textContent = overdue || '';
+  $('#btn-month').classList.toggle('has-overdue', overdue > 0);
 
   document.querySelectorAll('.tab').forEach((tab) => {
     tab.classList.toggle('is-active', tab.dataset.route === state.route);

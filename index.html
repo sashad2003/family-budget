@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <!-- ?v меняется при правках: заставляет браузер взять новый файл, а не старый из кеша -->
-<link rel="stylesheet" href="assets/css/app.css?v=4">
+<link rel="stylesheet" href="assets/css/app.css?v=5">
 </head>
 <body>
 
@@ -49,6 +49,7 @@
     <nav class="rail__nav">
       <button class="tab" data-route="dashboard"><span class="tab__ico">◍</span><span class="tab__label">Обзор</span></button>
       <button class="tab" data-route="list"><span class="tab__ico">≡</span><span class="tab__label">Операции</span></button>
+      <button class="tab" data-route="bills"><span class="tab__ico">🧾<span id="bills-badge" class="badge" hidden></span></span><span class="tab__label">Платежи</span></button>
       <button class="tab" data-route="charts"><span class="tab__ico">◔</span><span class="tab__label">Графики</span></button>
       <button class="tab" data-route="settings"><span class="tab__ico">⚙</span><span class="tab__label">Ещё</span></button>
     </nav>
@@ -82,6 +83,6 @@
 <div id="sheet-root"></div>
 <div id="toast-root" class="toast-root"></div>
 
-<script type="module" src="src/main.js?v=4"></script>
+<script type="module" src="src/main.js?v=5"></script>
 </body>
 </html>
