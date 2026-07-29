@@ -2,25 +2,25 @@
  * Точка входа: авторизация → загрузка семьи → подписки на данные → роутинг.
  */
 
-import { $, render } from './core/dom.js?v=5';
-import { state, set, subscribe } from './core/store.js?v=5';
-import { CURRENCY_CODES } from './config.js?v=5';
-import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=5';
-import { unpaidBills } from './core/selectors.js?v=5';
+import { $, render } from './core/dom.js?v=6';
+import { state, set, subscribe } from './core/store.js?v=6';
+import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=6';
+import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=6';
+import { unpaidBills } from './core/selectors.js?v=6';
 
-import { watchAuth, signIn, loadFamily } from './services/auth.js?v=5';
-import { watchTransactions, watchCategories, seedCategoriesIfEmpty } from './services/transactions.js?v=5';
-import { watchBills } from './services/bills.js?v=5';
-import { loadRates } from './services/rates.js?v=5';
+import { watchAuth, signIn, loadFamily } from './services/auth.js?v=6';
+import { watchTransactions, watchCategories, seedCategoriesIfEmpty } from './services/transactions.js?v=6';
+import { watchBills } from './services/bills.js?v=6';
+import { loadRates } from './services/rates.js?v=6';
 
-import { renderDashboard } from './views/dashboard.js?v=5';
-import { renderList } from './views/list.js?v=5';
-import { renderBills } from './views/bills.js?v=5';
-import { renderCharts, destroyCharts } from './views/charts.js?v=5';
-import { renderSettings } from './views/settings.js?v=5';
-import { openTxForm } from './views/txForm.js?v=5';
-import { closeSheet } from './ui/sheet.js?v=5';
-import { toastError } from './ui/toast.js?v=5';
+import { renderDashboard } from './views/dashboard.js?v=6';
+import { renderList } from './views/list.js?v=6';
+import { renderBills } from './views/bills.js?v=6';
+import { renderCharts, destroyCharts } from './views/charts.js?v=6';
+import { renderSettings } from './views/settings.js?v=6';
+import { openTxForm } from './views/txForm.js?v=6';
+import { closeSheet } from './ui/sheet.js?v=6';
+import { toastError } from './ui/toast.js?v=6';
 
 const ROUTES = {
   dashboard: renderDashboard,
@@ -176,10 +176,7 @@ $('#btn-next-month').addEventListener('click', () => {
 
 $('#btn-month').addEventListener('click', () => set({ month: monthKey(new Date()) }));
 
-$('#btn-base-currency').addEventListener('click', () => {
-  const index = CURRENCY_CODES.indexOf(state.base);
-  set({ base: CURRENCY_CODES[(index + 1) % CURRENCY_CODES.length] });
-});
+$('#btn-base-currency').addEventListener('click', openBaseCurrencyPicker);
 
 $('#btn-add').addEventListener('click', () => openTxForm());
 $('#btn-add-wide').addEventListener('click', () => openTxForm());

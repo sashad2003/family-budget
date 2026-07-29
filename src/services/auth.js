@@ -15,8 +15,8 @@ import {
   arrayUnion,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { auth, db } from '../core/firebase.js?v=5';
-import { FAMILY_ID } from '../config.js?v=5';
+import { auth, db } from '../core/firebase.js?v=6';
+import { FAMILY_ID } from '../config.js?v=6';
 
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: 'select_account' });

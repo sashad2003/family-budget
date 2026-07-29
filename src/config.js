@@ -23,10 +23,10 @@ export const PROXY_URL = 'api-proxy.php';
 
 /** Валюты приложения. Первая — база по умолчанию. */
 export const CURRENCIES = [
-  { code: 'RSD', symbol: 'дин', locale: 'sr-RS', decimals: 0 },
-  { code: 'EUR', symbol: '€', locale: 'de-DE', decimals: 2 },
-  { code: 'ILS', symbol: '₪', locale: 'he-IL', decimals: 2 },
-  { code: 'USD', symbol: '$', locale: 'en-US', decimals: 2 },
+  { code: 'RSD', symbol: 'дин', name: 'Сербский динар', locale: 'sr-RS', decimals: 0 },
+  { code: 'EUR', symbol: '€', name: 'Евро', locale: 'de-DE', decimals: 2 },
+  { code: 'ILS', symbol: '₪', name: 'Шекель', locale: 'he-IL', decimals: 2 },
+  { code: 'USD', symbol: '$', name: 'Доллар США', locale: 'en-US', decimals: 2 },
 ];
 
 export const CURRENCY_CODES = CURRENCIES.map((c) => c.code);

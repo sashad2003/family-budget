@@ -700,6 +700,45 @@ button { cursor: pointer; border: none; background: none; }
 .list-item:hover { border-color: var(--edge-strong); }
 .list-item__sub { font-size: 12.5px; color: var(--fg-2); }
 
+/* ------------------------------------------------ выбор валюты */
+
+.cur-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
+
+.cur {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  padding: 13px 15px;
+  border-radius: var(--r-md);
+  border: 1px solid var(--edge);
+  background: rgba(255, 255, 255, 0.045);
+  color: var(--fg-0);
+  text-align: left;
+  transition: border-color 0.18s, background 0.18s;
+}
+.cur:hover { background: rgba(255, 255, 255, 0.08); }
+.cur.is-active {
+  border-color: rgba(91, 159, 255, 0.6);
+  background: linear-gradient(150deg, rgba(91, 159, 255, 0.22), rgba(58, 99, 255, 0.1));
+}
+
+.cur__sym {
+  flex: 0 0 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 13px;
+  font-size: 17px;
+  background: rgba(255, 255, 255, 0.07);
+}
+.cur.is-active .cur__sym { background: linear-gradient(150deg, #5b9fff, #3a63ff); color: #fff; }
+
+.cur__body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.cur__code { font-size: 16px; font-weight: 500; }
+.cur__name { font-size: 12.5px; color: var(--fg-2); }
+.cur__rate { font-size: 12.5px; color: var(--fg-2); white-space: nowrap; }
+
 /* ------------------------------------------------ регулярные платежи */
 
 .card--alert {
