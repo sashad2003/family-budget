@@ -20,7 +20,7 @@ async function loadChartJs() {
     ChartLib = module.default || module.Chart;
     ChartLib.defaults.color = '#8a8a94';
     ChartLib.defaults.font.family = "'Geologica', sans-serif";
-    ChartLib.defaults.font.size = 11;
+    ChartLib.defaults.font.size = 13;
   }
   return ChartLib;
 }
