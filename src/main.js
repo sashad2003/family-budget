@@ -2,30 +2,30 @@
  * Точка входа: авторизация → загрузка семьи → подписки на данные → роутинг.
  */
 
-import { $, render } from './core/dom.js?v=10';
-import { state, set, subscribe } from './core/store.js?v=10';
-import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=10';
-import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=10';
-import { unpaidBills } from './core/selectors.js?v=10';
+import { $, render } from './core/dom.js?v=11';
+import { state, set, subscribe } from './core/store.js?v=11';
+import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=11';
+import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=11';
+import { unpaidBills } from './core/selectors.js?v=11';
 
-import { watchAuth, signIn, loadFamily } from './services/auth.js?v=10';
+import { watchAuth, signIn, loadFamily } from './services/auth.js?v=11';
 import {
   watchTransactions,
   watchCategories,
   seedCategoriesIfEmpty,
   syncNewCategories,
-} from './services/transactions.js?v=10';
-import { watchBills } from './services/bills.js?v=10';
-import { loadRates } from './services/rates.js?v=10';
+} from './services/transactions.js?v=11';
+import { watchBills } from './services/bills.js?v=11';
+import { loadRates } from './services/rates.js?v=11';
 
-import { renderDashboard } from './views/dashboard.js?v=10';
-import { renderList } from './views/list.js?v=10';
-import { renderBills } from './views/bills.js?v=10';
-import { renderCharts, destroyCharts } from './views/charts.js?v=10';
-import { renderSettings } from './views/settings.js?v=10';
-import { openTxForm } from './views/txForm.js?v=10';
-import { closeSheet } from './ui/sheet.js?v=10';
-import { toastError } from './ui/toast.js?v=10';
+import { renderDashboard } from './views/dashboard.js?v=11';
+import { renderList } from './views/list.js?v=11';
+import { renderBills } from './views/bills.js?v=11';
+import { renderCharts, destroyCharts } from './views/charts.js?v=11';
+import { renderSettings } from './views/settings.js?v=11';
+import { openTxForm } from './views/txForm.js?v=11';
+import { closeSheet } from './ui/sheet.js?v=11';
+import { toastError } from './ui/toast.js?v=11';
 
 const ROUTES = {
   dashboard: renderDashboard,
@@ -163,9 +163,10 @@ function drawView() {
   render(view, [].concat(content));
 
   // Наверх поднимаем только при переходе между экранами. Иначе смена периода
-  // или фильтра дёргала бы страницу под руками.
+  // или фильтра дёргала бы страницу под руками. Прокручиваем окно, а не блок:
+  // scrollIntoView прижимал #view к верху и прятал шапку с выбором месяца.
   if (state.route !== drawnRoute) {
-    view.scrollIntoView({ block: 'start' });
+    window.scrollTo({ top: 0 });
     drawnRoute = state.route;
   }
 }
