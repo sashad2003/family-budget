@@ -7,3 +7,6 @@ config.php
 *.log
 *.save
 node_modules/
+
+# Служебный ключ Firebase — только локально
+*firebase-adminsdk*.json

@@ -6,15 +6,13 @@
  * и белый список почт. Секретное (ключ Anthropic) живёт только в config.php на сервере.
  */
 
-// ЗАПОЛНИТЬ: Firebase Console → Project settings → Your apps → Web app → SDK setup.
-// Скопировать значения как есть; projectId и authDomain уже подставлены.
 export const firebaseConfig = {
-  apiKey: 'ЗАПОЛНИТЬ_apiKey',
+  apiKey: 'AIzaSyAwBJgchwHOMiKAh1oIpV72euqNlK2wyhk',
   authDomain: 'mony-y-hac-b-kormaney.firebaseapp.com',
   projectId: 'mony-y-hac-b-kormaney',
   storageBucket: 'mony-y-hac-b-kormaney.firebasestorage.app',
-  messagingSenderId: 'ЗАПОЛНИТЬ_messagingSenderId',
-  appId: 'ЗАПОЛНИТЬ_appId',
+  messagingSenderId: '635303578955',
+  appId: '1:635303578955:web:2c396be79027e854346cce',
 };
 
 /** Документ семьи в Firestore: families/family_drutz */
