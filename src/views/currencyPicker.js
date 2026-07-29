@@ -1,10 +1,10 @@
 /** Выбор валюты списком — перебор по кругу неудобен, когда валют больше двух. */
 
-import { el } from '../core/dom.js?v=9';
-import { state, set } from '../core/store.js?v=9';
-import { CURRENCIES } from '../config.js?v=9';
-import { formatAmount, convert } from '../core/money.js?v=9';
-import { openSheet, closeSheet } from '../ui/sheet.js?v=9';
+import { el } from '../core/dom.js?v=10';
+import { state, set } from '../core/store.js?v=10';
+import { CURRENCIES } from '../config.js?v=10';
+import { formatAmount, convert } from '../core/money.js?v=10';
+import { openSheet, closeSheet } from '../ui/sheet.js?v=10';
 
 /** Валюта сводных сумм: в какой считать баланс и итоги месяца. */
 export function openBaseCurrencyPicker() {

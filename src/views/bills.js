@@ -3,18 +3,18 @@
  * оплаченные отмечены галочкой, забытые горят красным.
  */
 
-import { el, render } from '../core/dom.js?v=9';
-import { state, set } from '../core/store.js?v=9';
-import { CURRENCY_CODES } from '../config.js?v=9';
-import { formatAmount, parseAmount, currencyInfo, convert } from '../core/money.js?v=9';
-import { monthLabel, monthKey, today } from '../core/dates.js?v=9';
-import { billsForMonth } from '../core/selectors.js?v=9';
-import { createBill, updateBill, deleteBill } from '../services/bills.js?v=9';
-import { createTransaction, deleteTransaction } from '../services/transactions.js?v=9';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=9';
-import { toastOk, toastError } from '../ui/toast.js?v=9';
-import { openTxForm } from './txForm.js?v=9';
-import { tileGradient } from './list.js?v=9';
+import { el, render } from '../core/dom.js?v=10';
+import { state, set } from '../core/store.js?v=10';
+import { CURRENCY_CODES } from '../config.js?v=10';
+import { formatAmount, parseAmount, currencyInfo, convert } from '../core/money.js?v=10';
+import { monthLabel, monthKey, today } from '../core/dates.js?v=10';
+import { billsForMonth } from '../core/selectors.js?v=10';
+import { createBill, updateBill, deleteBill } from '../services/bills.js?v=10';
+import { createTransaction, deleteTransaction } from '../services/transactions.js?v=10';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=10';
+import { toastOk, toastError } from '../ui/toast.js?v=10';
+import { openTxForm } from './txForm.js?v=10';
+import { tileGradient } from './list.js?v=10';
 
 export function renderBills() {
   const rows = billsForMonth(state);
