@@ -1,0 +1,388 @@
+/**
+ * Форма операции. Она же приёмник результата распознавания чека:
+ * после сканирования каждое поле и каждая строка товара остаются редактируемыми.
+ */
+
+import { el, render } from '../core/dom.js';
+import { state } from '../core/store.js';
+import { CURRENCY_CODES } from '../config.js';
+import { formatAmount, parseAmount, round, convert, currencyInfo } from '../core/money.js';
+import { today } from '../core/dates.js';
+import { guessCategory } from '../data/categories.js';
+import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js';
+import { toastOk, toastError } from '../ui/toast.js';
+import { openScanSheet } from './scan.js';
+
+/**
+ * openTxForm({ tx })      — правка существующей операции
+ * openTxForm({ draft })   — новая операция, предзаполненная из чека
+ * openTxForm()            — пустая новая операция
+ */
+export function openTxForm({ tx = null, draft = null } = {}) {
+  const model = tx ? fromTx(tx) : fromDraft(draft);
+
+  const body = el('div');
+  const footer = el('div', { style: 'display:flex;gap:10px;flex:1' });
+
+  const rerender = () => {
+    render(body, buildBody(model, rerender));
+    render(footer, buildFooter(model, tx));
+  };
+  rerender();
+
+  openSheet({
+    title: tx ? 'Операция' : 'Новая операция',
+    body,
+    footer: [footer],
+  });
+}
+
+// ---------------------------------------------------------------- модель
+
+function fromTx(tx) {
+  return {
+    type: tx.type || 'expense',
+    amount: Number(tx.amount) || 0,
+    currency: tx.currency || state.base,
+    categoryId: tx.categoryId || null,
+    date: tx.date || today(),
+    note: tx.note || '',
+    merchant: tx.merchant || '',
+    items: (tx.items || []).map((it) => ({ ...it })),
+    source: tx.source || 'manual',
+    receiptUrl: tx.receiptUrl || '',
+    showItems: (tx.items || []).length > 0,
+    mismatch: false,
+  };
+}
+
+function fromDraft(draft) {
+  if (!draft) {
+    return {
+      type: 'expense',
+      amount: 0,
+      currency: state.base,
+      categoryId: null,
+      date: today(),
+      note: '',
+      merchant: '',
+      items: [],
+      source: 'manual',
+      receiptUrl: '',
+      showItems: false,
+      mismatch: false,
+    };
+  }
+
+  const guessed = guessCategory(
+    `${draft.categoryHint} ${draft.merchant}`,
+    state.categories,
+    'expense',
+  );
+
+  return {
+    type: 'expense',
+    amount: draft.total || 0,
+    currency: draft.currency || state.base,
+    categoryId: guessed,
+    date: draft.date || today(),
+    note: '',
+    merchant: draft.merchant || '',
+    items: draft.items || [],
+    source: draft.source || 'manual',
+    receiptUrl: draft.receiptUrl || '',
+    showItems: (draft.items || []).length > 0,
+    mismatch: Boolean(draft.mismatch),
+  };
+}
+
+const itemsSum = (model) => model.items.reduce((sum, item) => sum + (Number(item.total) || 0), 0);
+
+// ---------------------------------------------------------------- разметка
+
+function buildBody(model, rerender) {
+  const nodes = [];
+
+  // Тип операции
+  nodes.push(
+    el('div', { class: 'segmented', style: 'margin-bottom:14px' }, [
+      typeButton('expense', 'Расход', model, rerender),
+      typeButton('income', 'Доход', model, rerender),
+    ]),
+  );
+
+  // Сумма + валюта
+  const amountInput = el('input', {
+    class: 'input input--amount',
+    type: 'text',
+    inputmode: 'decimal',
+    value: model.amount ? String(model.amount) : '',
+    placeholder: '0',
+    oninput: (e) => { model.amount = parseAmount(e.target.value); updateHint(); },
+  });
+
+  const hint = el('div', { class: 'hint', style: 'text-align:center' });
+  const updateHint = () => {
+    if (model.currency === state.base || !model.amount) { hint.textContent = ''; return; }
+    const converted = convert(model.amount, model.currency, state.base, state.rates);
+    hint.textContent = `≈ ${formatAmount(converted, state.base)} по сегодняшнему курсу`;
+  };
+
+  nodes.push(el('div', { class: 'field' }, [amountInput, hint]));
+  updateHint();
+
+  nodes.push(
+    el('div', { class: 'field' }, [
+      el('div', { class: 'segmented' }, CURRENCY_CODES.map((code) =>
+        el('button', {
+          class: `${model.currency === code ? 'is-active' : ''}`,
+          onclick: () => { model.currency = code; rerender(); },
+        }, `${code} ${currencyInfo(code).symbol}`),
+      )),
+    ]),
+  );
+  setTimeout(updateHint, 0);
+
+  // Категории
+  const pool = state.categories.filter((c) => c.type === model.type && !c.archived);
+  nodes.push(
+    el('div', { class: 'field' }, [
+      el('label', { class: 'field__label' }, 'Категория'),
+      el('div', { class: 'cat-grid' }, pool.map((cat) =>
+        el('button', {
+          class: `cat ${model.categoryId === cat.id ? 'is-active' : ''}`,
+          style: model.categoryId === cat.id ? `color:${cat.color}` : '',
+          onclick: () => { model.categoryId = cat.id; rerender(); },
+        }, [
+          el('span', { class: 'cat__ico' }, cat.icon || '•'),
+          el('span', {}, cat.name),
+        ]),
+      )),
+    ]),
+  );
+
+  // Дата и магазин
+  nodes.push(
+    el('div', { class: 'row', style: 'margin-bottom:14px' }, [
+      el('div', {}, [
+        el('label', { class: 'field__label' }, 'Дата'),
+        el('input', {
+          class: 'input',
+          type: 'date',
+          value: model.date,
+          oninput: (e) => { model.date = e.target.value || today(); },
+        }),
+      ]),
+      el('div', {}, [
+        el('label', { class: 'field__label' }, 'Магазин'),
+        el('input', {
+          class: 'input',
+          type: 'text',
+          value: model.merchant,
+          placeholder: '—',
+          oninput: (e) => { model.merchant = e.target.value; },
+        }),
+      ]),
+    ]),
+  );
+
+  // Комментарий
+  nodes.push(
+    el('div', { class: 'field' }, [
+      el('label', { class: 'field__label' }, 'Комментарий'),
+      el('textarea', {
+        class: 'textarea',
+        placeholder: 'Необязательно',
+        oninput: (e) => { model.note = e.target.value; },
+      }, model.note),
+    ]),
+  );
+
+  // Чек
+  nodes.push(buildReceiptBlock(model, rerender));
+
+  return nodes;
+}
+
+function typeButton(value, label, model, rerender) {
+  return el('button', {
+    class: model.type === value ? 'is-active' : '',
+    dataset: { value },
+    onclick: () => {
+      if (model.type === value) return;
+      model.type = value;
+      model.categoryId = null;
+      rerender();
+    },
+  }, label);
+}
+
+function buildReceiptBlock(model, rerender) {
+  if (!model.showItems) {
+    return el('div', {}, [
+      el('div', { class: 'divider' }, 'или'),
+      el('button', {
+        class: 'btn btn--ghost btn--wide',
+        onclick: () => openScanSheet((draft) => openTxForm({ draft })),
+      }, '📷  Отсканировать чек'),
+      el('button', {
+        class: 'btn btn--ghost btn--wide',
+        style: 'margin-top:8px',
+        onclick: () => { model.showItems = true; model.items.push(emptyItem()); rerender(); },
+      }, '＋  Добавить товары вручную'),
+    ]);
+  }
+
+  const sum = itemsSum(model);
+  const diff = Math.abs(sum - model.amount) > 0.01;
+
+  return el('div', { style: 'margin-top:18px' }, [
+    el('div', { class: 'section-title', style: 'margin-top:0' }, [
+      el('span', {}, `Товары (${model.items.length})`),
+      el('button', {
+        class: 'chip',
+        onclick: () => { model.items.push(emptyItem()); rerender(); },
+      }, '＋ строка'),
+    ]),
+
+    model.mismatch
+      ? el('p', { class: 'hint', style: 'color:var(--yellow)' },
+          'AI не сошёлся: сумма строк отличается от итога на чеке. Проверьте строки.')
+      : null,
+
+    el('div', { class: 'items__head' }, [
+      el('span', {}, 'Название'),
+      el('span', {}, 'Кол-во'),
+      el('span', {}, 'Сумма'),
+      el('span', {}, ''),
+    ]),
+
+    el('div', { class: 'items' }, model.items.map((item, index) =>
+      itemRow(item, index, model, rerender),
+    )),
+
+    el('div', {
+      style: 'display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:13px',
+    }, [
+      el('span', { style: 'color:var(--fg-1)' }, 'Сумма строк'),
+      el('span', { class: 'num' }, formatAmount(sum, model.currency)),
+    ]),
+
+    diff
+      ? el('button', {
+          class: 'btn btn--ghost btn--wide',
+          style: 'margin-top:10px',
+          onclick: () => { model.amount = round(sum, model.currency); model.mismatch = false; rerender(); },
+        }, `Подставить ${formatAmount(sum, model.currency)} в итог`)
+      : null,
+  ]);
+}
+
+function itemRow(item, index, model, rerender) {
+  const recalcTotal = () => {
+    item.total = round((Number(item.qty) || 0) * (Number(item.price) || 0), model.currency);
+    totalInput.value = item.total || '';
+  };
+
+  const nameInput = el('input', {
+    class: 'input',
+    type: 'text',
+    value: item.name,
+    placeholder: 'Название',
+    oninput: (e) => { item.name = e.target.value; },
+  });
+
+  const qtyInput = el('input', {
+    class: 'input input--num',
+    type: 'text',
+    inputmode: 'decimal',
+    value: item.qty ?? 1,
+    oninput: (e) => { item.qty = parseAmount(e.target.value); recalcTotal(); },
+  });
+
+  const totalInput = el('input', {
+    class: 'input input--num',
+    type: 'text',
+    inputmode: 'decimal',
+    value: item.total || '',
+    oninput: (e) => {
+      item.total = parseAmount(e.target.value);
+      item.price = item.qty ? item.total / item.qty : item.total;
+    },
+  });
+
+  return el('div', { class: 'item-row' }, [
+    nameInput,
+    qtyInput,
+    totalInput,
+    el('button', {
+      class: 'item-row__del',
+      'aria-label': 'Удалить строку',
+      onclick: () => {
+        model.items.splice(index, 1);
+        if (!model.items.length) model.showItems = false;
+        rerender();
+      },
+    }, '✕'),
+  ]);
+}
+
+const emptyItem = () => ({ name: '', qty: 1, price: 0, total: 0 });
+
+// ---------------------------------------------------------------- сохранение
+
+function buildFooter(model, tx) {
+  const save = el('button', { class: 'btn btn--primary' }, tx ? 'Сохранить' : 'Добавить');
+
+  save.addEventListener('click', async () => {
+    if (!model.amount) { toastError('Введите сумму'); return; }
+    if (!model.categoryId) { toastError('Выберите категорию'); return; }
+
+    save.disabled = true;
+    try {
+      const payload = { ...model, items: model.showItems ? model.items : [] };
+      if (tx) {
+        await updateTransaction(tx.id, payload, {
+          rates: state.rates,
+          user: state.user,
+          previous: tx,
+        });
+        toastOk('Сохранено');
+      } else {
+        await createTransaction(payload, { rates: state.rates, user: state.user });
+        toastOk('Добавлено');
+      }
+      closeSheet();
+    } catch (error) {
+      console.error(error);
+      toastError('Не удалось сохранить');
+      save.disabled = false;
+    }
+  });
+
+  if (!tx) return [save];
+
+  return [
+    el('button', {
+      class: 'btn btn--danger',
+      style: 'flex:0 0 auto',
+      onclick: () => {
+        closeSheet();
+        confirmSheet({
+          title: 'Удалить операцию?',
+          text: 'Действие необратимо.',
+          onConfirm: async () => {
+            try {
+              await deleteTransaction(tx.id);
+              toastOk('Удалено');
+            } catch {
+              toastError('Не удалось удалить');
+            }
+          },
+        });
+      },
+    }, 'Удалить'),
+    save,
+  ];
+}

@@ -1,0 +1,67 @@
+rules_version = '2';
+
+// Схема:
+//   families/{familyId}
+//     ├─ transactions/{txId}
+//     ├─ categories/{catId}
+//     └─ meta/{docId}          (rates, settings)
+//
+// Доступ: только участники семьи (uid в memberUids).
+// Присоединиться может только тот, чей email есть в allowedEmails.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function familyDoc(familyId) {
+      return get(/databases/$(database)/documents/families/$(familyId)).data;
+    }
+
+    function isMember(familyId) {
+      return request.auth != null
+        && request.auth.uid in familyDoc(familyId).memberUids;
+    }
+
+    function isInvited(familyId) {
+      return request.auth != null
+        && request.auth.token.email != null
+        && request.auth.token.email in familyDoc(familyId).allowedEmails;
+    }
+
+    match /families/{familyId} {
+      // Читать документ семьи может любой авторизованный: там нет ничего секретного,
+      // а клиенту нужно понять, приглашён он или нет.
+      allow read: if request.auth != null;
+
+      // Участник может менять настройки семьи.
+      // Приглашённый может добавить себя в memberUids (self-join), но не тронуть
+      // allowedEmails и не выкинуть чужие uid.
+      allow update: if isMember(familyId)
+        || (
+          isInvited(familyId)
+          && request.resource.data.allowedEmails == resource.data.allowedEmails
+          && request.resource.data.memberUids.hasAll(resource.data.memberUids)
+          && request.resource.data.memberUids.hasOnly(
+               resource.data.memberUids.concat([request.auth.uid])
+             )
+        );
+
+      // Создание/удаление семьи — только вручную через консоль.
+      allow create, delete: if false;
+
+      match /transactions/{txId} {
+        allow read: if isMember(familyId);
+        allow create: if isMember(familyId)
+          && request.resource.data.createdBy.uid == request.auth.uid;
+        allow update, delete: if isMember(familyId);
+      }
+
+      match /categories/{catId} {
+        allow read, write: if isMember(familyId);
+      }
+
+      match /meta/{docId} {
+        allow read, write: if isMember(familyId);
+      }
+    }
+  }
+}

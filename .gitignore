@@ -1,0 +1,9 @@
+# Секреты сервера — НИКОГДА не коммитить
+config.php
+.env
+
+# Локальное
+.DS_Store
+*.log
+*.save
+node_modules/

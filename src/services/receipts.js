@@ -1,0 +1,113 @@
+/**
+ * Распознавание чеков через Claude (всегда через api-proxy.php — ключ на сервере).
+ *
+ * Возвращает нормализованный черновик, который целиком редактируется в форме:
+ * AI ошибается в названиях товаров, поэтому ни одно поле не считается финальным.
+ */
+
+import { PROXY_URL, CURRENCY_CODES } from '../config.js';
+import { idToken } from './auth.js';
+import { normalizeDate, today } from '../core/dates.js';
+
+/** Сколько пикселей по длинной стороне отправляем. Больше — дороже и медленнее без выигрыша. */
+const MAX_EDGE = 1600;
+const JPEG_QUALITY = 0.82;
+
+export async function scanReceiptImage(file) {
+  const { base64, mediaType } = await prepareImage(file);
+  const data = await callProxy({ action: 'receipt_image', image_base64: base64, media_type: mediaType });
+  return normalizeReceipt(data.receipt, 'receipt-photo');
+}
+
+export async function scanReceiptUrl(url) {
+  const data = await callProxy({ action: 'receipt_url', url: String(url).trim() });
+  const draft = normalizeReceipt(data.receipt, 'receipt-url');
+  draft.receiptUrl = String(url).trim();
+  return draft;
+}
+
+async function callProxy(payload) {
+  const token = await idToken();
+  if (!token) throw new Error('Нужно войти заново');
+
+  const response = await fetch(PROXY_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json().catch(() => null);
+  if (!response.ok || !data?.receipt) {
+    throw new Error(errorText(data?.error, response.status));
+  }
+  return data;
+}
+
+function errorText(code, status) {
+  const messages = {
+    rate_limited: 'Слишком много запросов, попробуйте через час',
+    not_allowed: 'Нет доступа к распознаванию',
+    url_must_be_https: 'Ссылка должна начинаться с https://',
+    url_private_address: 'Такая ссылка недоступна',
+    page_fetch_failed: 'Не удалось открыть страницу чека',
+    page_empty: 'На странице не нашлось текста',
+    image_size: 'Фото слишком большое',
+    claude_unparsable: 'Не удалось разобрать ответ AI',
+    refused: 'AI отказался обрабатывать это изображение',
+    config_missing: 'На сервере не настроен config.php',
+  };
+  return messages[code] || `Ошибка распознавания (${code || status})`;
+}
+
+/** Сжимает фото в браузере: экономит трафик и укладывается в лимит прокси. */
+async function prepareImage(file) {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height));
+  const width = Math.round(bitmap.width * scale);
+  const height = Math.round(bitmap.height * scale);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  canvas.getContext('2d').drawImage(bitmap, 0, 0, width, height);
+  bitmap.close?.();
+
+  const dataUrl = canvas.toDataURL('image/jpeg', JPEG_QUALITY);
+  return { base64: dataUrl.split(',')[1], mediaType: 'image/jpeg' };
+}
+
+/** Приводит ответ модели к форме черновика транзакции. */
+function normalizeReceipt(raw, source) {
+  const items = Array.isArray(raw?.items) ? raw.items : [];
+
+  const normalizedItems = items
+    .map((item) => {
+      const qty = num(item?.qty) || 1;
+      const price = num(item?.price);
+      const total = num(item?.total) || price * qty;
+      return { name: String(item?.name || '').trim(), qty, price: price || (qty ? total / qty : 0), total };
+    })
+    .filter((item) => item.name !== '');
+
+  const currency = CURRENCY_CODES.includes(raw?.currency) ? raw.currency : '';
+  const itemsSum = normalizedItems.reduce((sum, item) => sum + item.total, 0);
+  const total = num(raw?.total) || itemsSum;
+
+  return {
+    merchant: String(raw?.merchant || '').trim(),
+    date: normalizeDate(raw?.date) || today(),
+    currency,
+    total,
+    categoryHint: String(raw?.category_hint || '').trim(),
+    items: normalizedItems,
+    source,
+    receiptUrl: '',
+    /** Расхождение между суммой строк и итогом — повод показать подсказку. */
+    mismatch: normalizedItems.length > 0 && Math.abs(itemsSum - total) > Math.max(1, total * 0.02),
+  };
+}
+
+function num(value) {
+  const parsed = Number.parseFloat(String(value ?? '').replace(',', '.'));
+  return Number.isFinite(parsed) ? parsed : 0;
+}
