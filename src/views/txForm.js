@@ -3,17 +3,17 @@
  * после сканирования каждое поле и каждая строка товара остаются редактируемыми.
  */
 
-import { el, render } from '../core/dom.js?v=2';
-import { state } from '../core/store.js?v=2';
-import { CURRENCY_CODES } from '../config.js?v=2';
-import { formatAmount, parseAmount, round, convert, currencyInfo } from '../core/money.js?v=2';
-import { today } from '../core/dates.js?v=2';
-import { guessCategory } from '../data/categories.js?v=2';
-import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=2';
-import { tileGradient } from './list.js?v=2';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=2';
-import { toastOk, toastError } from '../ui/toast.js?v=2';
-import { scanFromCamera, scanFromGallery, openScanUrlSheet } from './scan.js?v=2';
+import { el, render } from '../core/dom.js?v=3';
+import { state } from '../core/store.js?v=3';
+import { CURRENCY_CODES } from '../config.js?v=3';
+import { formatAmount, parseAmount, round, convert, currencyInfo } from '../core/money.js?v=3';
+import { today } from '../core/dates.js?v=3';
+import { guessCategory } from '../data/categories.js?v=3';
+import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=3';
+import { tileGradient } from './list.js?v=3';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=3';
+import { toastOk, toastError } from '../ui/toast.js?v=3';
+import { scanFromCamera, scanFromGallery, openScanUrlSheet } from './scan.js?v=3';
 
 /**
  * openTxForm({ tx })      — правка существующей операции
@@ -169,28 +169,30 @@ function buildBody(model, rerender) {
     ]),
   );
 
-  // Дата и магазин
+  // Дата
   nodes.push(
-    el('div', { class: 'row', style: 'margin-bottom:14px' }, [
-      el('div', {}, [
-        el('label', { class: 'field__label' }, 'Дата'),
-        el('input', {
-          class: 'input',
-          type: 'date',
-          value: model.date,
-          oninput: (e) => { model.date = e.target.value || today(); },
-        }),
-      ]),
-      el('div', {}, [
-        el('label', { class: 'field__label' }, 'Магазин'),
-        el('input', {
-          class: 'input',
-          type: 'text',
-          value: model.merchant,
-          placeholder: '—',
-          oninput: (e) => { model.merchant = e.target.value; },
-        }),
-      ]),
+    el('div', { class: 'field' }, [
+      el('label', { class: 'field__label' }, 'Дата'),
+      el('input', {
+        class: 'input',
+        type: 'date',
+        value: model.date,
+        oninput: (e) => { model.date = e.target.value || today(); },
+      }),
+    ]),
+  );
+
+  // Магазин — во всю ширину: названия бывают длинные
+  nodes.push(
+    el('div', { class: 'field' }, [
+      el('label', { class: 'field__label' }, 'Магазин'),
+      el('input', {
+        class: 'input',
+        type: 'text',
+        value: model.merchant,
+        placeholder: '—',
+        oninput: (e) => { model.merchant = e.target.value; },
+      }),
     ]),
   );
 
