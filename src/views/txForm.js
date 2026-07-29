@@ -13,7 +13,7 @@ import { createTransaction, updateTransaction, deleteTransaction } from '../serv
 import { tileGradient } from './list.js';
 import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js';
 import { toastOk, toastError } from '../ui/toast.js';
-import { openScanSheet } from './scan.js';
+import { scanFromCamera, scanFromGallery, openScanUrlSheet } from './scan.js';
 
 /**
  * openTxForm({ tx })      — правка существующей операции
@@ -104,6 +104,9 @@ const itemsSum = (model) => model.items.reduce((sum, item) => sum + (Number(item
 
 function buildBody(model, rerender) {
   const nodes = [];
+
+  // Чек — самое частое действие, поэтому стоит первым.
+  if (!model.showItems) nodes.push(buildScanRow());
 
   // Тип операции
   nodes.push(
@@ -209,6 +212,29 @@ function buildBody(model, rerender) {
   return nodes;
 }
 
+/** Две кнопки съёмки и ссылка из QR — вверху формы. */
+function buildScanRow() {
+  const toForm = (draft) => openTxForm({ draft });
+
+  return el('div', { style: 'margin-bottom:16px' }, [
+    el('div', { class: 'scan-row' }, [
+      el('button', { class: 'scan-tile', onclick: () => scanFromCamera(toForm) }, [
+        el('span', { class: 'scan-tile__ico' }, '📷'),
+        el('span', {}, 'Снять чек'),
+      ]),
+      el('button', { class: 'scan-tile', onclick: () => scanFromGallery(toForm) }, [
+        el('span', { class: 'scan-tile__ico' }, '🖼'),
+        el('span', {}, 'Из галереи'),
+      ]),
+    ]),
+    el('button', {
+      class: 'btn btn--ghost btn--wide',
+      style: 'margin-top:8px',
+      onclick: () => openScanUrlSheet(toForm),
+    }, '🔗  Ссылка из QR-кода'),
+  ]);
+}
+
 function typeButton(value, label, model, rerender) {
   return el('button', {
     class: model.type === value ? 'is-active' : '',
@@ -225,14 +251,9 @@ function typeButton(value, label, model, rerender) {
 function buildReceiptBlock(model, rerender) {
   if (!model.showItems) {
     return el('div', {}, [
-      el('div', { class: 'divider' }, 'или'),
+      el('div', { class: 'divider' }, 'состав покупки'),
       el('button', {
         class: 'btn btn--ghost btn--wide',
-        onclick: () => openScanSheet((draft) => openTxForm({ draft })),
-      }, '📷  Отсканировать чек'),
-      el('button', {
-        class: 'btn btn--ghost btn--wide',
-        style: 'margin-top:8px',
         onclick: () => { model.showItems = true; model.items.push(emptyItem()); rerender(); },
       }, '＋  Добавить товары вручную'),
     ]);

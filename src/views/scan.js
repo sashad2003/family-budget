@@ -1,6 +1,7 @@
 /**
- * Сканирование чека: фото или ссылка со страницы чека (та, что зашита в QR инвойса).
- * Результат — черновик, который открывается в редактируемой форме.
+ * Сканирование чека: фото с камеры, фото из галереи или ссылка со страницы
+ * чека (та, что зашита в QR инвойса). Результат — черновик, который
+ * открывается в редактируемой форме.
  */
 
 import { el, render } from '../core/dom.js';
@@ -8,107 +9,118 @@ import { openSheet, closeSheet } from '../ui/sheet.js';
 import { toastError } from '../ui/toast.js';
 import { scanReceiptImages, scanReceiptUrl, MAX_RECEIPT_IMAGES } from '../services/receipts.js';
 
-/** openScanSheet(onDraft) — onDraft получает распознанный черновик. */
-export function openScanSheet(onDraft) {
-  const body = el('div');
+/** Шторка «распознаём…» — на время запроса заменяет собой форму. */
+function showBusy(text) {
+  openSheet({
+    title: 'Сканирование чека',
+    body: el('div', { class: 'empty' }, [
+      el('div', { class: 'spinner', style: 'margin:0 auto 14px' }),
+      el('div', {}, text),
+      el('div', { class: 'hint', style: 'margin-top:6px' }, 'Обычно занимает 5–15 секунд'),
+    ]),
+  });
+}
 
-  const busy = (text) => render(body, el('div', { class: 'empty' }, [
-    el('div', { class: 'spinner', style: 'margin:0 auto 14px' }),
-    el('div', {}, text),
-    el('div', { class: 'hint', style: 'margin-top:6px' }, 'Обычно занимает 5–15 секунд'),
-  ]));
+async function run(task, waitText, onDraft) {
+  showBusy(waitText);
+  try {
+    const draft = await task();
+    closeSheet();
+    onDraft(draft);
+  } catch (error) {
+    console.error(error);
+    closeSheet();
+    toastError(error.message || 'Не удалось распознать');
+  }
+}
 
-  const handle = async (task, waitText) => {
-    busy(waitText);
-    try {
-      const draft = await task();
-      closeSheet();
-      onDraft(draft);
-    } catch (error) {
-      console.error(error);
-      toastError(error.message || 'Не удалось распознать');
-      showForm();
-    }
-  };
+/**
+ * Открывает выбор файлов. С capture телефон показывает камеру,
+ * без него — галерею, поэтому два разных input.
+ */
+function pickPhotos({ fromCamera }, onDraft) {
+  const input = el('input', {
+    type: 'file',
+    accept: 'image/*',
+    style: 'position:fixed;left:-9999px;top:0',
+  });
+  if (fromCamera) input.capture = 'environment';
+  else input.multiple = true;
 
-  // Два отдельных input: с capture телефон открывает камеру и не пускает в галерею.
-  const runScan = (files) => {
-    const list = Array.from(files || []);
-    if (!list.length) return;
-    if (list.length > MAX_RECEIPT_IMAGES) {
+  input.addEventListener('change', () => {
+    const files = Array.from(input.files || []);
+    input.remove();
+    if (!files.length) return;
+    if (files.length > MAX_RECEIPT_IMAGES) {
       toastError(`Не больше ${MAX_RECEIPT_IMAGES} фото за раз`);
       return;
     }
-    handle(
-      () => scanReceiptImages(list),
-      list.length > 1 ? `Распознаём чек, ${list.length} фото…` : 'Распознаём чек…',
+    run(
+      () => scanReceiptImages(files),
+      files.length > 1 ? `Распознаём чек, ${files.length} фото…` : 'Распознаём чек…',
+      onDraft,
     );
+  });
+
+  document.body.append(input);
+  input.click();
+}
+
+export const scanFromCamera = (onDraft) => pickPhotos({ fromCamera: true }, onDraft);
+export const scanFromGallery = (onDraft) => pickPhotos({ fromCamera: false }, onDraft);
+
+/** Шторка для ссылки со страницы фискального чека. */
+export function openScanUrlSheet(onDraft) {
+  const urlInput = el('input', {
+    class: 'input',
+    type: 'url',
+    inputmode: 'url',
+    placeholder: 'https://…',
+  });
+
+  const submit = () => {
+    const url = urlInput.value.trim();
+    if (!/^https:\/\//i.test(url)) {
+      toastError('Ссылка должна начинаться с https://');
+      return;
+    }
+    run(() => scanReceiptUrl(url), 'Читаем страницу чека…', onDraft);
   };
 
-  const cameraInput = el('input', {
-    type: 'file',
-    accept: 'image/*',
-    capture: 'environment',
-    style: 'display:none',
-    onchange: (e) => { runScan(e.target.files); e.target.value = ''; },
-  });
-
-  const galleryInput = el('input', {
-    type: 'file',
-    accept: 'image/*',
-    multiple: true,
-    style: 'display:none',
-    onchange: (e) => { runScan(e.target.files); e.target.value = ''; },
-  });
-
-  function showForm() {
-    const urlInput = el('input', {
-      class: 'input',
-      type: 'url',
-      inputmode: 'url',
-      placeholder: 'https://…',
-    });
-
-    render(body, [
-      el('div', {
-        class: 'scan-drop',
-        onclick: () => cameraInput.click(),
-      }, [
-        el('span', { class: 'scan-drop__ico' }, '🧾'),
-        el('div', {}, 'Сфотографировать чек'),
-        el('div', { class: 'hint' }, 'AI прочитает магазин, товары, цены и итог'),
-      ]),
-
-      el('button', {
-        class: 'btn btn--ghost btn--wide',
-        style: 'margin-top:10px',
-        onclick: () => galleryInput.click(),
-      }, '🖼  Выбрать из галереи'),
-
-      el('p', { class: 'hint' },
-        `Можно выбрать до ${MAX_RECEIPT_IMAGES} фото одного чека — длинную ленту снимайте частями по порядку.`),
-
-      cameraInput,
-      galleryInput,
-
-      el('div', { class: 'divider' }, 'или ссылка из QR-кода'),
-
+  openSheet({
+    title: 'Чек по ссылке',
+    body: [
       urlInput,
       el('p', { class: 'hint' },
         'Страница фискального чека по ссылке с инвойса — оттуда берётся точный список товаров и цен.'),
+    ],
+    footer: [el('button', { class: 'btn btn--primary', onclick: submit }, 'Разобрать')],
+  });
+}
 
-      el('button', {
-        class: 'btn btn--primary btn--wide',
-        style: 'margin-top:12px',
-        onclick: () => {
-          const url = urlInput.value.trim();
-          if (!/^https:\/\//i.test(url)) { toastError('Ссылка должна начинаться с https://'); return; }
-          handle(() => scanReceiptUrl(url), 'Читаем страницу чека…');
-        },
-      }, 'Разобрать по ссылке'),
-    ]);
-  }
+/** Полное меню сканирования — используется там, где нет своих кнопок. */
+export function openScanSheet(onDraft) {
+  const body = el('div');
 
-  showForm();
+  render(body, [
+    el('div', { class: 'scan-row' }, [
+      el('button', { class: 'scan-tile', onclick: () => scanFromCamera(onDraft) }, [
+        el('span', { class: 'scan-tile__ico' }, '📷'),
+        el('span', {}, 'Снять камерой'),
+      ]),
+      el('button', { class: 'scan-tile', onclick: () => scanFromGallery(onDraft) }, [
+        el('span', { class: 'scan-tile__ico' }, '🖼'),
+        el('span', {}, 'Из галереи'),
+      ]),
+    ]),
+    el('p', { class: 'hint' },
+      `До ${MAX_RECEIPT_IMAGES} фото одного чека — длинную ленту снимайте частями по порядку.`),
+    el('div', { class: 'divider' }, 'или'),
+    el('button', {
+      class: 'btn btn--ghost btn--wide',
+      onclick: () => openScanUrlSheet(onDraft),
+    }, '🔗  Ссылка из QR-кода'),
+  ]);
+
   openSheet({ title: 'Сканирование чека', body });
 }
