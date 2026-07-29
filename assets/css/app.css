@@ -47,11 +47,15 @@
 
 * { box-sizing: border-box; }
 
+/* Тёмная основа на html, полупрозрачная плёнка на body: сквозь неё
+   проступает сияние, но текст остаётся читаемым. */
+html { background: var(--bg-void); }
+body { background: rgb(8 8 15 / 51%); }
+
 html, body {
   margin: 0;
   padding: 0;
   min-height: 100%;
-  background: var(--bg-void);
   color: var(--fg-0);
   font-family: var(--font);
   font-weight: 350;
@@ -749,6 +753,15 @@ button { cursor: pointer; border: none; background: none; }
 }
 .card--action { display: block; width: 100%; text-align: left; color: inherit; }
 .card--action:hover { border-color: rgba(255, 91, 91, 0.7); }
+
+/* Крупная сумма в окне подтверждения оплаты */
+.confirm-sum {
+  font-size: 34px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  text-align: center;
+  padding: 12px 0 4px;
+}
 
 .bills { display: flex; flex-direction: column; gap: 8px; }
 

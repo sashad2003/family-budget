@@ -3,18 +3,18 @@
  * оплаченные отмечены галочкой, забытые горят красным.
  */
 
-import { el, render } from '../core/dom.js?v=6';
-import { state, set } from '../core/store.js?v=6';
-import { CURRENCY_CODES } from '../config.js?v=6';
-import { formatAmount, parseAmount, currencyInfo } from '../core/money.js?v=6';
-import { monthLabel, monthKey, today } from '../core/dates.js?v=6';
-import { billsForMonth } from '../core/selectors.js?v=6';
-import { createBill, updateBill, deleteBill } from '../services/bills.js?v=6';
-import { createTransaction } from '../services/transactions.js?v=6';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=6';
-import { toastOk, toastError } from '../ui/toast.js?v=6';
-import { openTxForm } from './txForm.js?v=6';
-import { tileGradient } from './list.js?v=6';
+import { el, render } from '../core/dom.js?v=7';
+import { state, set } from '../core/store.js?v=7';
+import { CURRENCY_CODES } from '../config.js?v=7';
+import { formatAmount, parseAmount, currencyInfo } from '../core/money.js?v=7';
+import { monthLabel, monthKey, today } from '../core/dates.js?v=7';
+import { billsForMonth } from '../core/selectors.js?v=7';
+import { createBill, updateBill, deleteBill } from '../services/bills.js?v=7';
+import { createTransaction, deleteTransaction } from '../services/transactions.js?v=7';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=7';
+import { toastOk, toastError } from '../ui/toast.js?v=7';
+import { openTxForm } from './txForm.js?v=7';
+import { tileGradient } from './list.js?v=7';
 
 export function renderBills() {
   const rows = billsForMonth(state);
@@ -70,7 +70,7 @@ function billRow({ bill, tx, paid, expected, tracked }) {
   return el('div', { class: `bill ${paid ? 'is-paid' : ''} ${overdue ? 'is-overdue' : ''}` }, [
     el('button', {
       class: 'bill__main',
-      onclick: () => (paid ? openTxForm({ tx }) : payBill(bill, expected)),
+      onclick: () => (paid ? openPaidBill(bill, tx) : payBill(bill, expected)),
     }, [
       el('span', {
         class: 'bill__ico',
@@ -104,10 +104,10 @@ function billMeta(bill, paid, tx, overdue) {
 // ---------------------------------------------------------------- оплата
 
 /**
- * Постоянную сумму записываем сразу — это один тап.
- * Меняющуюся открываем в обычной форме, там же правятся детали.
+ * Оплата с подтверждением: случайное касание не должно записывать деньги.
+ * Постоянную сумму подтверждаем одной кнопкой, меняющуюся правим в форме.
  */
-async function payBill(bill, expected) {
+function payBill(bill, expected) {
   const model = {
     type: 'expense',
     amount: expected,
@@ -129,13 +129,74 @@ async function payBill(bill, expected) {
     return;
   }
 
-  try {
-    await createTransaction(model, { rates: state.rates, user: state.user });
-    toastOk(`${bill.name} — оплачено`);
-  } catch (error) {
-    console.error(error);
-    toastError('Не удалось записать оплату');
-  }
+  const write = el('button', { class: 'btn btn--primary', style: 'flex:1' }, 'Записать оплату');
+  write.addEventListener('click', async () => {
+    write.disabled = true;
+    try {
+      await createTransaction(model, { rates: state.rates, user: state.user });
+      toastOk(`${bill.name} — оплачено`);
+      closeSheet();
+    } catch (error) {
+      console.error(error);
+      toastError('Не удалось записать оплату');
+      write.disabled = false;
+    }
+  });
+
+  openSheet({
+    title: bill.name,
+    body: [
+      el('div', { class: 'confirm-sum num' }, formatAmount(expected, bill.currency)),
+      el('p', { class: 'hint', style: 'text-align:center' },
+        `Запишем расход за ${monthLabel(state.month)}. Сумму потом можно изменить или отменить оплату.`),
+    ],
+    footer: [
+      el('button', {
+        class: 'btn btn--ghost',
+        style: 'flex:0 0 auto',
+        onclick: () => closeSheet(),
+      }, 'Отмена'),
+      el('button', {
+        class: 'btn btn--ghost',
+        style: 'flex:0 0 auto',
+        onclick: () => openTxForm({ model }),
+      }, 'Другая сумма'),
+      write,
+    ],
+  });
+}
+
+/** Уже оплаченный счёт: посмотреть, поправить сумму или отменить оплату. */
+function openPaidBill(bill, tx) {
+  openSheet({
+    title: bill.name,
+    body: [
+      el('div', { class: 'confirm-sum num', style: 'color:var(--income)' },
+        formatAmount(tx.amount, tx.currency)),
+      el('p', { class: 'hint', style: 'text-align:center' },
+        `Оплачено ${tx.date}. Отмена уберёт эту операцию из бюджета — счёт снова станет неоплаченным.`),
+    ],
+    footer: [
+      el('button', {
+        class: 'btn btn--danger',
+        style: 'flex:0 0 auto',
+        onclick: async () => {
+          try {
+            await deleteTransaction(tx.id);
+            toastOk('Оплата отменена');
+            closeSheet();
+          } catch {
+            toastError('Не удалось отменить');
+          }
+        },
+      }, 'Отменить оплату'),
+      el('button', {
+        class: 'btn btn--primary',
+        style: 'flex:1',
+        onclick: () => openTxForm({ tx }),
+      }, 'Изменить'),
+    ],
+  });
 }
 
 /** В текущем месяце — сегодня, в прошлом — последний день того месяца. */
