@@ -1,7 +1,7 @@
 /** Выборки и агрегаты над транзакциями. Чистые функции — их удобно переиспользовать. */
 
-import { txAmountIn } from './money.js?v=8';
-import { monthOf, shiftMonth } from './dates.js?v=8';
+import { txAmountIn } from './money.js?v=9';
+import { monthOf, shiftMonth } from './dates.js?v=9';
 
 /** Операции выбранного месяца с учётом фильтров экрана «Операции». */
 export function monthTransactions(state, filters = {}) {
@@ -17,6 +17,20 @@ export function monthTransactions(state, filters = {}) {
       if (!haystack.toLowerCase().includes(needle)) return false;
     }
     return true;
+  });
+}
+
+/** Операции за произвольный отрезок дат (границы включительно). */
+export function rangeTransactions(state, { from, to }) {
+  return state.transactions.filter((tx) => tx.date >= from && tx.date <= to);
+}
+
+/** Доходы и расходы по каждому месяцу списка — для графика динамики. */
+export function seriesForMonths(state, months) {
+  return months.map((key) => {
+    const list = state.transactions.filter((tx) => monthOf(tx.date) === key);
+    const { income, expense } = totals(list, state);
+    return { month: key, income, expense };
   });
 }
 

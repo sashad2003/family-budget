@@ -3,8 +3,8 @@
  * Никакой магии — set() сливает патч и уведомляет слушателей.
  */
 
-import { DEFAULT_BASE_CURRENCY, FALLBACK_RATES } from '../config.js?v=8';
-import { monthKey } from './dates.js?v=8';
+import { DEFAULT_BASE_CURRENCY, FALLBACK_RATES } from '../config.js?v=9';
+import { monthKey } from './dates.js?v=9';
 
 const listeners = new Set();
 
@@ -29,6 +29,8 @@ export const state = {
   base: localStorage.getItem('base') || DEFAULT_BASE_CURRENCY,
   /** Выбранный месяц, 'YYYY-MM' */
   month: monthKey(new Date()),
+  /** Период статистики: { kind: 'month' | 'm3' | 'm6' | 'm12' | 'ytd' | 'all' | 'custom', from, to } */
+  period: { kind: localStorage.getItem('period') || 'month' },
   /** Активный экран */
   route: 'dashboard',
 
@@ -38,6 +40,7 @@ export const state = {
 export function set(patch) {
   Object.assign(state, patch);
   if (patch.base) localStorage.setItem('base', patch.base);
+  if (patch.period?.kind) localStorage.setItem('period', patch.period.kind);
   listeners.forEach((fn) => fn(state));
 }
 

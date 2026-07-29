@@ -1,13 +1,18 @@
 /**
- * Графики на Chart.js: расходы по категориям, динамика по месяцам, доходы vs расходы.
- * Библиотека грузится с CDN по требованию — на других экранах она не нужна.
+ * Статистика за выбранный период: итоги, расходы по категориям,
+ * динамика по месяцам, доходы против расходов.
+ *
+ * Период задаётся здесь же: месяц может быть в плюсе, а год — в минусе,
+ * поэтому итог по одному месяцу ничего не говорит о картине в целом.
+ * Chart.js грузится с CDN по требованию — на других экранах он не нужен.
  */
 
-import { el, render } from '../core/dom.js?v=8';
-import { state } from '../core/store.js?v=8';
-import { formatAmount } from '../core/money.js?v=8';
-import { monthLabel } from '../core/dates.js?v=8';
-import { monthTransactions, byCategory, totals, monthlySeries } from '../core/selectors.js?v=8';
+import { el, render } from '../core/dom.js?v=9';
+import { state, set } from '../core/store.js?v=9';
+import { formatAmount } from '../core/money.js?v=9';
+import { monthLabel } from '../core/dates.js?v=9';
+import { PERIODS, resolvePeriod } from '../core/period.js?v=9';
+import { rangeTransactions, byCategory, totals, seriesForMonths } from '../core/selectors.js?v=9';
 
 const CHART_JS = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.7/+esm';
 
@@ -32,49 +37,64 @@ export function destroyCharts() {
 
 export function renderCharts() {
   destroyCharts();
+
+  const period = resolvePeriod(state);
+  const list = rangeTransactions(state, period);
   const container = el('div');
-  const list = monthTransactions(state);
+  const head = [periodPicker(), periodCaption(period, list.length)];
 
   if (!list.length) {
-    render(container, el('div', { class: 'empty' }, [
-      el('span', { class: 'empty__ico' }, '📊'),
-      el('div', {}, 'За этот месяц нет данных'),
-    ]));
+    render(container, [
+      ...head,
+      el('div', { class: 'empty' }, [
+        el('span', { class: 'empty__ico' }, '📊'),
+        el('div', {}, 'За этот период нет данных'),
+      ]),
+    ]);
     return container;
   }
 
   const expenses = list.filter((tx) => tx.type === 'expense');
   const cats = byCategory(expenses, state);
-  const series = monthlySeries(state, 6);
-  const { income, expense } = totals(list, state);
+  const series = seriesForMonths(state, period.months);
+  const { income, expense, balance } = totals(list, state);
 
   const donutCanvas = el('canvas');
   const trendCanvas = el('canvas');
   const compareCanvas = el('canvas');
 
-  render(container, el('div', { class: 'chart-grid' }, [
-    el('div', { class: 'card' }, [
-      el('div', { class: 'card__label' }, `Расходы по категориям · ${monthLabel(state.month)}`),
-      el('div', { class: 'chart-box' }, donutCanvas),
-      el('div', { class: 'bar-legend', style: 'margin-top:16px' }, cats.map((row) =>
-        el('div', { class: 'legend-row' }, [
-          el('span', { class: 'legend-dot', style: `background:${row.color}` }),
-          el('span', { class: 'legend-name' }, `${row.icon} ${row.name}`),
-          el('span', { class: 'legend-val' }, formatAmount(row.total, state.base)),
-        ]),
-      )),
+  render(container, [
+    ...head,
+    summaryCard(income, expense, balance, period.months.length),
+
+    el('div', { class: 'chart-grid' }, [
+      el('div', { class: 'card' }, [
+        el('div', { class: 'card__label' }, 'Расходы по категориям'),
+        el('div', { class: 'chart-box' }, donutCanvas),
+        el('div', { class: 'bar-legend', style: 'margin-top:16px' }, cats.map((row) =>
+          el('div', { class: 'legend-row' }, [
+            el('span', { class: 'legend-dot', style: `background:${row.color}` }),
+            el('span', { class: 'legend-name' }, `${row.icon} ${row.name}`),
+            el('span', { class: 'legend-val' },
+              `${row.share}% · ${formatAmount(row.total, state.base)}`),
+          ]),
+        )),
+      ]),
+
+      el('div', { class: 'card' }, [
+        el('div', { class: 'card__label' },
+          series.length > 1 ? `Динамика · ${series.length} мес` : 'Динамика'),
+        el('div', { class: 'chart-box' }, trendCanvas),
+      ]),
+
+      el('div', { class: 'card' }, [
+        el('div', { class: 'card__label' }, 'Доходы и расходы за период'),
+        el('div', { class: 'chart-box', style: 'height:190px' }, compareCanvas),
+      ]),
     ]),
 
-    el('div', { class: 'card' }, [
-      el('div', { class: 'card__label' }, 'Динамика за 6 месяцев'),
-      el('div', { class: 'chart-box' }, trendCanvas),
-    ]),
-
-    el('div', { class: 'card' }, [
-      el('div', { class: 'card__label' }, 'Доходы и расходы за месяц'),
-      el('div', { class: 'chart-box', style: 'height:190px' }, compareCanvas),
-    ]),
-  ]));
+    series.length > 1 ? monthTable(series) : null,
+  ]);
 
   // Рисуем после того, как узлы попали в документ, иначе canvas не знает размеров.
   loadChartJs().then((Chart) => {
@@ -101,7 +121,7 @@ export function renderCharts() {
     charts.push(new Chart(trendCanvas, {
       type: 'line',
       data: {
-        labels: series.map((row) => monthLabel(row.month).slice(0, 3)),
+        labels: series.map((row) => shortMonth(row.month)),
         datasets: [
           lineSet('Доходы', series.map((r) => Math.round(r.income)), '#2dd98a'),
           lineSet('Расходы', series.map((r) => Math.round(r.expense)), '#ff5b5b'),
@@ -143,6 +163,108 @@ export function renderCharts() {
   return container;
 }
 
+// ---------------------------------------------------------------- период
+
+function periodPicker() {
+  const kind = state.period?.kind || 'month';
+
+  const chips = el('div', { class: 'chip-row' }, PERIODS.map((item) =>
+    el('button', {
+      class: `chip ${kind === item.kind ? 'is-active' : ''}`,
+      onclick: () => set({
+        period: item.kind === 'custom'
+          ? { kind: 'custom', from: state.period?.from || '', to: state.period?.to || '' }
+          : { kind: item.kind },
+      }),
+    }, item.label),
+  ));
+
+  if (kind !== 'custom') return chips;
+
+  // Свой срок: пустые поля означают границы выбранного месяца
+  const dateInput = (field) => el('input', {
+    class: 'input',
+    type: 'date',
+    value: state.period[field] || '',
+    oninput: (e) => set({ period: { ...state.period, [field]: e.target.value } }),
+  });
+
+  return el('div', {}, [
+    chips,
+    el('div', { class: 'row', style: 'margin-top:12px' }, [
+      el('div', {}, [el('label', { class: 'field__label' }, 'С даты'), dateInput('from')]),
+      el('div', {}, [el('label', { class: 'field__label' }, 'По дату'), dateInput('to')]),
+    ]),
+  ]);
+}
+
+function periodCaption(period, count) {
+  return el('p', { class: 'hint', style: 'margin:12px 0 16px' },
+    `${period.label} · ${count} ${plural(count, 'операция', 'операции', 'операций')}`);
+}
+
+// ---------------------------------------------------------------- итоги
+
+function summaryCard(income, expense, balance, monthCount) {
+  return el('div', { class: 'card balance' }, [
+    el('div', { class: 'balance__label' }, balance < 0 ? 'Минус за период' : 'Плюс за период'),
+    el('div', {
+      class: 'balance__value num',
+      style: `color:${balance < 0 ? 'var(--expense)' : 'var(--income)'}`,
+    }, formatAmount(balance, state.base, { sign: true })),
+
+    el('div', { class: 'sum-rows' }, [
+      sumRow('Доходы', income, 'var(--income)'),
+      sumRow('Расходы', expense, 'var(--expense)'),
+    ]),
+
+    monthCount > 1
+      ? el('div', { class: 'sum-rows' }, [
+          sumRow('В среднем за месяц', balance / monthCount, balance < 0 ? 'var(--expense)' : 'var(--fg-0)', true),
+          sumRow('Расходы в месяц', expense / monthCount, 'var(--fg-1)'),
+        ])
+      : null,
+  ]);
+}
+
+function sumRow(label, value, color, sign = false) {
+  return el('div', { class: 'sum-row' }, [
+    el('span', {}, label),
+    el('span', { class: 'num', style: `color:${color}` }, formatAmount(value, state.base, { sign })),
+  ]);
+}
+
+/** Таблица по месяцам — видно, какой именно месяц утащил в минус. */
+function monthTable(series) {
+  return el('div', {}, [
+    el('div', { class: 'section-title' }, [el('span', {}, 'По месяцам')]),
+    el('div', { class: 'card' }, [
+      el('div', { class: 'mrow mrow--head' }, [
+        el('span', {}, 'Месяц'),
+        el('span', {}, 'Доход'),
+        el('span', {}, 'Расход'),
+        el('span', {}, 'Итог'),
+      ]),
+      ...series.slice().reverse().map((row) => {
+        const balance = row.income - row.expense;
+        return el('div', { class: 'mrow' }, [
+          el('span', { class: 'mrow__month' }, monthLabel(row.month)),
+          el('span', { class: 'num', style: 'color:var(--income)' },
+            formatAmount(row.income, state.base)),
+          el('span', { class: 'num', style: 'color:var(--expense)' },
+            formatAmount(row.expense, state.base)),
+          el('span', {
+            class: 'num',
+            style: `color:${balance < 0 ? 'var(--expense)' : 'var(--fg-0)'}`,
+          }, formatAmount(balance, state.base, { sign: true })),
+        ]);
+      }),
+    ]),
+  ]);
+}
+
+// ---------------------------------------------------------------- графики
+
 const baseOptions = () => ({ responsive: true, maintainAspectRatio: false });
 
 function lineSet(label, data, color) {
@@ -154,7 +276,8 @@ function lineSet(label, data, color) {
     fill: true,
     tension: 0.35,
     borderWidth: 2,
-    pointRadius: 3,
+    // На длинных периодах точки сливаются в кашу.
+    pointRadius: data.length > 14 ? 0 : 3,
     pointBackgroundColor: color,
   };
 }
@@ -186,4 +309,18 @@ function compact(value) {
   if (abs >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
   if (abs >= 1000) return `${Math.round(value / 1000)}k`;
   return String(value);
+}
+
+/** 'июл' на коротком периоде, 'июл 25' — когда важен год. */
+function shortMonth(key) {
+  const [name, year] = monthLabel(key).split(' ');
+  return year ? `${name.slice(0, 3)} ${year.slice(2)}` : name.slice(0, 3);
+}
+
+function plural(n, one, few, many) {
+  const mod10 = n % 10;
+  const mod100 = n % 100;
+  if (mod10 === 1 && mod100 !== 11) return one;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return few;
+  return many;
 }

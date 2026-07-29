@@ -4,10 +4,10 @@
  * открывается в редактируемой форме.
  */
 
-import { el, render } from '../core/dom.js?v=8';
-import { openSheet, closeSheet } from '../ui/sheet.js?v=8';
-import { toastError } from '../ui/toast.js?v=8';
-import { scanReceiptImages, scanReceiptUrl, MAX_RECEIPT_IMAGES } from '../services/receipts.js?v=8';
+import { el, render } from '../core/dom.js?v=9';
+import { openSheet, closeSheet } from '../ui/sheet.js?v=9';
+import { toastError } from '../ui/toast.js?v=9';
+import { scanReceiptImages, scanReceiptUrl, MAX_RECEIPT_IMAGES } from '../services/receipts.js?v=9';
 
 /** Шторка «распознаём…» — на время запроса заменяет собой форму. */
 function showBusy(text) {
