@@ -2,7 +2,7 @@
 
 Учёт семейных расходов и доходов в трёх валютах (RSD / EUR / ILS) с распознаванием чеков через Claude.
 
-**Прод:** https://budget.sitemarket.co.il
+**Прод:** https://mybudget.sitemarket.co.il
 
 ---
 
@@ -122,7 +122,7 @@ families/family_drutz
 
 1. Firebase Console → проект `mony-y-hac-b-kormaney`.
 2. **Authentication** → Sign-in method → включить **Google**.
-3. **Authentication → Settings → Authorized domains** → добавить `budget.sitemarket.co.il`.
+3. **Authentication → Settings → Authorized domains** → добавить `mybudget.sitemarket.co.il`.
 4. **Firestore Database** → создать базу (production mode).
 5. Вкладка **Rules** → вставить содержимое [`firestore.rules`](firestore.rules) → Publish.
 6. Создать документ вручную: коллекция `families`, ID документа `family_drutz`, поля:
@@ -147,7 +147,7 @@ families/family_drutz
 2. Заполнить:
    - `anthropic_key` — ключ из console.anthropic.com;
    - `allowed_emails` — те же почты, что в `allowedEmails` Firestore;
-   - `allowed_origins` — `https://budget.sitemarket.co.il`.
+   - `allowed_origins` — `https://mybudget.sitemarket.co.il`.
 3. Права на файл: `chmod 600 config.php`.
 4. Требования: **PHP 8.1+** (используется тип `never`) с расширением `curl` —
    на Hostinger это версия по умолчанию, проверить можно в hPanel → PHP Configuration.

@@ -21,7 +21,7 @@ return [
 
     // Откуда принимаем запросы. Пустой массив = запретить всё.
     'allowed_origins' => [
-        'https://budget.sitemarket.co.il',
+        'https://mybudget.sitemarket.co.il',
         'http://localhost:8080',
     ],
 
