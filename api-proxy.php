@@ -22,6 +22,10 @@ const MAX_IMAGE_BYTES = 5 * 1024 * 1024;   // 5 МБ на base64-картинк�
 const MAX_PAGE_BYTES  = 512 * 1024;        // 512 КБ с чужой страницы
 const MAX_TOKENS      = 8000;
 
+// Публичные ключи, которыми Google подписывает Firebase ID-токены
+const FIREBASE_CERTS_URL =
+    'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com';
+
 // ---------------------------------------------------------------- конфиг
 
 $configPath = __DIR__ . '/config.php';
@@ -113,45 +117,16 @@ function respond(int $code, array $payload): never
     exit;
 }
 
-/**
- * Проверяет Firebase ID-токен через Google и сверяет проект + белый список почт.
- * Результат кешируется до истечения токена, чтобы не ходить в Google на каждый запрос.
- */
+/** Проверяет Firebase ID-токен и сверяет проект + белый список почт. */
 function requireUser(array $config): array
 {
     $header = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
     if (!preg_match('/^Bearer\s+(\S+)$/i', $header, $m)) {
         respond(401, ['error' => 'missing_token']);
     }
-    $token = $m[1];
 
-    $cacheFile = sys_get_temp_dir() . '/budget_tok_' . hash('sha256', $token) . '.json';
-    $claims = null;
-    if (is_file($cacheFile)) {
-        $cached = json_decode((string)file_get_contents($cacheFile), true);
-        if (is_array($cached) && (int)($cached['exp'] ?? 0) > time() + 30) {
-            $claims = $cached;
-        }
-    }
+    $claims = verifyFirebaseToken($m[1], (string)$config['firebase_project_id']);
 
-    if ($claims === null) {
-        $res = httpGet('https://oauth2.googleapis.com/tokeninfo?id_token=' . urlencode($token), 10);
-        if ($res['code'] !== 200) {
-            respond(401, ['error' => 'invalid_token']);
-        }
-        $claims = json_decode($res['body'], true);
-        if (!is_array($claims)) {
-            respond(401, ['error' => 'invalid_token']);
-        }
-        @file_put_contents($cacheFile, json_encode($claims));
-    }
-
-    if (($claims['aud'] ?? '') !== $config['firebase_project_id']) {
-        respond(403, ['error' => 'wrong_project']);
-    }
-    if ((int)($claims['exp'] ?? 0) <= time()) {
-        respond(401, ['error' => 'token_expired']);
-    }
     $email = strtolower((string)($claims['email'] ?? ''));
     $allowed = array_map('strtolower', $config['allowed_emails']);
     if ($email === '' || !in_array($email, $allowed, true)) {
@@ -159,6 +134,96 @@ function requireUser(array $config): array
     }
 
     return ['sub' => (string)($claims['sub'] ?? $email), 'email' => $email];
+}
+
+/**
+ * Локальная проверка Firebase ID-токена: разбор JWT, сверка iss/aud/exp
+ * и подпись RS256 публичным ключом Google. Ключи кешируются на час.
+ */
+function verifyFirebaseToken(string $token, string $projectId): array
+{
+    $parts = explode('.', $token);
+    if (count($parts) !== 3) {
+        respond(401, ['error' => 'invalid_token']);
+    }
+    [$head64, $body64, $sig64] = $parts;
+
+    $header = json_decode(b64urlDecode($head64), true);
+    $claims = json_decode(b64urlDecode($body64), true);
+    $signature = b64urlDecode($sig64);
+
+    if (!is_array($header) || !is_array($claims) || $signature === '') {
+        respond(401, ['error' => 'invalid_token']);
+    }
+    if (($header['alg'] ?? '') !== 'RS256' || ($header['kid'] ?? '') === '') {
+        respond(401, ['error' => 'invalid_token']);
+    }
+
+    $now = time();
+    if ((int)($claims['exp'] ?? 0) <= $now) {
+        respond(401, ['error' => 'token_expired']);
+    }
+    if ((int)($claims['iat'] ?? 0) > $now + 300) {
+        respond(401, ['error' => 'invalid_token']);
+    }
+    if (($claims['sub'] ?? '') === '') {
+        respond(401, ['error' => 'invalid_token']);
+    }
+    if (($claims['aud'] ?? '') !== $projectId
+        || ($claims['iss'] ?? '') !== 'https://securetoken.google.com/' . $projectId) {
+        respond(403, ['error' => 'wrong_project']);
+    }
+
+    // Ключи ротируются: если kid незнаком, перечитываем список принудительно.
+    $certs = firebaseCerts(false);
+    $cert = $certs[$header['kid']] ?? null;
+    if ($cert === null) {
+        $certs = firebaseCerts(true);
+        $cert = $certs[$header['kid']] ?? null;
+    }
+    if ($cert === null) {
+        respond(401, ['error' => 'unknown_signing_key']);
+    }
+
+    $publicKey = openssl_pkey_get_public($cert);
+    if ($publicKey === false) {
+        respond(500, ['error' => 'cert_unreadable']);
+    }
+    if (openssl_verify($head64 . '.' . $body64, $signature, $publicKey, OPENSSL_ALGO_SHA256) !== 1) {
+        respond(401, ['error' => 'bad_signature']);
+    }
+
+    return $claims;
+}
+
+/** Публичные сертификаты Firebase. При сбое сети отдаём просроченный кеш. */
+function firebaseCerts(bool $force): array
+{
+    $file = sys_get_temp_dir() . '/budget_firebase_certs.json';
+    $cached = is_file($file) ? json_decode((string)file_get_contents($file), true) : null;
+    $fresh = is_array($cached) && $cached && time() - (int)filemtime($file) < 3600;
+
+    if (!$force && $fresh) {
+        return $cached;
+    }
+
+    $res = httpGet(FIREBASE_CERTS_URL, 10);
+    $certs = $res['code'] === 200 ? json_decode($res['body'], true) : null;
+    if (!is_array($certs) || !$certs) {
+        if (is_array($cached) && $cached) {
+            return $cached;
+        }
+        respond(503, ['error' => 'certs_unavailable']);
+    }
+
+    @file_put_contents($file, json_encode($certs));
+    return $certs;
+}
+
+function b64urlDecode(string $value): string
+{
+    $decoded = base64_decode(strtr($value, '-_', '+/'), true);
+    return $decoded === false ? '' : $decoded;
 }
 
 function enforceRateLimit(string $uid, int $perHour): void
