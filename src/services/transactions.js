@@ -27,6 +27,7 @@ import {
   updateDoc,
   deleteDoc,
   setDoc,
+  getDoc,
   getDocs,
   onSnapshot,
   query,
@@ -36,11 +37,11 @@ import {
   writeBatch,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=7';
-import { FAMILY_ID } from '../config.js?v=7';
-import { DEFAULT_CATEGORIES } from '../data/categories.js?v=7';
-import { amountsInAllCurrencies, round } from '../core/money.js?v=7';
-import { monthOf } from '../core/dates.js?v=7';
+import { db } from '../core/firebase.js?v=8';
+import { FAMILY_ID } from '../config.js?v=8';
+import { DEFAULT_CATEGORIES } from '../data/categories.js?v=8';
+import { amountsInAllCurrencies, round } from '../core/money.js?v=8';
+import { monthOf } from '../core/dates.js?v=8';
 
 const txCollection = () => collection(db, 'families', FAMILY_ID, 'transactions');
 const catCollection = () => collection(db, 'families', FAMILY_ID, 'categories');
@@ -78,6 +79,36 @@ export async function seedCategoriesIfEmpty() {
   }
   await batch.commit();
   return true;
+}
+
+/**
+ * Довозит категории, появившиеся в коде после первого запуска.
+ *
+ * Что уже присылали — помним в meta/categorySeed, поэтому удалённую вручную
+ * категорию не воскрешаем: добавляется только то, чего семья ещё не видела.
+ */
+export async function syncNewCategories() {
+  const seedRef = doc(db, 'families', FAMILY_ID, 'meta', 'categorySeed');
+  const [seedSnap, catSnap] = await Promise.all([getDoc(seedRef), getDocs(catCollection())]);
+
+  const delivered = new Set(seedSnap.exists() ? seedSnap.data().ids || [] : []);
+  const existing = new Set(catSnap.docs.map((d) => d.id));
+
+  // Первый запуск на старой базе: считаем уже показанным всё, что там лежит.
+  const fresh = DEFAULT_CATEGORIES.filter((c) => !delivered.has(c.id) && !existing.has(c.id));
+  if (!fresh.length) {
+    if (!seedSnap.exists()) {
+      await setDoc(seedRef, { ids: DEFAULT_CATEGORIES.map((c) => c.id) });
+    }
+    return 0;
+  }
+
+  const batch = writeBatch(db);
+  for (const { id, ...data } of fresh) batch.set(doc(catCollection(), id), data);
+  batch.set(seedRef, { ids: DEFAULT_CATEGORIES.map((c) => c.id) });
+  await batch.commit();
+
+  return fresh.length;
 }
 
 export function saveCategory(id, data) {

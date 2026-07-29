@@ -3,11 +3,11 @@
  * Библиотека грузится с CDN по требованию — на других экранах она не нужна.
  */
 
-import { el, render } from '../core/dom.js?v=7';
-import { state } from '../core/store.js?v=7';
-import { formatAmount } from '../core/money.js?v=7';
-import { monthLabel } from '../core/dates.js?v=7';
-import { monthTransactions, byCategory, totals, monthlySeries } from '../core/selectors.js?v=7';
+import { el, render } from '../core/dom.js?v=8';
+import { state } from '../core/store.js?v=8';
+import { formatAmount } from '../core/money.js?v=8';
+import { monthLabel } from '../core/dates.js?v=8';
+import { monthTransactions, byCategory, totals, monthlySeries } from '../core/selectors.js?v=8';
 
 const CHART_JS = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.7/+esm';
 

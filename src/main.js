@@ -2,25 +2,30 @@
  * Точка входа: авторизация → загрузка семьи → подписки на данные → роутинг.
  */
 
-import { $, render } from './core/dom.js?v=7';
-import { state, set, subscribe } from './core/store.js?v=7';
-import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=7';
-import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=7';
-import { unpaidBills } from './core/selectors.js?v=7';
+import { $, render } from './core/dom.js?v=8';
+import { state, set, subscribe } from './core/store.js?v=8';
+import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=8';
+import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=8';
+import { unpaidBills } from './core/selectors.js?v=8';
 
-import { watchAuth, signIn, loadFamily } from './services/auth.js?v=7';
-import { watchTransactions, watchCategories, seedCategoriesIfEmpty } from './services/transactions.js?v=7';
-import { watchBills } from './services/bills.js?v=7';
-import { loadRates } from './services/rates.js?v=7';
+import { watchAuth, signIn, loadFamily } from './services/auth.js?v=8';
+import {
+  watchTransactions,
+  watchCategories,
+  seedCategoriesIfEmpty,
+  syncNewCategories,
+} from './services/transactions.js?v=8';
+import { watchBills } from './services/bills.js?v=8';
+import { loadRates } from './services/rates.js?v=8';
 
-import { renderDashboard } from './views/dashboard.js?v=7';
-import { renderList } from './views/list.js?v=7';
-import { renderBills } from './views/bills.js?v=7';
-import { renderCharts, destroyCharts } from './views/charts.js?v=7';
-import { renderSettings } from './views/settings.js?v=7';
-import { openTxForm } from './views/txForm.js?v=7';
-import { closeSheet } from './ui/sheet.js?v=7';
-import { toastError } from './ui/toast.js?v=7';
+import { renderDashboard } from './views/dashboard.js?v=8';
+import { renderList } from './views/list.js?v=8';
+import { renderBills } from './views/bills.js?v=8';
+import { renderCharts, destroyCharts } from './views/charts.js?v=8';
+import { renderSettings } from './views/settings.js?v=8';
+import { openTxForm } from './views/txForm.js?v=8';
+import { closeSheet } from './ui/sheet.js?v=8';
+import { toastError } from './ui/toast.js?v=8';
 
 const ROUTES = {
   dashboard: renderDashboard,
@@ -74,6 +79,8 @@ async function startData() {
   if (stale) toastError('Курсы валют не обновились, используются сохранённые');
 
   await seedCategoriesIfEmpty().catch(() => {});
+  // Категории, добавленные в код позже первого запуска, довозим молча.
+  await syncNewCategories().catch((error) => console.error(error));
 
   unsubscribers.push(
     watchCategories(

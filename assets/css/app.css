@@ -765,6 +765,18 @@ button { cursor: pointer; border: none; background: none; }
 
 .bills { display: flex; flex-direction: column; gap: 8px; }
 
+.bills__group {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 2px 8px;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: var(--fg-1);
+}
+.bills__group .num { color: var(--fg-2); font-size: 13px; }
+
 .bill {
   display: flex;
   align-items: stretch;

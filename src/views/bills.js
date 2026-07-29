@@ -3,18 +3,18 @@
  * оплаченные отмечены галочкой, забытые горят красным.
  */
 
-import { el, render } from '../core/dom.js?v=7';
-import { state, set } from '../core/store.js?v=7';
-import { CURRENCY_CODES } from '../config.js?v=7';
-import { formatAmount, parseAmount, currencyInfo } from '../core/money.js?v=7';
-import { monthLabel, monthKey, today } from '../core/dates.js?v=7';
-import { billsForMonth } from '../core/selectors.js?v=7';
-import { createBill, updateBill, deleteBill } from '../services/bills.js?v=7';
-import { createTransaction, deleteTransaction } from '../services/transactions.js?v=7';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=7';
-import { toastOk, toastError } from '../ui/toast.js?v=7';
-import { openTxForm } from './txForm.js?v=7';
-import { tileGradient } from './list.js?v=7';
+import { el, render } from '../core/dom.js?v=8';
+import { state, set } from '../core/store.js?v=8';
+import { CURRENCY_CODES } from '../config.js?v=8';
+import { formatAmount, parseAmount, currencyInfo, convert } from '../core/money.js?v=8';
+import { monthLabel, monthKey, today } from '../core/dates.js?v=8';
+import { billsForMonth } from '../core/selectors.js?v=8';
+import { createBill, updateBill, deleteBill } from '../services/bills.js?v=8';
+import { createTransaction, deleteTransaction } from '../services/transactions.js?v=8';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=8';
+import { toastOk, toastError } from '../ui/toast.js?v=8';
+import { openTxForm } from './txForm.js?v=8';
+import { tileGradient } from './list.js?v=8';
 
 export function renderBills() {
   const rows = billsForMonth(state);
@@ -54,13 +54,43 @@ export function renderBills() {
       el('button', { class: 'chip', onclick: () => openBillForm() }, '＋ платёж'),
     ]),
 
-    el('div', { class: 'bills' }, rows.map((row) => billRow(row))),
+    // Группировка по категориям: коммунальные отдельно от услуг и учёбы
+    ...groupByCategory(rows).map(({ category, list, total }) => el('div', {}, [
+      el('div', { class: 'bills__group' }, [
+        el('span', {}, `${category?.icon || '•'} ${category?.name || 'Без категории'}`),
+        el('span', { class: 'num' }, formatAmount(total, state.base)),
+      ]),
+      el('div', { class: 'bills' }, list.map((row) => billRow(row))),
+    ])),
 
     el('p', { class: 'hint', style: 'margin-top:14px' },
       'Галочка — оплачено в этом месяце. Нажатие на строку открывает оплату, шестерёнка — настройки счёта.'),
   ]);
 
   return container;
+}
+
+/** Платежи по категориям + сколько выходит за месяц в сводной валюте. */
+function groupByCategory(rows) {
+  const groups = new Map();
+
+  for (const row of rows) {
+    const key = row.bill.categoryId || 'none';
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(row);
+  }
+
+  return [...groups.entries()]
+    .map(([key, list]) => {
+      const category = state.categories.find((c) => c.id === key) || null;
+      const total = list.reduce((sum, row) => {
+        const amount = row.paid ? Number(row.tx.amount) : row.expected;
+        const currency = row.paid ? row.tx.currency : row.bill.currency;
+        return sum + convert(amount, currency, state.base, state.rates);
+      }, 0);
+      return { category, list, total, order: category?.order ?? 999 };
+    })
+    .sort((a, b) => a.order - b.order);
 }
 
 function billRow({ bill, tx, paid, expected, tracked }) {
