@@ -3,25 +3,28 @@
  * после сканирования каждое поле и каждая строка товара остаются редактируемыми.
  */
 
-import { el, render } from '../core/dom.js?v=3';
-import { state } from '../core/store.js?v=3';
-import { CURRENCY_CODES } from '../config.js?v=3';
-import { formatAmount, parseAmount, round, convert, currencyInfo } from '../core/money.js?v=3';
-import { today } from '../core/dates.js?v=3';
-import { guessCategory } from '../data/categories.js?v=3';
-import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=3';
-import { tileGradient } from './list.js?v=3';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=3';
-import { toastOk, toastError } from '../ui/toast.js?v=3';
-import { scanFromCamera, scanFromGallery, openScanUrlSheet } from './scan.js?v=3';
+import { el, render } from '../core/dom.js?v=4';
+import { state } from '../core/store.js?v=4';
+import { CURRENCY_CODES } from '../config.js?v=4';
+import { formatAmount, parseAmount, round, convert, currencyInfo } from '../core/money.js?v=4';
+import { today, dayLabel } from '../core/dates.js?v=4';
+import { guessCategory } from '../data/categories.js?v=4';
+import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=4';
+import { tileGradient } from './list.js?v=4';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=4';
+import { toastOk, toastError } from '../ui/toast.js?v=4';
+import { scanFromCamera, scanFromGallery, openScanUrlSheet } from './scan.js?v=4';
+import { openQuickPick } from './quickPick.js?v=4';
+import { findDuplicates } from '../core/selectors.js?v=4';
 
 /**
  * openTxForm({ tx })      — правка существующей операции
  * openTxForm({ draft })   — новая операция, предзаполненная из чека
+ * openTxForm({ model })   — возврат к уже набранной форме (после выбора товаров)
  * openTxForm()            — пустая новая операция
  */
-export function openTxForm({ tx = null, draft = null } = {}) {
-  const model = tx ? fromTx(tx) : fromDraft(draft);
+export function openTxForm({ tx = null, draft = null, model: restored = null } = {}) {
+  const model = restored || (tx ? fromTx(tx) : fromDraft(draft));
 
   const body = el('div');
   const footer = el('div', { style: 'display:flex;gap:10px;flex:1' });
@@ -255,7 +258,12 @@ function buildReceiptBlock(model, rerender) {
     return el('div', {}, [
       el('div', { class: 'divider' }, 'состав покупки'),
       el('button', {
+        class: 'btn btn--primary btn--wide',
+        onclick: () => pickItems(model),
+      }, '⚡  Быстрый выбор товаров'),
+      el('button', {
         class: 'btn btn--ghost btn--wide',
+        style: 'margin-top:8px',
         onclick: () => { model.showItems = true; model.items.push(emptyItem()); rerender(); },
       }, '＋  Добавить товары вручную'),
     ]);
@@ -267,10 +275,13 @@ function buildReceiptBlock(model, rerender) {
   return el('div', { style: 'margin-top:18px' }, [
     el('div', { class: 'section-title', style: 'margin-top:0' }, [
       el('span', {}, `Товары (${model.items.length})`),
-      el('button', {
-        class: 'chip',
-        onclick: () => { model.items.push(emptyItem()); rerender(); },
-      }, '＋ строка'),
+      el('div', { style: 'display:flex;gap:6px' }, [
+        el('button', { class: 'chip', onclick: () => pickItems(model) }, '⚡ выбрать'),
+        el('button', {
+          class: 'chip',
+          onclick: () => { model.items.push(emptyItem()); rerender(); },
+        }, '＋ строка'),
+      ]),
     ]),
 
     model.mismatch
@@ -357,7 +368,98 @@ function itemRow(item, index, model, rerender) {
 
 const emptyItem = () => ({ name: '', qty: 1, price: 0, total: 0 });
 
+/**
+ * Быстрый выбор товаров. Шторка одна на всё приложение, поэтому форма
+ * закрывается и открывается заново с тем же черновиком — набранное не теряется.
+ */
+function pickItems(model) {
+  openQuickPick(model.currency, {
+    onDone: (picked) => {
+      // Уже добавленное не дублируем, пустую заготовку выкидываем.
+      const existing = new Set(model.items.map((it) => it.name.trim().toLowerCase()));
+      model.items = model.items.filter((it) => it.name.trim() !== '');
+
+      for (const item of picked) {
+        if (!existing.has(item.name.toLowerCase())) model.items.push(item);
+      }
+
+      model.showItems = model.items.length > 0;
+
+      // Сумма ещё не введена — подставляем итог по строкам.
+      const sum = itemsSum(model);
+      if (!model.amount && sum) model.amount = round(sum, model.currency);
+
+      openTxForm({ model });
+    },
+    onCancel: () => openTxForm({ model }),
+  });
+}
+
 // ---------------------------------------------------------------- сохранение
+
+/** Запись в базу. true — сохранили, false — ошибка (кнопку возвращаем в строй). */
+async function persist(model, tx) {
+  try {
+    const payload = { ...model, items: model.showItems ? model.items : [] };
+    if (tx) {
+      await updateTransaction(tx.id, payload, {
+        rates: state.rates,
+        user: state.user,
+        previous: tx,
+      });
+      toastOk('Сохранено');
+    } else {
+      await createTransaction(payload, { rates: state.rates, user: state.user });
+      toastOk('Добавлено');
+    }
+    closeSheet();
+    return true;
+  } catch (error) {
+    console.error(error);
+    toastError('Не удалось сохранить');
+    return false;
+  }
+}
+
+/** Предупреждение о похожей операции. Решение всегда за человеком. */
+function askAboutDuplicate(model, twins, tx = null) {
+  const rows = twins.slice(0, 4).map((twin) => el('div', { class: 'list-item' }, [
+    el('div', {}, [
+      el('div', {}, twin.merchant || categoryName(twin.categoryId) || 'Без описания'),
+      el('div', { class: 'list-item__sub' },
+        `${dayLabel(twin.date)}${twin.note ? ` · ${twin.note}` : ''}`),
+    ]),
+    el('span', { class: 'num' }, formatAmount(twin.amount, twin.currency)),
+  ]));
+
+  openSheet({
+    title: 'Похоже на повтор',
+    body: [
+      el('p', { class: 'hint', style: 'margin-bottom:12px' },
+        twins.length === 1
+          ? 'Такая операция уже записана:'
+          : `Таких операций уже ${twins.length}:`),
+      ...rows,
+      el('p', { class: 'hint', style: 'margin-top:12px' },
+        'Если это разные покупки — добавляйте, ничего страшного.'),
+    ],
+    footer: [
+      el('button', {
+        class: 'btn btn--ghost',
+        onclick: () => { closeSheet(); openTxForm({ tx, model }); },
+      }, 'Вернуться'),
+      el('button', {
+        class: 'btn btn--primary',
+        onclick: async () => {
+          model.duplicateConfirmed = true;
+          await persist(model, tx);
+        },
+      }, 'Всё равно добавить'),
+    ],
+  });
+}
+
+const categoryName = (id) => state.categories.find((c) => c.id === id)?.name || '';
 
 function buildFooter(model, tx) {
   const save = el('button', { class: 'btn btn--primary' }, tx ? 'Сохранить' : 'Добавить');
@@ -366,26 +468,16 @@ function buildFooter(model, tx) {
     if (!model.amount) { toastError('Введите сумму'); return; }
     if (!model.categoryId) { toastError('Выберите категорию'); return; }
 
-    save.disabled = true;
-    try {
-      const payload = { ...model, items: model.showItems ? model.items : [] };
-      if (tx) {
-        await updateTransaction(tx.id, payload, {
-          rates: state.rates,
-          user: state.user,
-          previous: tx,
-        });
-        toastOk('Сохранено');
-      } else {
-        await createTransaction(payload, { rates: state.rates, user: state.user });
-        toastOk('Добавлено');
-      }
-      closeSheet();
-    } catch (error) {
-      console.error(error);
-      toastError('Не удалось сохранить');
-      save.disabled = false;
+    // Двойной ввод — частая ошибка, поэтому предупреждаем, но не запрещаем.
+    const twins = findDuplicates(state, model, { excludeId: tx?.id || null });
+    if (twins.length && !model.duplicateConfirmed) {
+      askAboutDuplicate(model, twins, tx);
+      return;
     }
+
+    save.disabled = true;
+    const ok = await persist(model, tx);
+    if (!ok) save.disabled = false;
   });
 
   if (!tx) return [save];

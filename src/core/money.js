@@ -9,7 +9,7 @@
  * поэтому не «плывут», когда курс меняется.
  */
 
-import { CURRENCIES, CURRENCY_CODES, FALLBACK_RATES } from '../config.js?v=3';
+import { CURRENCIES, CURRENCY_CODES, FALLBACK_RATES } from '../config.js?v=4';
 
 const byCode = Object.fromEntries(CURRENCIES.map((c) => [c.code, c]));
 

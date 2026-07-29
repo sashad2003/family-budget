@@ -5,9 +5,9 @@
  * AI ошибается в названиях товаров, поэтому ни одно поле не считается финальным.
  */
 
-import { PROXY_URL, CURRENCY_CODES } from '../config.js?v=3';
-import { idToken } from './auth.js?v=3';
-import { normalizeDate, today } from '../core/dates.js?v=3';
+import { PROXY_URL, CURRENCY_CODES } from '../config.js?v=4';
+import { idToken } from './auth.js?v=4';
+import { normalizeDate, today } from '../core/dates.js?v=4';
 
 /** Сколько пикселей по длинной стороне отправляем. Больше — дороже и медленнее без выигрыша. */
 const MAX_EDGE = 1600;

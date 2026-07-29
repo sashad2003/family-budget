@@ -2,22 +2,22 @@
  * Точка входа: авторизация → загрузка семьи → подписки на данные → роутинг.
  */
 
-import { $, render } from './core/dom.js?v=3';
-import { state, set, subscribe } from './core/store.js?v=3';
-import { CURRENCY_CODES } from './config.js?v=3';
-import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=3';
+import { $, render } from './core/dom.js?v=4';
+import { state, set, subscribe } from './core/store.js?v=4';
+import { CURRENCY_CODES } from './config.js?v=4';
+import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=4';
 
-import { watchAuth, signIn, loadFamily } from './services/auth.js?v=3';
-import { watchTransactions, watchCategories, seedCategoriesIfEmpty } from './services/transactions.js?v=3';
-import { loadRates } from './services/rates.js?v=3';
+import { watchAuth, signIn, loadFamily } from './services/auth.js?v=4';
+import { watchTransactions, watchCategories, seedCategoriesIfEmpty } from './services/transactions.js?v=4';
+import { loadRates } from './services/rates.js?v=4';
 
-import { renderDashboard } from './views/dashboard.js?v=3';
-import { renderList } from './views/list.js?v=3';
-import { renderCharts, destroyCharts } from './views/charts.js?v=3';
-import { renderSettings } from './views/settings.js?v=3';
-import { openTxForm } from './views/txForm.js?v=3';
-import { closeSheet } from './ui/sheet.js?v=3';
-import { toastError } from './ui/toast.js?v=3';
+import { renderDashboard } from './views/dashboard.js?v=4';
+import { renderList } from './views/list.js?v=4';
+import { renderCharts, destroyCharts } from './views/charts.js?v=4';
+import { renderSettings } from './views/settings.js?v=4';
+import { openTxForm } from './views/txForm.js?v=4';
+import { closeSheet } from './ui/sheet.js?v=4';
+import { toastError } from './ui/toast.js?v=4';
 
 const ROUTES = {
   dashboard: renderDashboard,
