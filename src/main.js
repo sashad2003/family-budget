@@ -122,6 +122,12 @@ function drawChrome() {
   document.querySelectorAll('.tab').forEach((tab) => {
     tab.classList.toggle('is-active', tab.dataset.route === state.route);
   });
+
+  // Профиль в боковой колонке (на телефоне скрыт стилями).
+  const photo = $('#user-photo');
+  photo.hidden = !state.user?.photoURL;
+  if (state.user?.photoURL) photo.src = state.user.photoURL;
+  $('#user-name').textContent = state.user?.displayName || state.user?.email || '';
 }
 
 /** Перерисовка экрана. Chart.js держит canvas — старые графики гасим явно. */
@@ -161,7 +167,12 @@ $('#btn-base-currency').addEventListener('click', () => {
 });
 
 $('#btn-add').addEventListener('click', () => openTxForm());
+$('#btn-add-wide').addEventListener('click', () => openTxForm());
+$('#btn-user').addEventListener('click', () => set({ route: 'settings' }));
 
 document.querySelectorAll('.tab').forEach((tab) => {
   tab.addEventListener('click', () => set({ route: tab.dataset.route }));
 });
+
+// Кнопка «все» на обзоре ведёт в список операций.
+window.addEventListener('goto-list', () => set({ route: 'list' }));

@@ -102,7 +102,7 @@ export function txRow(tx, onClick) {
   return el('button', { class: 'tx', onclick: onClick }, [
     el('div', {
       class: 'tx__ico',
-      style: cat ? `background:${hexToSoft(cat.color)}` : '',
+      style: `background:${tileGradient(cat?.color)}`,
     }, cat?.icon || '•'),
 
     el('div', { class: 'tx__body' }, [
@@ -122,12 +122,20 @@ export function txRow(tx, onClick) {
   ]);
 }
 
-/** Полупрозрачная подложка под иконку категории. */
-function hexToSoft(hex) {
+/**
+ * Насыщенная плитка под иконку категории: цвет категории с уходом в тень,
+ * как цветные квадраты в референсе.
+ */
+export function tileGradient(hex) {
   const value = String(hex || '').replace('#', '');
-  if (value.length !== 6) return '';
-  const [r, g, b] = [0, 2, 4].map((i) => Number.parseInt(value.slice(i, i + 2), 16));
-  return `rgba(${r}, ${g}, ${b}, 0.16)`;
+  if (value.length !== 6) return 'linear-gradient(150deg, #3a3a52, #23233a)';
+
+  const rgb = [0, 2, 4].map((i) => Number.parseInt(value.slice(i, i + 2), 16));
+  const darker = rgb
+    .map((c) => Math.round(c * 0.62).toString(16).padStart(2, '0'))
+    .join('');
+
+  return `linear-gradient(150deg, #${value}, #${darker})`;
 }
 
 function plural(n) {

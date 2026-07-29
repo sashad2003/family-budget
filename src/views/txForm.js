@@ -10,6 +10,7 @@ import { formatAmount, parseAmount, round, convert, currencyInfo } from '../core
 import { today } from '../core/dates.js';
 import { guessCategory } from '../data/categories.js';
 import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js';
+import { tileGradient } from './list.js';
 import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js';
 import { toastOk, toastError } from '../ui/toast.js';
 import { openScanSheet } from './scan.js';
@@ -155,7 +156,10 @@ function buildBody(model, rerender) {
           style: model.categoryId === cat.id ? `color:${cat.color}` : '',
           onclick: () => { model.categoryId = cat.id; rerender(); },
         }, [
-          el('span', { class: 'cat__ico' }, cat.icon || '•'),
+          el('span', {
+            class: 'cat__ico',
+            style: `background:${tileGradient(cat.color)}`,
+          }, cat.icon || '•'),
           el('span', {}, cat.name),
         ]),
       )),

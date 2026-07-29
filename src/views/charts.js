@@ -52,11 +52,11 @@ export function renderCharts() {
   const trendCanvas = el('canvas');
   const compareCanvas = el('canvas');
 
-  render(container, [
+  render(container, el('div', { class: 'chart-grid' }, [
     el('div', { class: 'card' }, [
       el('div', { class: 'card__label' }, `Расходы по категориям · ${monthLabel(state.month)}`),
       el('div', { class: 'chart-box' }, donutCanvas),
-      el('div', { class: 'bar-legend' }, cats.map((row) =>
+      el('div', { class: 'bar-legend', style: 'margin-top:16px' }, cats.map((row) =>
         el('div', { class: 'legend-row' }, [
           el('span', { class: 'legend-dot', style: `background:${row.color}` }),
           el('span', { class: 'legend-name' }, `${row.icon} ${row.name}`),
@@ -72,9 +72,9 @@ export function renderCharts() {
 
     el('div', { class: 'card' }, [
       el('div', { class: 'card__label' }, 'Доходы и расходы за месяц'),
-      el('div', { class: 'chart-box', style: 'height:170px' }, compareCanvas),
+      el('div', { class: 'chart-box', style: 'height:190px' }, compareCanvas),
     ]),
-  ]);
+  ]));
 
   // Рисуем после того, как узлы попали в документ, иначе canvas не знает размеров.
   loadChartJs().then((Chart) => {
