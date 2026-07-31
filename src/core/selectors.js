@@ -1,7 +1,7 @@
 /** Выборки и агрегаты над транзакциями. Чистые функции — их удобно переиспользовать. */
 
-import { txAmountIn } from './money.js?v=13';
-import { monthOf, shiftMonth } from './dates.js?v=13';
+import { txAmountIn, round } from './money.js?v=14';
+import { monthOf, shiftMonth } from './dates.js?v=14';
 
 /** Операции выбранного месяца с учётом фильтров экрана «Операции». */
 export function monthTransactions(state, filters = {}) {
@@ -82,8 +82,13 @@ export function groupByDate(list) {
 
 /**
  * Похожие операции — защита от двойного ввода.
+ *
  * Ссылка на чек совпадает точно; в остальном ловим ту же сумму в той же
  * валюте рядом по датам, потому что чаще всего дублируют именно её.
+ *
+ * Суммы сверяем и точно, и после округления до знаков валюты: у динара их
+ * ноль, поэтому записи, сохранённые раньше, лежат в базе без копеек. Иначе
+ * покупка из чека и SMS о том же списании выглядели бы разными операциями.
  */
 export function findDuplicates(state, candidate, { excludeId = null, dayWindow = 3 } = {}) {
   const amount = Number(candidate.amount) || 0;
@@ -100,12 +105,29 @@ export function findDuplicates(state, candidate, { excludeId = null, dayWindow =
 
       if (tx.type !== candidate.type) return false;
       if (tx.currency !== candidate.currency) return false;
-      if (Math.abs(Number(tx.amount) - amount) > 0.001) return false;
+      if (!sameAmount(Number(tx.amount), amount, tx.currency)) return false;
 
       const diff = Math.abs(Date.parse(tx.date) - when);
       return Number.isFinite(diff) && diff <= dayWindow * day;
     })
     .sort((a, b) => b.date.localeCompare(a.date));
+}
+
+/** Совпадение сумм: точное либо в пределах округления валюты. */
+function sameAmount(a, b, currency) {
+  if (Math.abs(a - b) <= 0.001) return true;
+  return Math.abs(round(a, currency) - round(b, currency)) <= 0.001;
+}
+
+/**
+ * Точное время покупки — самый надёжный признак того, что это одна и та же
+ * операция: две разные покупки в одном магазине на ту же сумму в ту же минуту
+ * практически не встречаются.
+ */
+export function sameMoment(tx, candidate) {
+  return Boolean(tx.time) && Boolean(candidate.time)
+    && tx.date === candidate.date
+    && tx.time === candidate.time;
 }
 
 /**

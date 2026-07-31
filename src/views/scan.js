@@ -4,13 +4,13 @@
  * открывается в редактируемой форме.
  */
 
-import { el, render } from '../core/dom.js?v=13';
-import { openSheet, closeSheet } from '../ui/sheet.js?v=13';
-import { toastError } from '../ui/toast.js?v=13';
-import { state } from '../core/store.js?v=13';
-import { findDuplicates } from '../core/selectors.js?v=13';
-import { formatAmount } from '../core/money.js?v=13';
-import { scanReceiptImages, scanReceiptUrl, scanSmsText, MAX_RECEIPT_IMAGES } from '../services/receipts.js?v=13';
+import { el, render } from '../core/dom.js?v=14';
+import { openSheet, closeSheet } from '../ui/sheet.js?v=14';
+import { toastError } from '../ui/toast.js?v=14';
+import { state } from '../core/store.js?v=14';
+import { findDuplicates, sameMoment } from '../core/selectors.js?v=14';
+import { formatAmount } from '../core/money.js?v=14';
+import { scanReceiptImages, scanReceiptUrl, scanSmsText, MAX_RECEIPT_IMAGES } from '../services/receipts.js?v=14';
 
 /** Шторка «распознаём…» — на время запроса заменяет собой форму. */
 function showBusy(text) {
@@ -32,16 +32,18 @@ async function run(task, waitText, onDraft) {
 
     // Одну и ту же покупку легко внести дважды: сначала чек, потом SMS о списании.
     // Ровное совпадение суммы, валюты и дня — повод спросить, пока форма не открыта.
-    const twins = findDuplicates(state, {
+    const candidate = {
       type: 'expense',
       amount: draft.total,
       currency: draft.currency,
       date: draft.date,
+      time: draft.time,
       receiptUrl: draft.receiptUrl,
-    }, { dayWindow: 0 });
+    };
+    const twins = findDuplicates(state, candidate, { dayWindow: 0 });
 
     if (twins.length) {
-      warnAboutDuplicate(draft, twins, onDraft);
+      warnAboutDuplicate(draft, twins, candidate, onDraft);
       return;
     }
 
@@ -54,19 +56,28 @@ async function run(task, waitText, onDraft) {
 }
 
 /** «Уже вносили?» — показываем найденные операции и оставляем выбор за человеком. */
-function warnAboutDuplicate(draft, twins, onDraft) {
-  const rows = twins.slice(0, 5).map((tx) => el('div', { class: 'hint' }, [
+function warnAboutDuplicate(draft, twins, candidate, onDraft) {
+  // Совпавшее до минуты время — почти наверняка та же покупка, показываем первой.
+  const sorted = [...twins].sort(
+    (a, b) => Number(sameMoment(b, candidate)) - Number(sameMoment(a, candidate)),
+  );
+  const exact = sorted.some((tx) => sameMoment(tx, candidate));
+
+  const rows = sorted.slice(0, 5).map((tx) => el('div', { class: 'hint' }, [
     el('b', {}, formatAmount(tx.amount, tx.currency)),
     ` · ${tx.date}${tx.time ? ` ${tx.time}` : ''}${tx.merchant ? ` · ${tx.merchant}` : ''}`,
+    sameMoment(tx, candidate) ? el('b', {}, ' · то же время') : null,
   ]));
 
   openSheet({
-    title: 'Возможно, уже внесено',
+    title: exact ? 'Это уже внесено' : 'Возможно, уже внесено',
     body: [
       el('p', { class: 'hint', style: 'margin-bottom:12px' },
-        twins.length === 1
-          ? 'На эту дату уже есть операция на ту же сумму:'
-          : `На эту дату уже есть операции на ту же сумму (${twins.length}):`),
+        exact
+          ? 'Та же сумма в ту же минуту — почти наверняка эта покупка уже записана:'
+          : twins.length === 1
+            ? 'На эту дату уже есть операция на ту же сумму:'
+            : `На эту дату уже есть операции на ту же сумму (${twins.length}):`),
       ...rows,
       el('p', { class: 'hint', style: 'margin-top:12px' },
         'Если это другая покупка — добавляйте, ничего страшного.'),

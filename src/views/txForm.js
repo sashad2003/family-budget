@@ -3,19 +3,19 @@
  * после сканирования каждое поле и каждая строка товара остаются редактируемыми.
  */
 
-import { el, render } from '../core/dom.js?v=13';
-import { state } from '../core/store.js?v=13';
-import { CURRENCY_CODES } from '../config.js?v=13';
-import { formatAmount, parseAmount, round, convert, currencyInfo } from '../core/money.js?v=13';
-import { today, dayLabel } from '../core/dates.js?v=13';
-import { guessCategory } from '../data/categories.js?v=13';
-import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=13';
-import { tileGradient } from './list.js?v=13';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=13';
-import { toastOk, toastError } from '../ui/toast.js?v=13';
-import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=13';
-import { openQuickPick } from './quickPick.js?v=13';
-import { findDuplicates } from '../core/selectors.js?v=13';
+import { el, render } from '../core/dom.js?v=14';
+import { state } from '../core/store.js?v=14';
+import { CURRENCY_CODES } from '../config.js?v=14';
+import { formatAmount, parseAmount, round, convert, currencyInfo } from '../core/money.js?v=14';
+import { today, dayLabel } from '../core/dates.js?v=14';
+import { guessCategory } from '../data/categories.js?v=14';
+import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=14';
+import { tileGradient } from './list.js?v=14';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=14';
+import { toastOk, toastError } from '../ui/toast.js?v=14';
+import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=14';
+import { openQuickPick } from './quickPick.js?v=14';
+import { findDuplicates, sameMoment } from '../core/selectors.js?v=14';
 
 /**
  * openTxForm({ tx })      — правка существующей операции
@@ -448,8 +448,12 @@ function askAboutDuplicate(model, twins, tx = null) {
   const rows = twins.slice(0, 4).map((twin) => el('div', { class: 'list-item' }, [
     el('div', {}, [
       el('div', {}, twin.merchant || categoryName(twin.categoryId) || 'Без описания'),
-      el('div', { class: 'list-item__sub' },
-        `${dayLabel(twin.date)}${twin.note ? ` · ${twin.note}` : ''}`),
+      el('div', { class: 'list-item__sub' }, [
+        `${dayLabel(twin.date)}${twin.time ? ` ${twin.time}` : ''}`,
+        twin.note ? ` · ${twin.note}` : '',
+        // Та же минута — почти наверняка та же покупка, а не похожая.
+        sameMoment(twin, model) ? el('b', {}, ' · то же время') : null,
+      ]),
     ]),
     el('span', { class: 'num' }, formatAmount(twin.amount, twin.currency)),
   ]));

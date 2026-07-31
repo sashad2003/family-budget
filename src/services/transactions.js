@@ -38,11 +38,11 @@ import {
   writeBatch,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=13';
-import { FAMILY_ID } from '../config.js?v=13';
-import { DEFAULT_CATEGORIES } from '../data/categories.js?v=13';
-import { amountsInAllCurrencies, round } from '../core/money.js?v=13';
-import { monthOf } from '../core/dates.js?v=13';
+import { db } from '../core/firebase.js?v=14';
+import { FAMILY_ID } from '../config.js?v=14';
+import { DEFAULT_CATEGORIES } from '../data/categories.js?v=14';
+import { amountsInAllCurrencies } from '../core/money.js?v=14';
+import { monthOf } from '../core/dates.js?v=14';
 
 const txCollection = () => collection(db, 'families', FAMILY_ID, 'transactions');
 const catCollection = () => collection(db, 'families', FAMILY_ID, 'categories');
@@ -125,7 +125,13 @@ export function deleteCategory(id) {
  * Дальше эти числа не пересчитываются — отчёты за прошлое остаются стабильными.
  */
 function buildTx(input, rates) {
-  const amount = round(Number(input.amount) || 0, input.currency);
+  /**
+   * Сумму храним как есть, без округления до знаков валюты. У динара их ноль,
+   * и округление стирало копейки — а именно они надёжнее всего связывают
+   * покупку из чека с SMS о том же списании. На экране число всё равно
+   * показывается через formatAmount, то есть вид не меняется.
+   */
+  const amount = Number(input.amount) || 0;
   const items = (input.items || [])
     .filter((it) => String(it.name || '').trim() !== '')
     .map((it) => ({
