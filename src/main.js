@@ -2,30 +2,30 @@
  * Точка входа: авторизация → загрузка семьи → подписки на данные → роутинг.
  */
 
-import { $, render } from './core/dom.js?v=11';
-import { state, set, subscribe } from './core/store.js?v=11';
-import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=11';
-import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=11';
-import { unpaidBills } from './core/selectors.js?v=11';
+import { $, render } from './core/dom.js?v=12';
+import { state, set, subscribe } from './core/store.js?v=12';
+import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=12';
+import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=12';
+import { unpaidBills } from './core/selectors.js?v=12';
 
-import { watchAuth, signIn, loadFamily } from './services/auth.js?v=11';
+import { watchAuth, signIn, loadFamily } from './services/auth.js?v=12';
 import {
   watchTransactions,
   watchCategories,
   seedCategoriesIfEmpty,
   syncNewCategories,
-} from './services/transactions.js?v=11';
-import { watchBills } from './services/bills.js?v=11';
-import { loadRates } from './services/rates.js?v=11';
+} from './services/transactions.js?v=12';
+import { watchBills } from './services/bills.js?v=12';
+import { loadRates } from './services/rates.js?v=12';
 
-import { renderDashboard } from './views/dashboard.js?v=11';
-import { renderList } from './views/list.js?v=11';
-import { renderBills } from './views/bills.js?v=11';
-import { renderCharts, destroyCharts } from './views/charts.js?v=11';
-import { renderSettings } from './views/settings.js?v=11';
-import { openTxForm } from './views/txForm.js?v=11';
-import { closeSheet } from './ui/sheet.js?v=11';
-import { toastError } from './ui/toast.js?v=11';
+import { renderDashboard } from './views/dashboard.js?v=12';
+import { renderList } from './views/list.js?v=12';
+import { renderBills } from './views/bills.js?v=12';
+import { renderCharts, destroyCharts } from './views/charts.js?v=12';
+import { renderSettings } from './views/settings.js?v=12';
+import { openTxForm } from './views/txForm.js?v=12';
+import { closeSheet } from './ui/sheet.js?v=12';
+import { toastError } from './ui/toast.js?v=12';
 
 const ROUTES = {
   dashboard: renderDashboard,

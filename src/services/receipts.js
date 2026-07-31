@@ -5,9 +5,9 @@
  * AI ошибается в названиях товаров, поэтому ни одно поле не считается финальным.
  */
 
-import { PROXY_URL, CURRENCY_CODES } from '../config.js?v=11';
-import { idToken } from './auth.js?v=11';
-import { normalizeDate, today } from '../core/dates.js?v=11';
+import { PROXY_URL, CURRENCY_CODES } from '../config.js?v=12';
+import { idToken } from './auth.js?v=12';
+import { normalizeDate, today } from '../core/dates.js?v=12';
 
 /** Сколько пикселей по длинной стороне отправляем. Больше — дороже и медленнее без выигрыша. */
 const MAX_EDGE = 1600;
@@ -63,6 +63,7 @@ function errorText(code, status) {
     url_private_address: 'Такая ссылка недоступна',
     page_fetch_failed: 'Не удалось открыть страницу чека',
     page_empty: 'На странице не нашлось текста',
+    pdf_too_large: 'Квитанция по ссылке слишком тяжёлая',
     image_size: 'Фото слишком большое',
     image_count: `Можно отправить от 1 до ${MAX_RECEIPT_IMAGES} фото`,
     images_too_large: 'Фотографии в сумме слишком тяжёлые, попробуйте меньше кадров',

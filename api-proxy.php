@@ -22,6 +22,7 @@ const MAX_IMAGE_BYTES  = 5 * 1024 * 1024;   // 5 МБ на base64-картинк
 const MAX_IMAGES       = 6;                 // длинный чек разрешаем снять частями
 const MAX_IMAGES_BYTES = 12 * 1024 * 1024;  // суммарный потолок на все кадры
 const MAX_PAGE_BYTES   = 512 * 1024;        // 512 КБ с чужой страницы
+const MAX_PDF_BYTES    = 4 * 1024 * 1024;   // если по ссылке отдают PDF — шлём его целиком
 const MAX_TOKENS      = 8000;
 
 // Публичные ключи, которыми Google подписывает Firebase ID-токены
@@ -103,10 +104,7 @@ switch ($action) {
 
     case 'receipt_url':
         $url = (string)($req['url'] ?? '');
-        $text = fetchReceiptPage($url);
-        respond(200, extractReceipt($config, [
-            ['type' => 'text', 'text' => "Извлеки данные из текста страницы чека:\n\n" . $text],
-        ]));
+        respond(200, extractReceipt($config, fetchReceiptContent($url)));
 
     default:
         respond(400, ['error' => 'unknown_action']);
@@ -299,11 +297,12 @@ function httpGet(string $url, int $timeout, array $headers = []): array
     ]);
     $body = curl_exec($ch);
     $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $type = (string)(curl_getinfo($ch, CURLINFO_CONTENT_TYPE) ?: '');
     $err  = curl_error($ch);
     if ($body === false) {
-        return ['code' => 0, 'body' => '', 'error' => $err];
+        return ['code' => 0, 'body' => '', 'type' => '', 'error' => $err];
     }
-    return ['code' => $code, 'body' => (string)$body, 'error' => ''];
+    return ['code' => $code, 'body' => (string)$body, 'type' => $type, 'error' => ''];
 }
 
 /** Курсы к EUR. Источник бесплатный и без ключа, поддерживает RSD и ILS. */
@@ -338,7 +337,14 @@ function fetchRates(): array
  * Пускаем только https и только на публичные адреса — иначе прокси
  * превращается в инструмент для запросов во внутреннюю сеть хостинга.
  */
-function fetchReceiptPage(string $url): string
+/**
+ * Готовит содержимое страницы чека для модели.
+ *
+ * По ссылке из QR не всегда лежит HTML: часть сетей отдаёт сразу PDF-квитанцию.
+ * Такой ответ нельзя чистить strip_tags — от бинарника остаётся мусор без товаров,
+ * поэтому PDF уходит в Claude как есть, отдельным document-блоком.
+ */
+function fetchReceiptContent(string $url): array
 {
     $parts = parse_url($url);
     if (!$parts || ($parts['scheme'] ?? '') !== 'https' || empty($parts['host'])) {
@@ -355,9 +361,23 @@ function fetchReceiptPage(string $url): string
         }
     }
 
-    $res = httpGet($url, 20, ['Accept: text/html,application/xhtml+xml']);
+    $res = httpGet($url, 20, ['Accept: text/html,application/xhtml+xml,application/pdf']);
     if ($res['code'] !== 200 || $res['body'] === '') {
         respond(502, ['error' => 'page_fetch_failed', 'status' => $res['code']]);
+    }
+
+    if (stripos($res['type'], 'application/pdf') !== false || str_starts_with($res['body'], '%PDF-')) {
+        if (strlen($res['body']) > MAX_PDF_BYTES) {
+            respond(413, ['error' => 'pdf_too_large']);
+        }
+        return [
+            ['type' => 'document', 'source' => [
+                'type'       => 'base64',
+                'media_type' => 'application/pdf',
+                'data'       => base64_encode($res['body']),
+            ]],
+            ['type' => 'text', 'text' => 'Извлеки данные из этой квитанции.'],
+        ];
     }
 
     $html = substr($res['body'], 0, MAX_PAGE_BYTES);
@@ -368,7 +388,9 @@ function fetchReceiptPage(string $url): string
     if ($text === '') {
         respond(422, ['error' => 'page_empty']);
     }
-    return mb_substr($text, 0, 20000);
+    return [
+        ['type' => 'text', 'text' => "Извлеки данные из текста страницы чека:\n\n" . mb_substr($text, 0, 20000)],
+    ];
 }
 
 /** Один вызов Claude с жёсткой схемой ответа — на выходе всегда валидный JSON. */
