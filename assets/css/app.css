@@ -275,9 +275,6 @@ button { cursor: pointer; border: none; background: none; }
 .rail__brand, .rail__user { display: none; }
 .rail__nav { display: flex; flex: 1; gap: 4px; }
 
-/* «Операции», «Статистика» и «Настройки» на телефоне живут внутри «Ещё». */
-.tab--desktop { display: none; }
-
 .tab {
   flex: 1;
   display: flex;
@@ -292,6 +289,12 @@ button { cursor: pointer; border: none; background: none; }
   font-weight: 400;
   transition: color 0.2s, background 0.2s;
 }
+
+/*
+ * «Операции», «Статистика» и «Настройки» на телефоне живут внутри «Ещё».
+ * Правило стоит после .tab: у обоих селекторов одинаковый вес, и решает порядок.
+ */
+.tab--desktop { display: none; }
 
 .tab__ico { display: block; line-height: 0; }
 .tab__ico svg {

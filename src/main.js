@@ -2,31 +2,31 @@
  * Точка входа: авторизация → загрузка семьи → подписки на данные → роутинг.
  */
 
-import { $, render } from './core/dom.js?v=16';
-import { state, set, subscribe } from './core/store.js?v=16';
-import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=16';
-import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=16';
-import { unpaidBills } from './core/selectors.js?v=16';
+import { $, render } from './core/dom.js?v=17';
+import { state, set, subscribe } from './core/store.js?v=17';
+import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=17';
+import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=17';
+import { unpaidBills } from './core/selectors.js?v=17';
 
-import { watchAuth, signIn, loadFamily } from './services/auth.js?v=16';
+import { watchAuth, signIn, loadFamily } from './services/auth.js?v=17';
 import {
   watchTransactions,
   watchCategories,
   seedCategoriesIfEmpty,
   syncNewCategories,
-} from './services/transactions.js?v=16';
-import { watchBills } from './services/bills.js?v=16';
-import { loadRates } from './services/rates.js?v=16';
+} from './services/transactions.js?v=17';
+import { watchBills } from './services/bills.js?v=17';
+import { loadRates } from './services/rates.js?v=17';
 
-import { renderDashboard } from './views/dashboard.js?v=16';
-import { renderList } from './views/list.js?v=16';
-import { renderBills } from './views/bills.js?v=16';
-import { renderCharts, destroyCharts } from './views/charts.js?v=16';
-import { renderSettings } from './views/settings.js?v=16';
-import { openTxForm } from './views/txForm.js?v=16';
-import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=16';
-import { closeSheet } from './ui/sheet.js?v=16';
-import { toastError } from './ui/toast.js?v=16';
+import { renderDashboard } from './views/dashboard.js?v=17';
+import { renderList } from './views/list.js?v=17';
+import { renderBills } from './views/bills.js?v=17';
+import { renderCharts, destroyCharts } from './views/charts.js?v=17';
+import { renderSettings } from './views/settings.js?v=17';
+import { openTxForm } from './views/txForm.js?v=17';
+import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=17';
+import { closeSheet } from './ui/sheet.js?v=17';
+import { toastError } from './ui/toast.js?v=17';
 
 const ROUTES = {
   dashboard: renderDashboard,
