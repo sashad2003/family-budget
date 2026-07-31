@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <!-- ?v меняется при правках: заставляет браузер взять новый файл, а не старый из кеша -->
-<link rel="stylesheet" href="assets/css/app.css?v=15">
+<link rel="stylesheet" href="assets/css/app.css?v=16">
 </head>
 <body>
 
@@ -46,12 +46,41 @@
       <span class="rail__name">Бюджет</span>
     </div>
 
+    <!--
+      На телефоне в доке помещаются три кнопки: «Обзор», «Платежи» и «Ещё».
+      Помеченные tab--desktop живут только в боковой колонке, а на телефоне
+      открываются из «Ещё» — иначе пять подписей ломают строку.
+    -->
     <nav class="rail__nav">
-      <button class="tab" data-route="dashboard"><span class="tab__ico">◍</span><span class="tab__label">Обзор</span></button>
-      <button class="tab" data-route="list"><span class="tab__ico">≡</span><span class="tab__label">Операции</span></button>
-      <button class="tab" data-route="bills"><span class="tab__ico">🧾<span id="bills-badge" class="badge" hidden></span></span><span class="tab__label">Платежи</span></button>
-      <button class="tab" data-route="charts"><span class="tab__ico">◔</span><span class="tab__label">Статистика</span></button>
-      <button class="tab" data-route="settings"><span class="tab__ico">⚙</span><span class="tab__label">Ещё</span></button>
+      <button class="tab" data-route="dashboard">
+        <span class="tab__ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10.6 12 4l8 6.6"/><path d="M6.4 9.8V20h11.2V9.8"/></svg></span>
+        <span class="tab__label">Обзор</span>
+      </button>
+
+      <button class="tab tab--desktop" data-route="list">
+        <span class="tab__ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7h11M9 12h11M9 17h7"/><circle cx="4.8" cy="7" r="1.1" fill="currentColor" stroke="none"/><circle cx="4.8" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="4.8" cy="17" r="1.1" fill="currentColor" stroke="none"/></svg></span>
+        <span class="tab__label">Операции</span>
+      </button>
+
+      <button class="tab" data-route="bills">
+        <span class="tab__ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3.6h12v16.8l-3-1.8-3 1.8-3-1.8-3 1.8z"/><path d="M9.2 8.6h5.6M9.2 12.6h5.6"/></svg><span id="bills-badge" class="badge" hidden></span></span>
+        <span class="tab__label">Платежи</span>
+      </button>
+
+      <button class="tab tab--desktop" data-route="charts">
+        <span class="tab__ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20v-7M12 20V4.8M19 20v-9.5"/></svg></span>
+        <span class="tab__label">Статистика</span>
+      </button>
+
+      <button class="tab tab--desktop" data-route="settings">
+        <span class="tab__ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7.5h8.5M17.5 7.5H20M4 16.5h3.5M12.5 16.5H20"/><circle cx="15" cy="7.5" r="2.3"/><circle cx="10" cy="16.5" r="2.3"/></svg></span>
+        <span class="tab__label">Настройки</span>
+      </button>
+
+      <button id="btn-more" class="tab tab--more">
+        <span class="tab__ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5.2" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.7" fill="currentColor" stroke="none"/><circle cx="18.8" cy="12" r="1.7" fill="currentColor" stroke="none"/></svg></span>
+        <span class="tab__label">Ещё</span>
+      </button>
     </nav>
 
     <button id="btn-user" class="rail__user">
@@ -83,6 +112,6 @@
 <div id="sheet-root"></div>
 <div id="toast-root" class="toast-root"></div>
 
-<script type="module" src="src/main.js?v=15"></script>
+<script type="module" src="src/main.js?v=16"></script>
 </body>
 </html>

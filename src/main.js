@@ -2,30 +2,31 @@
  * Точка входа: авторизация → загрузка семьи → подписки на данные → роутинг.
  */
 
-import { $, render } from './core/dom.js?v=15';
-import { state, set, subscribe } from './core/store.js?v=15';
-import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=15';
-import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=15';
-import { unpaidBills } from './core/selectors.js?v=15';
+import { $, render } from './core/dom.js?v=16';
+import { state, set, subscribe } from './core/store.js?v=16';
+import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=16';
+import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=16';
+import { unpaidBills } from './core/selectors.js?v=16';
 
-import { watchAuth, signIn, loadFamily } from './services/auth.js?v=15';
+import { watchAuth, signIn, loadFamily } from './services/auth.js?v=16';
 import {
   watchTransactions,
   watchCategories,
   seedCategoriesIfEmpty,
   syncNewCategories,
-} from './services/transactions.js?v=15';
-import { watchBills } from './services/bills.js?v=15';
-import { loadRates } from './services/rates.js?v=15';
+} from './services/transactions.js?v=16';
+import { watchBills } from './services/bills.js?v=16';
+import { loadRates } from './services/rates.js?v=16';
 
-import { renderDashboard } from './views/dashboard.js?v=15';
-import { renderList } from './views/list.js?v=15';
-import { renderBills } from './views/bills.js?v=15';
-import { renderCharts, destroyCharts } from './views/charts.js?v=15';
-import { renderSettings } from './views/settings.js?v=15';
-import { openTxForm } from './views/txForm.js?v=15';
-import { closeSheet } from './ui/sheet.js?v=15';
-import { toastError } from './ui/toast.js?v=15';
+import { renderDashboard } from './views/dashboard.js?v=16';
+import { renderList } from './views/list.js?v=16';
+import { renderBills } from './views/bills.js?v=16';
+import { renderCharts, destroyCharts } from './views/charts.js?v=16';
+import { renderSettings } from './views/settings.js?v=16';
+import { openTxForm } from './views/txForm.js?v=16';
+import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=16';
+import { closeSheet } from './ui/sheet.js?v=16';
+import { toastError } from './ui/toast.js?v=16';
 
 const ROUTES = {
   dashboard: renderDashboard,
@@ -145,6 +146,9 @@ function drawChrome() {
     tab.classList.toggle('is-active', tab.dataset.route === state.route);
   });
 
+  // На телефоне открытый раздел может лежать внутри «Ещё» — подсвечиваем её.
+  $('#btn-more').classList.toggle('is-active', MORE_ROUTES.includes(state.route));
+
   // Профиль в боковой колонке (на телефоне скрыт стилями).
   const photo = $('#user-photo');
   photo.hidden = !state.user?.photoURL;
@@ -198,9 +202,11 @@ $('#btn-add').addEventListener('click', () => openTxForm());
 $('#btn-add-wide').addEventListener('click', () => openTxForm());
 $('#btn-user').addEventListener('click', () => set({ route: 'settings' }));
 
-document.querySelectorAll('.tab').forEach((tab) => {
+document.querySelectorAll('.tab[data-route]').forEach((tab) => {
   tab.addEventListener('click', () => set({ route: tab.dataset.route }));
 });
+
+$('#btn-more').addEventListener('click', openMoreMenu);
 
 // Кнопка «все» на обзоре ведёт в список операций.
 window.addEventListener('goto-list', () => set({ route: 'list' }));
