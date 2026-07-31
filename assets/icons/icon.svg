@@ -6,6 +6,10 @@
     </linearGradient>
   </defs>
   <rect width="512" height="512" rx="112" fill="url(#g)"/>
-  <text x="256" y="256" fill="#fff" font-family="Helvetica, Arial, sans-serif"
-        font-size="300" font-weight="600" text-anchor="middle" dominant-baseline="central">₽</text>
+  <!-- Знак валюты вообще: кружок с четырьмя лучами. Нарисован линиями,
+       а не текстом, чтобы не зависеть от шрифта на устройстве. -->
+  <g fill="none" stroke="#fff" stroke-width="34" stroke-linecap="round">
+    <circle cx="256" cy="256" r="92"/>
+    <path d="M191 191 138 138M321 191 374 138M191 321 138 374M321 321 374 374"/>
+  </g>
 </svg>

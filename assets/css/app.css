@@ -173,11 +173,22 @@ button { cursor: pointer; border: none; background: none; }
 
 .auth__card { width: 100%; max-width: 380px; padding: 40px 30px 34px; text-align: center; }
 
+/*
+ * Знак валюты вообще (¤) — кружок с лучами. Рисуем линиями, а не буквой:
+ * в шрифте интерфейса этот символ мелкий и в разных системах разный.
+ */
+.logo-mark {
+  width: 56%; height: 56%;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+}
+
 .auth__logo {
   width: 74px; height: 74px;
   margin: 0 auto 24px;
   display: grid; place-items: center;
-  font-size: 30px; font-weight: 600;
   color: #fff;
   border-radius: 24px;
   background: linear-gradient(145deg, #5b9fff, #7a3cff 60%, #3de8d0);
@@ -1083,7 +1094,7 @@ button { cursor: pointer; border: none; background: none; }
     width: 38px; height: 38px;
     display: grid; place-items: center;
     border-radius: 12px;
-    font-size: 18px; font-weight: 600; color: #fff;
+    color: #fff;
     background: linear-gradient(145deg, #5b9fff, #7a3cff);
     box-shadow: 0 10px 22px -10px rgba(91, 159, 255, 0.9);
   }

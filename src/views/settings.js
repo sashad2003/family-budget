@@ -1,14 +1,14 @@
 /** Настройки: профиль, участники, валюта, курсы, категории. */
 
-import { el, render } from '../core/dom.js?v=18';
-import { state, set } from '../core/store.js?v=18';
-import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=18';
-import { formatAmount, convert } from '../core/money.js?v=18';
-import { logout } from '../services/auth.js?v=18';
-import { refreshRates } from '../services/rates.js?v=18';
-import { saveCategory, deleteCategory } from '../services/transactions.js?v=18';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=18';
-import { toastOk, toastError } from '../ui/toast.js?v=18';
+import { el, render } from '../core/dom.js?v=19';
+import { state, set } from '../core/store.js?v=19';
+import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=19';
+import { formatAmount, convert } from '../core/money.js?v=19';
+import { logout } from '../services/auth.js?v=19';
+import { refreshRates } from '../services/rates.js?v=19';
+import { saveCategory, deleteCategory } from '../services/transactions.js?v=19';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=19';
+import { toastOk, toastError } from '../ui/toast.js?v=19';
 
 const PALETTE = ['#2dd98a', '#ff5b5b', '#5b9fff', '#ffb347', '#ff7eb3', '#3de8d0', '#8a8a94'];
 
