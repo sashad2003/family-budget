@@ -10,11 +10,12 @@
  *   rateDate   когда сняли курсы
  *   categoryId ссылка на categories/{id}
  *   date       'YYYY-MM-DD'
+ *   time       'HH:MM' — время покупки, если известно (с чека или из SMS банка)
  *   month      'YYYY-MM' — для выборок и графиков
  *   note       комментарий
  *   merchant   магазин (с чека)
  *   items      [{ name, qty, price, total }] — строки чека, редактируемые
- *   source     'manual' | 'receipt-photo' | 'receipt-url' | 'bill'
+ *   source     'manual' | 'receipt-photo' | 'receipt-url' | 'sms' | 'bill'
  *   billId     ссылка на bills/{id}, если это оплата регулярного платежа
  *   receiptUrl исходная ссылка на страницу чека
  *   createdBy  { uid, name, photo }
@@ -37,11 +38,11 @@ import {
   writeBatch,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=12';
-import { FAMILY_ID } from '../config.js?v=12';
-import { DEFAULT_CATEGORIES } from '../data/categories.js?v=12';
-import { amountsInAllCurrencies, round } from '../core/money.js?v=12';
-import { monthOf } from '../core/dates.js?v=12';
+import { db } from '../core/firebase.js?v=13';
+import { FAMILY_ID } from '../config.js?v=13';
+import { DEFAULT_CATEGORIES } from '../data/categories.js?v=13';
+import { amountsInAllCurrencies, round } from '../core/money.js?v=13';
+import { monthOf } from '../core/dates.js?v=13';
 
 const txCollection = () => collection(db, 'families', FAMILY_ID, 'transactions');
 const catCollection = () => collection(db, 'families', FAMILY_ID, 'categories');
@@ -143,6 +144,8 @@ function buildTx(input, rates) {
     rateDate: input.rateDate || new Date().toISOString(),
     categoryId: input.categoryId || null,
     date: input.date,
+    /** Время знаем не всегда: ручной ввод и часть чеков его не содержат. */
+    time: /^\d{2}:\d{2}$/.test(String(input.time || '')) ? input.time : '',
     month: monthOf(input.date),
     note: String(input.note || '').trim(),
     merchant: String(input.merchant || '').trim(),

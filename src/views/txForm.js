@@ -3,19 +3,19 @@
  * после сканирования каждое поле и каждая строка товара остаются редактируемыми.
  */
 
-import { el, render } from '../core/dom.js?v=12';
-import { state } from '../core/store.js?v=12';
-import { CURRENCY_CODES } from '../config.js?v=12';
-import { formatAmount, parseAmount, round, convert, currencyInfo } from '../core/money.js?v=12';
-import { today, dayLabel } from '../core/dates.js?v=12';
-import { guessCategory } from '../data/categories.js?v=12';
-import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=12';
-import { tileGradient } from './list.js?v=12';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=12';
-import { toastOk, toastError } from '../ui/toast.js?v=12';
-import { scanFromCamera, scanFromGallery, openScanUrlSheet } from './scan.js?v=12';
-import { openQuickPick } from './quickPick.js?v=12';
-import { findDuplicates } from '../core/selectors.js?v=12';
+import { el, render } from '../core/dom.js?v=13';
+import { state } from '../core/store.js?v=13';
+import { CURRENCY_CODES } from '../config.js?v=13';
+import { formatAmount, parseAmount, round, convert, currencyInfo } from '../core/money.js?v=13';
+import { today, dayLabel } from '../core/dates.js?v=13';
+import { guessCategory } from '../data/categories.js?v=13';
+import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=13';
+import { tileGradient } from './list.js?v=13';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=13';
+import { toastOk, toastError } from '../ui/toast.js?v=13';
+import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=13';
+import { openQuickPick } from './quickPick.js?v=13';
+import { findDuplicates } from '../core/selectors.js?v=13';
 
 /**
  * openTxForm({ tx })      — правка существующей операции
@@ -51,6 +51,7 @@ function fromTx(tx) {
     currency: tx.currency || state.base,
     categoryId: tx.categoryId || null,
     date: tx.date || today(),
+    time: tx.time || '',
     note: tx.note || '',
     merchant: tx.merchant || '',
     items: (tx.items || []).map((it) => ({ ...it })),
@@ -71,6 +72,7 @@ function fromDraft(draft) {
       currency: state.base,
       categoryId: null,
       date: today(),
+      time: '',
       note: '',
       merchant: '',
       items: [],
@@ -93,6 +95,7 @@ function fromDraft(draft) {
     currency: draft.currency || state.base,
     categoryId: guessed,
     date: draft.date || today(),
+    time: draft.time || '',
     note: '',
     merchant: draft.merchant || '',
     items: draft.items || [],
@@ -174,16 +177,28 @@ function buildBody(model, rerender) {
     ]),
   );
 
-  // Дата
+  // Дата и время в одной строке. Время необязательно: с чека и из SMS оно
+  // приходит само, при ручном вводе его обычно не заполняют.
   nodes.push(
-    el('div', { class: 'field' }, [
-      el('label', { class: 'field__label' }, 'Дата'),
-      el('input', {
-        class: 'input',
-        type: 'date',
-        value: model.date,
-        oninput: (e) => { model.date = e.target.value || today(); },
-      }),
+    el('div', { class: 'row' }, [
+      el('div', { class: 'field' }, [
+        el('label', { class: 'field__label' }, 'Дата'),
+        el('input', {
+          class: 'input',
+          type: 'date',
+          value: model.date,
+          oninput: (e) => { model.date = e.target.value || today(); },
+        }),
+      ]),
+      el('div', { class: 'field' }, [
+        el('label', { class: 'field__label' }, 'Время'),
+        el('input', {
+          class: 'input',
+          type: 'time',
+          value: model.time,
+          oninput: (e) => { model.time = e.target.value || ''; },
+        }),
+      ]),
     ]),
   );
 
@@ -239,6 +254,11 @@ function buildScanRow() {
       style: 'margin-top:8px',
       onclick: () => openScanUrlSheet(toForm),
     }, '🔗  Ссылка из QR-кода'),
+    el('button', {
+      class: 'btn btn--ghost btn--wide',
+      style: 'margin-top:8px',
+      onclick: () => openScanSmsSheet(toForm),
+    }, '💬  SMS от банка'),
   ]);
 }
 

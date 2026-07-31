@@ -1,11 +1,11 @@
 /** Список операций с фильтрами по типу, категории и тексту. */
 
-import { el, render } from '../core/dom.js?v=12';
-import { state } from '../core/store.js?v=12';
-import { formatAmount, txAmountIn } from '../core/money.js?v=12';
-import { dayLabel } from '../core/dates.js?v=12';
-import { monthTransactions, groupByDate, totals } from '../core/selectors.js?v=12';
-import { openTxForm } from './txForm.js?v=12';
+import { el, render } from '../core/dom.js?v=13';
+import { state } from '../core/store.js?v=13';
+import { formatAmount, txAmountIn } from '../core/money.js?v=13';
+import { dayLabel } from '../core/dates.js?v=13';
+import { monthTransactions, groupByDate, totals } from '../core/selectors.js?v=13';
+import { openTxForm } from './txForm.js?v=13';
 
 /** Фильтры живут вне state: они локальны для экрана и не влияют на другие. */
 const filters = { type: 'all', categoryId: null, query: '' };
@@ -92,10 +92,13 @@ export function txRow(tx, onClick) {
 
   const title = tx.merchant || cat?.name || 'Операция';
   const metaParts = [];
+  // Список уже сгруппирован по дням, поэтому в строке полезно только время.
+  if (tx.time) metaParts.push(tx.time);
   if (tx.merchant && cat) metaParts.push(cat.name);
   if (tx.note) metaParts.push(tx.note);
   else if (tx.items?.length) metaParts.push(`${tx.items.length} поз.`);
-  if (tx.source !== 'manual') metaParts.push('чек');
+  if (tx.source === 'sms') metaParts.push('SMS');
+  else if (tx.source !== 'manual') metaParts.push('чек');
 
   const inBase = txAmountIn(tx, state.base, state.rates);
 

@@ -4,10 +4,13 @@
  * открывается в редактируемой форме.
  */
 
-import { el, render } from '../core/dom.js?v=12';
-import { openSheet, closeSheet } from '../ui/sheet.js?v=12';
-import { toastError } from '../ui/toast.js?v=12';
-import { scanReceiptImages, scanReceiptUrl, MAX_RECEIPT_IMAGES } from '../services/receipts.js?v=12';
+import { el, render } from '../core/dom.js?v=13';
+import { openSheet, closeSheet } from '../ui/sheet.js?v=13';
+import { toastError } from '../ui/toast.js?v=13';
+import { state } from '../core/store.js?v=13';
+import { findDuplicates } from '../core/selectors.js?v=13';
+import { formatAmount } from '../core/money.js?v=13';
+import { scanReceiptImages, scanReceiptUrl, scanSmsText, MAX_RECEIPT_IMAGES } from '../services/receipts.js?v=13';
 
 /** Шторка «распознаём…» — на время запроса заменяет собой форму. */
 function showBusy(text) {
@@ -26,12 +29,56 @@ async function run(task, waitText, onDraft) {
   try {
     const draft = await task();
     closeSheet();
+
+    // Одну и ту же покупку легко внести дважды: сначала чек, потом SMS о списании.
+    // Ровное совпадение суммы, валюты и дня — повод спросить, пока форма не открыта.
+    const twins = findDuplicates(state, {
+      type: 'expense',
+      amount: draft.total,
+      currency: draft.currency,
+      date: draft.date,
+      receiptUrl: draft.receiptUrl,
+    }, { dayWindow: 0 });
+
+    if (twins.length) {
+      warnAboutDuplicate(draft, twins, onDraft);
+      return;
+    }
+
     onDraft(draft);
   } catch (error) {
     console.error(error);
     closeSheet();
     toastError(error.message || 'Не удалось распознать');
   }
+}
+
+/** «Уже вносили?» — показываем найденные операции и оставляем выбор за человеком. */
+function warnAboutDuplicate(draft, twins, onDraft) {
+  const rows = twins.slice(0, 5).map((tx) => el('div', { class: 'hint' }, [
+    el('b', {}, formatAmount(tx.amount, tx.currency)),
+    ` · ${tx.date}${tx.time ? ` ${tx.time}` : ''}${tx.merchant ? ` · ${tx.merchant}` : ''}`,
+  ]));
+
+  openSheet({
+    title: 'Возможно, уже внесено',
+    body: [
+      el('p', { class: 'hint', style: 'margin-bottom:12px' },
+        twins.length === 1
+          ? 'На эту дату уже есть операция на ту же сумму:'
+          : `На эту дату уже есть операции на ту же сумму (${twins.length}):`),
+      ...rows,
+      el('p', { class: 'hint', style: 'margin-top:12px' },
+        'Если это другая покупка — добавляйте, ничего страшного.'),
+    ],
+    footer: [
+      el('button', { class: 'btn btn--ghost', onclick: () => closeSheet() }, 'Не добавлять'),
+      el('button', {
+        class: 'btn btn--primary',
+        onclick: () => { closeSheet(); onDraft(draft); },
+      }, 'Всё равно добавить'),
+    ],
+  });
 }
 
 /**
@@ -98,6 +145,39 @@ export function openScanUrlSheet(onDraft) {
   });
 }
 
+/**
+ * Шторка для SMS банка о списании.
+ * Знакомый формат разбирается мгновенно, незнакомый уходит в AI —
+ * поэтому текст ожидания нейтральный.
+ */
+export function openScanSmsSheet(onDraft) {
+  const textInput = el('textarea', {
+    class: 'textarea',
+    rows: '5',
+    placeholder: 'Вставьте сюда текст SMS от банка целиком',
+  });
+
+  const submit = () => {
+    const text = textInput.value.trim();
+    if (!text) {
+      toastError('Вставьте текст SMS');
+      return;
+    }
+    run(() => scanSmsText(text), 'Разбираем SMS…', onDraft);
+  };
+
+  openSheet({
+    title: 'SMS от банка',
+    body: [
+      textInput,
+      el('p', { class: 'hint' },
+        'Из SMS берутся сумма, магазин, дата и время. Список товаров банк не присылает — '
+        + 'при желании добавьте его в форме.'),
+    ],
+    footer: [el('button', { class: 'btn btn--primary', onclick: submit }, 'Разобрать')],
+  });
+}
+
 /** Полное меню сканирования — используется там, где нет своих кнопок. */
 export function openScanSheet(onDraft) {
   const body = el('div');
@@ -120,6 +200,11 @@ export function openScanSheet(onDraft) {
       class: 'btn btn--ghost btn--wide',
       onclick: () => openScanUrlSheet(onDraft),
     }, '🔗  Ссылка из QR-кода'),
+    el('button', {
+      class: 'btn btn--ghost btn--wide',
+      style: 'margin-top:8px',
+      onclick: () => openScanSmsSheet(onDraft),
+    }, '💬  SMS от банка'),
   ]);
 
   openSheet({ title: 'Сканирование чека', body });

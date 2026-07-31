@@ -23,6 +23,7 @@ const MAX_IMAGES       = 6;                 // длинный чек разре�
 const MAX_IMAGES_BYTES = 12 * 1024 * 1024;  // суммарный потолок на все кадры
 const MAX_PAGE_BYTES   = 512 * 1024;        // 512 КБ с чужой страницы
 const MAX_PDF_BYTES    = 4 * 1024 * 1024;   // если по ссылке отдают PDF — шлём его целиком
+const MAX_SMS_CHARS    = 2000;              // банковская SMS во много раз короче
 const MAX_TOKENS      = 8000;
 
 // Публичные ключи, которыми Google подписывает Firebase ID-токены
@@ -105,6 +106,20 @@ switch ($action) {
     case 'receipt_url':
         $url = (string)($req['url'] ?? '');
         respond(200, extractReceipt($config, fetchReceiptContent($url)));
+
+    case 'sms_text':
+        $sms = trim((string)($req['text'] ?? ''));
+        if ($sms === '' || mb_strlen($sms) > MAX_SMS_CHARS) {
+            respond(400, ['error' => 'sms_text_invalid']);
+        }
+        respond(200, extractReceipt($config, [
+            ['type' => 'text', 'text' =>
+                "Это SMS банка о списании по карте. Извлеки из неё данные операции.\n"
+                . "Списка товаров в SMS нет — оставь items пустым.\n"
+                . "Магазин бери без служебных номеров терминала.\n"
+                . "Не путай сумму покупки с остатком на счёте (Rasp., raspolozivo, balance).\n\n"
+                . $sms],
+        ]));
 
     default:
         respond(400, ['error' => 'unknown_action']);
@@ -401,6 +416,7 @@ function extractReceipt(array $config, array $content): array
         'properties' => [
             'merchant'      => ['type' => 'string', 'description' => 'Название магазина, "" если не видно'],
             'date'          => ['type' => 'string', 'description' => 'Дата чека в формате YYYY-MM-DD, "" если не видно'],
+            'time'          => ['type' => 'string', 'description' => 'Время покупки в формате HH:MM (24 часа), "" если не видно'],
             'currency'      => ['type' => 'string', 'enum' => ['RSD', 'EUR', 'ILS', 'USD', '']],
             'total'         => ['type' => 'number', 'description' => 'Итоговая сумма, 0 если не видно'],
             'category_hint' => ['type' => 'string', 'description' => 'Категория расхода одним словом по-русски'],
@@ -419,7 +435,7 @@ function extractReceipt(array $config, array $content): array
                 ],
             ],
         ],
-        'required' => ['merchant', 'date', 'currency', 'total', 'category_hint', 'items'],
+        'required' => ['merchant', 'date', 'time', 'currency', 'total', 'category_hint', 'items'],
         'additionalProperties' => false,
     ];
 

@@ -5,9 +5,10 @@
  * AI ошибается в названиях товаров, поэтому ни одно поле не считается финальным.
  */
 
-import { PROXY_URL, CURRENCY_CODES } from '../config.js?v=12';
-import { idToken } from './auth.js?v=12';
-import { normalizeDate, today } from '../core/dates.js?v=12';
+import { PROXY_URL, CURRENCY_CODES } from '../config.js?v=13';
+import { idToken } from './auth.js?v=13';
+import { normalizeDate, today } from '../core/dates.js?v=13';
+import { parseBankSms } from '../core/smsParse.js?v=13';
 
 /** Сколько пикселей по длинной стороне отправляем. Больше — дороже и медленнее без выигрыша. */
 const MAX_EDGE = 1600;
@@ -15,6 +16,9 @@ const JPEG_QUALITY = 0.82;
 
 /** Сколько кадров одного чека принимаем за раз (совпадает с лимитом прокси). */
 export const MAX_RECEIPT_IMAGES = 6;
+
+/** Потолок на текст SMS — столько же принимает прокси. */
+const MAX_SMS_CHARS = 2000;
 
 /** Одно или несколько фото одного чека — модель собирает из них общий список. */
 export async function scanReceiptImages(files) {
@@ -36,6 +40,23 @@ export async function scanReceiptUrl(url) {
   const draft = normalizeReceipt(data.receipt, 'receipt-url');
   draft.receiptUrl = String(url).trim();
   return draft;
+}
+
+/**
+ * SMS банка о списании по карте.
+ *
+ * Знакомый сербский формат разбирается прямо здесь — это мгновенно и без запроса.
+ * Всё прочее (другой банк, другой язык) отправляем модели.
+ */
+export async function scanSmsText(text) {
+  const raw = String(text || '').trim();
+  if (!raw) throw new Error('Вставьте текст SMS');
+
+  const local = parseBankSms(raw);
+  if (local) return normalizeReceipt(local, 'sms');
+
+  const data = await callProxy({ action: 'sms_text', text: raw.slice(0, MAX_SMS_CHARS) });
+  return normalizeReceipt(data.receipt, 'sms');
 }
 
 async function callProxy(payload) {
@@ -118,6 +139,7 @@ function normalizeReceipt(raw, source) {
   return {
     merchant: String(raw?.merchant || '').trim(),
     date: normalizeDate(raw?.date) || today(),
+    time: normalizeTime(raw?.time),
     currency,
     total,
     categoryHint: String(raw?.category_hint || '').trim(),
@@ -127,6 +149,18 @@ function normalizeReceipt(raw, source) {
     /** Расхождение между суммой строк и итогом — повод показать подсказку. */
     mismatch: normalizedItems.length > 0 && Math.abs(itemsSum - total) > Math.max(1, total * 0.02),
   };
+}
+
+/** Время покупки к виду 'ЧЧ:ММ'. Что не разобралось — просто не заполняем. */
+function normalizeTime(value) {
+  const match = String(value ?? '').match(/(\d{1,2}):(\d{2})/);
+  if (!match) return '';
+
+  const hours = Number(match[1]);
+  const minutes = Number(match[2]);
+  if (hours > 23 || minutes > 59) return '';
+
+  return `${String(hours).padStart(2, '0')}:${match[2]}`;
 }
 
 function num(value) {
