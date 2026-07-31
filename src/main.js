@@ -2,31 +2,31 @@
  * Точка входа: авторизация → загрузка семьи → подписки на данные → роутинг.
  */
 
-import { $, render } from './core/dom.js?v=17';
-import { state, set, subscribe } from './core/store.js?v=17';
-import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=17';
-import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=17';
-import { unpaidBills } from './core/selectors.js?v=17';
+import { $, render } from './core/dom.js?v=18';
+import { state, set, subscribe } from './core/store.js?v=18';
+import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=18';
+import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=18';
+import { unpaidBills } from './core/selectors.js?v=18';
 
-import { watchAuth, signIn, loadFamily } from './services/auth.js?v=17';
+import { watchAuth, signIn, loadFamily } from './services/auth.js?v=18';
 import {
   watchTransactions,
   watchCategories,
   seedCategoriesIfEmpty,
   syncNewCategories,
-} from './services/transactions.js?v=17';
-import { watchBills } from './services/bills.js?v=17';
-import { loadRates } from './services/rates.js?v=17';
+} from './services/transactions.js?v=18';
+import { watchBills } from './services/bills.js?v=18';
+import { loadRates } from './services/rates.js?v=18';
 
-import { renderDashboard } from './views/dashboard.js?v=17';
-import { renderList } from './views/list.js?v=17';
-import { renderBills } from './views/bills.js?v=17';
-import { renderCharts, destroyCharts } from './views/charts.js?v=17';
-import { renderSettings } from './views/settings.js?v=17';
-import { openTxForm } from './views/txForm.js?v=17';
-import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=17';
-import { closeSheet } from './ui/sheet.js?v=17';
-import { toastError } from './ui/toast.js?v=17';
+import { renderDashboard } from './views/dashboard.js?v=18';
+import { renderList } from './views/list.js?v=18';
+import { renderBills } from './views/bills.js?v=18';
+import { renderCharts, destroyCharts } from './views/charts.js?v=18';
+import { renderSettings } from './views/settings.js?v=18';
+import { openTxForm } from './views/txForm.js?v=18';
+import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=18';
+import { closeSheet } from './ui/sheet.js?v=18';
+import { toastError } from './ui/toast.js?v=18';
 
 const ROUTES = {
   dashboard: renderDashboard,
@@ -210,3 +210,30 @@ $('#btn-more').addEventListener('click', openMoreMenu);
 
 // Кнопка «все» на обзоре ведёт в список операций.
 window.addEventListener('goto-list', () => set({ route: 'list' }));
+
+// ---------------------------------------------------------------- установка
+
+/**
+ * Service worker нужен, чтобы приложение ставилось на телефон значком и
+ * открывалось без адресной строки. Обновления он не задерживает: внутри
+ * стратегия «сначала сеть», а найденную новую версию активируем сразу.
+ */
+if ('serviceWorker' in navigator) {
+  // При самой первой установке воркер тоже «меняется», но перезагружать нечего:
+  // страница уже свежая. Перезагрузка нужна только когда воркер сменился под
+  // работающим приложением, то есть приехала новая версия кода.
+  const hadController = Boolean(navigator.serviceWorker.controller);
+  let reloading = false;
+
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController || reloading) return;
+    reloading = true;
+    window.location.reload();
+  });
+
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch((error) => {
+      console.error('Не удалось зарегистрировать service worker', error);
+    });
+  });
+}

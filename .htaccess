@@ -3,11 +3,16 @@
 # перепроверяться каждый раз: ответ 304 по ETag почти ничего не стоит,
 # а обновление приезжает сразу.
 <IfModule mod_headers.c>
-  <FilesMatch "\.(html|js|mjs|css|json)$">
+  <FilesMatch "\.(html|js|mjs|css|json|webmanifest)$">
     Header set Cache-Control "no-cache, must-revalidate"
     Header unset Expires
     Header unset Pragma
   </FilesMatch>
+</IfModule>
+
+# Манифест обязан отдаваться этим типом, иначе телефон не предложит установку.
+<IfModule mod_mime.c>
+  AddType application/manifest+json .webmanifest
 </IfModule>
 
 <IfModule mod_expires.c>

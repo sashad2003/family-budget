@@ -5,7 +5,7 @@
  * Отсчёт идёт от выбранного в шапке месяца: 3 месяца — это он и два до него.
  */
 
-import { monthRange, monthLabel, shiftMonth, today, monthOf } from './dates.js?v=17';
+import { monthRange, monthLabel, shiftMonth, today, monthOf } from './dates.js?v=18';
 
 export const PERIODS = [
   { kind: 'month', label: 'Месяц' },
