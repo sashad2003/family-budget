@@ -38,11 +38,11 @@ import {
   writeBatch,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=14';
-import { FAMILY_ID } from '../config.js?v=14';
-import { DEFAULT_CATEGORIES } from '../data/categories.js?v=14';
-import { amountsInAllCurrencies } from '../core/money.js?v=14';
-import { monthOf } from '../core/dates.js?v=14';
+import { db } from '../core/firebase.js?v=15';
+import { FAMILY_ID } from '../config.js?v=15';
+import { DEFAULT_CATEGORIES } from '../data/categories.js?v=15';
+import { amountsInAllCurrencies } from '../core/money.js?v=15';
+import { monthOf } from '../core/dates.js?v=15';
 
 const txCollection = () => collection(db, 'families', FAMILY_ID, 'transactions');
 const catCollection = () => collection(db, 'families', FAMILY_ID, 'categories');

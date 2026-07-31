@@ -500,6 +500,20 @@ button { cursor: pointer; border: none; background: none; }
 .btn--primary:hover { background: linear-gradient(150deg, #6ea8ff, #4a71ff); }
 
 .btn--danger { background: rgba(255, 91, 91, 0.1); border-color: rgba(255, 91, 91, 0.35); color: #ff8080; }
+
+/* Предупреждение о повторном вводе: красная рамка, чтобы его нельзя было пролистать. */
+.alert {
+  background: rgba(255, 91, 91, 0.09);
+  border: 1px solid rgba(255, 91, 91, 0.4);
+  border-radius: var(--r-sm);
+  padding: 12px 14px;
+  color: #ffb0b0;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.alert__title { color: #ff8080; font-weight: 600; margin-bottom: 8px; }
+.alert__row { color: var(--fg-0); font-size: 13px; margin-top: 6px; }
+.alert__row b { color: #ff8080; }
 .btn--ghost { background: rgba(255, 255, 255, 0.045); }
 .btn[disabled] { opacity: 0.4; pointer-events: none; }
 

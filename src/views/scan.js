@@ -4,13 +4,13 @@
  * открывается в редактируемой форме.
  */
 
-import { el, render } from '../core/dom.js?v=14';
-import { openSheet, closeSheet } from '../ui/sheet.js?v=14';
-import { toastError } from '../ui/toast.js?v=14';
-import { state } from '../core/store.js?v=14';
-import { findDuplicates, sameMoment } from '../core/selectors.js?v=14';
-import { formatAmount } from '../core/money.js?v=14';
-import { scanReceiptImages, scanReceiptUrl, scanSmsText, MAX_RECEIPT_IMAGES } from '../services/receipts.js?v=14';
+import { el, render } from '../core/dom.js?v=15';
+import { openSheet, closeSheet } from '../ui/sheet.js?v=15';
+import { toastError } from '../ui/toast.js?v=15';
+import { state } from '../core/store.js?v=15';
+import { findDuplicates, sameMoment } from '../core/selectors.js?v=15';
+import { formatAmount } from '../core/money.js?v=15';
+import { scanReceiptImages, scanReceiptUrl, scanSmsText, MAX_RECEIPT_IMAGES } from '../services/receipts.js?v=15';
 
 /** Шторка «распознаём…» — на время запроса заменяет собой форму. */
 function showBusy(text) {
@@ -63,31 +63,34 @@ function warnAboutDuplicate(draft, twins, candidate, onDraft) {
   );
   const exact = sorted.some((tx) => sameMoment(tx, candidate));
 
-  const rows = sorted.slice(0, 5).map((tx) => el('div', { class: 'hint' }, [
-    el('b', {}, formatAmount(tx.amount, tx.currency)),
+  const rows = sorted.slice(0, 5).map((tx) => el('div', { class: 'alert__row' }, [
+    el('b', {}, formatAmount(tx.amount, tx.currency, { exact: true })),
     ` · ${tx.date}${tx.time ? ` ${tx.time}` : ''}${tx.merchant ? ` · ${tx.merchant}` : ''}`,
     sameMoment(tx, candidate) ? el('b', {}, ' · то же время') : null,
   ]));
 
   openSheet({
-    title: exact ? 'Это уже внесено' : 'Возможно, уже внесено',
+    title: exact ? '⚠️ Это уже внесено' : '⚠️ Возможно, уже внесено',
     body: [
-      el('p', { class: 'hint', style: 'margin-bottom:12px' },
-        exact
-          ? 'Та же сумма в ту же минуту — почти наверняка эта покупка уже записана:'
-          : twins.length === 1
-            ? 'На эту дату уже есть операция на ту же сумму:'
-            : `На эту дату уже есть операции на ту же сумму (${twins.length}):`),
-      ...rows,
+      el('div', { class: 'alert' }, [
+        el('div', { class: 'alert__title' },
+          exact
+            ? 'Та же сумма в ту же минуту — почти наверняка эта покупка уже записана'
+            : twins.length === 1
+              ? 'На эту дату уже есть операция на ту же сумму'
+              : `На эту дату уже есть операции на ту же сумму (${twins.length})`),
+        ...rows,
+      ]),
       el('p', { class: 'hint', style: 'margin-top:12px' },
         'Если это другая покупка — добавляйте, ничего страшного.'),
     ],
+    // Безопасный выбор — основной: по умолчанию повтор не добавляется.
     footer: [
-      el('button', { class: 'btn btn--ghost', onclick: () => closeSheet() }, 'Не добавлять'),
       el('button', {
-        class: 'btn btn--primary',
+        class: 'btn btn--danger',
         onclick: () => { closeSheet(); onDraft(draft); },
       }, 'Всё равно добавить'),
+      el('button', { class: 'btn btn--primary', onclick: () => closeSheet() }, 'Не добавлять'),
     ],
   });
 }

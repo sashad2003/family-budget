@@ -9,7 +9,7 @@
  * поэтому не «плывут», когда курс меняется.
  */
 
-import { CURRENCIES, CURRENCY_CODES, FALLBACK_RATES } from '../config.js?v=14';
+import { CURRENCIES, CURRENCY_CODES, FALLBACK_RATES } from '../config.js?v=15';
 
 const byCode = Object.fromEntries(CURRENCIES.map((c) => [c.code, c]));
 
@@ -51,19 +51,40 @@ export function txAmountIn(tx, code, fallbackRates) {
   return convert(Number(tx?.amount) || 0, tx?.currency || 'RSD', code, rates);
 }
 
+/**
+ * Округление до копеек независимо от валюты.
+ * Нужно там, где считаются цены из чека: у динара знаков после запятой нет,
+ * а в чеке они есть, и терять их нельзя — по ним сверяются покупки.
+ */
+export function roundCents(value) {
+  return Math.round((Number(value) || 0) * 100) / 100;
+}
+
 export function round(value, code) {
   const decimals = currencyInfo(code).decimals;
   const factor = 10 ** decimals;
   return Math.round((Number(value) || 0) * factor) / factor;
 }
 
-/** '1 234 дин' / '12,50 €' */
-export function formatAmount(value, code, { sign = false } = {}) {
+/**
+ * '1 234 дин' / '12,50 €'
+ *
+ * exact — показать копейки, даже если у валюты их обычно не печатают.
+ * У динара знаков после запятой ноль, но в чеке и в SMS цена приходит с
+ * копейками, и по ним человек узнаёт свою покупку. Поэтому там, где сумма
+ * важна сама по себе (строка операции, сверка повторов), показываем её
+ * целиком, а в сводках и на графиках оставляем округление.
+ */
+export function formatAmount(value, code, { sign = false, exact = false } = {}) {
   const info = currencyInfo(code);
   const num = Number(value) || 0;
+
+  const hasFraction = Math.abs(num % 1) > 0.0001;
+  const decimals = exact && hasFraction ? Math.max(info.decimals, 2) : info.decimals;
+
   const body = new Intl.NumberFormat('ru-RU', {
-    minimumFractionDigits: info.decimals,
-    maximumFractionDigits: info.decimals,
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
   }).format(Math.abs(num));
 
   const prefix = sign ? (num > 0 ? '+' : num < 0 ? '−' : '') : num < 0 ? '−' : '';

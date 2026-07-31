@@ -3,19 +3,19 @@
  * после сканирования каждое поле и каждая строка товара остаются редактируемыми.
  */
 
-import { el, render } from '../core/dom.js?v=14';
-import { state } from '../core/store.js?v=14';
-import { CURRENCY_CODES } from '../config.js?v=14';
-import { formatAmount, parseAmount, round, convert, currencyInfo } from '../core/money.js?v=14';
-import { today, dayLabel } from '../core/dates.js?v=14';
-import { guessCategory } from '../data/categories.js?v=14';
-import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=14';
-import { tileGradient } from './list.js?v=14';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=14';
-import { toastOk, toastError } from '../ui/toast.js?v=14';
-import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=14';
-import { openQuickPick } from './quickPick.js?v=14';
-import { findDuplicates, sameMoment } from '../core/selectors.js?v=14';
+import { el, render } from '../core/dom.js?v=15';
+import { state } from '../core/store.js?v=15';
+import { CURRENCY_CODES } from '../config.js?v=15';
+import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=15';
+import { today, dayLabel } from '../core/dates.js?v=15';
+import { guessCategory } from '../data/categories.js?v=15';
+import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=15';
+import { tileGradient } from './list.js?v=15';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=15';
+import { toastOk, toastError } from '../ui/toast.js?v=15';
+import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=15';
+import { openQuickPick } from './quickPick.js?v=15';
+import { findDuplicates, sameMoment } from '../core/selectors.js?v=15';
 
 /**
  * openTxForm({ tx })      — правка существующей операции
@@ -326,22 +326,25 @@ function buildReceiptBlock(model, rerender) {
       style: 'display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:13px',
     }, [
       el('span', { style: 'color:var(--fg-1)' }, 'Сумма строк'),
-      el('span', { class: 'num' }, formatAmount(sum, model.currency)),
+      el('span', { class: 'num' }, formatAmount(sum, model.currency, { exact: true })),
     ]),
 
     diff
       ? el('button', {
           class: 'btn btn--ghost btn--wide',
           style: 'margin-top:10px',
-          onclick: () => { model.amount = round(sum, model.currency); model.mismatch = false; rerender(); },
-        }, `Подставить ${formatAmount(sum, model.currency)} в итог`)
+          // Сумму строк переносим как есть: округление здесь стирало копейки чека.
+          onclick: () => { model.amount = sum; model.mismatch = false; rerender(); },
+        }, `Подставить ${formatAmount(sum, model.currency, { exact: true })} в итог`)
       : null,
   ]);
 }
 
 function itemRow(item, index, model, rerender) {
   const recalcTotal = () => {
-    item.total = round((Number(item.qty) || 0) * (Number(item.price) || 0), model.currency);
+    // Копейки в строке чека сохраняем: у динара знаков после запятой нет,
+    // но цена в чеке с ними, и по ней потом сверяются покупки.
+    item.total = roundCents((Number(item.qty) || 0) * (Number(item.price) || 0));
     totalInput.value = item.total || '';
   };
 
@@ -409,7 +412,7 @@ function pickItems(model) {
 
       // Сумма ещё не введена — подставляем итог по строкам.
       const sum = itemsSum(model);
-      if (!model.amount && sum) model.amount = round(sum, model.currency);
+      if (!model.amount && sum) model.amount = sum;
 
       openTxForm({ model });
     },
@@ -455,32 +458,37 @@ function askAboutDuplicate(model, twins, tx = null) {
         sameMoment(twin, model) ? el('b', {}, ' · то же время') : null,
       ]),
     ]),
-    el('span', { class: 'num' }, formatAmount(twin.amount, twin.currency)),
+    el('span', { class: 'num' }, formatAmount(twin.amount, twin.currency, { exact: true })),
   ]));
 
+  const exact = twins.some((twin) => sameMoment(twin, model));
+
   openSheet({
-    title: 'Похоже на повтор',
+    title: exact ? '⚠️ Это уже внесено' : '⚠️ Похоже на повтор',
     body: [
-      el('p', { class: 'hint', style: 'margin-bottom:12px' },
-        twins.length === 1
-          ? 'Такая операция уже записана:'
-          : `Таких операций уже ${twins.length}:`),
+      el('div', { class: 'alert' },
+        exact
+          ? 'Та же сумма в ту же минуту — почти наверняка эта покупка уже записана.'
+          : twins.length === 1
+            ? 'Такая операция уже записана.'
+            : `Таких операций уже ${twins.length}.`),
       ...rows,
       el('p', { class: 'hint', style: 'margin-top:12px' },
         'Если это разные покупки — добавляйте, ничего страшного.'),
     ],
+    // Безопасный выбор — основной: по умолчанию возвращаемся к форме.
     footer: [
       el('button', {
-        class: 'btn btn--ghost',
-        onclick: () => { closeSheet(); openTxForm({ tx, model }); },
-      }, 'Вернуться'),
-      el('button', {
-        class: 'btn btn--primary',
+        class: 'btn btn--danger',
         onclick: async () => {
           model.duplicateConfirmed = true;
           await persist(model, tx);
         },
       }, 'Всё равно добавить'),
+      el('button', {
+        class: 'btn btn--primary',
+        onclick: () => { closeSheet(); openTxForm({ tx, model }); },
+      }, 'Вернуться'),
     ],
   });
 }

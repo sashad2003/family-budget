@@ -1,11 +1,11 @@
 /** Список операций с фильтрами по типу, категории и тексту. */
 
-import { el, render } from '../core/dom.js?v=14';
-import { state } from '../core/store.js?v=14';
-import { formatAmount, txAmountIn } from '../core/money.js?v=14';
-import { dayLabel } from '../core/dates.js?v=14';
-import { monthTransactions, groupByDate, totals } from '../core/selectors.js?v=14';
-import { openTxForm } from './txForm.js?v=14';
+import { el, render } from '../core/dom.js?v=15';
+import { state } from '../core/store.js?v=15';
+import { formatAmount, txAmountIn } from '../core/money.js?v=15';
+import { dayLabel } from '../core/dates.js?v=15';
+import { monthTransactions, groupByDate, totals } from '../core/selectors.js?v=15';
+import { openTxForm } from './txForm.js?v=15';
 
 /** Фильтры живут вне state: они локальны для экрана и не влияют на другие. */
 const filters = { type: 'all', categoryId: null, query: '' };
@@ -116,7 +116,7 @@ export function txRow(tx, onClick) {
     el('div', {}, [
       el('div', {
         class: `tx__amount num ${isIncome ? 'tx__amount--in' : 'tx__amount--out'}`,
-      }, `${isIncome ? '+' : '−'}${formatAmount(tx.amount, tx.currency)}`),
+      }, `${isIncome ? '+' : '−'}${formatAmount(tx.amount, tx.currency, { exact: true })}`),
 
       tx.currency !== state.base
         ? el('span', { class: 'tx__converted num' }, `≈ ${formatAmount(inBase, state.base)}`)
