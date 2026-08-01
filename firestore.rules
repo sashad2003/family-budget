@@ -1,14 +1,17 @@
 rules_version = '2';
 
 // Схема:
+//   users/{uid}                профиль: имя, почта, телефон, подписка, familyId
+//   invites/{email}            кого и куда позвали
 //   families/{familyId}
 //     ├─ transactions/{txId}
 //     ├─ categories/{catId}
 //     ├─ bills/{billId}        (регулярные платежи)
 //     └─ meta/{docId}          (rates, settings)
+//   prices/{priceId}           общая база цен, читают все
 //
-// Доступ: только участники семьи (uid в memberUids).
-// Присоединиться может только тот, чей email есть в allowedEmails.
+// Доступ к бюджету: только участники семьи (uid в memberUids).
+// Присоединиться можно, только если на твою почту выписано приглашение.
 
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -22,32 +25,86 @@ service cloud.firestore {
         && request.auth.uid in familyDoc(familyId).memberUids;
     }
 
-    function isInvited(familyId) {
-      return request.auth != null
-        && request.auth.token.email != null
-        && request.auth.token.email in familyDoc(familyId).allowedEmails;
+    function myEmail() {
+      return request.auth != null ? request.auth.token.email : '';
     }
 
-    match /families/{familyId} {
-      // Читать документ семьи может любой авторизованный: там нет ничего секретного,
-      // а клиенту нужно понять, приглашён он или нет.
-      allow read: if request.auth != null;
+    // Меня пустят к чужим профилям — это админ-панель. Список закрытый и
+    // лежит в правилах, а не в коде страницы: спрятать кнопку недостаточно.
+    function isAdmin() {
+      return request.auth != null
+        && myEmail() in ['sashad2003@gmail.com'];
+    }
 
-      // Участник может менять настройки семьи.
-      // Приглашённый может добавить себя в memberUids (self-join), но не тронуть
-      // allowedEmails и не выкинуть чужие uid.
+    // Приглашение выписано лично на эту почту.
+    function invitedTo(familyId) {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/invites/$(myEmail()))
+        && get(/databases/$(database)/documents/invites/$(myEmail())).data.familyId == familyId;
+    }
+
+    // ---------------------------------------------------------------- профили
+
+    match /users/{uid} {
+      allow read: if request.auth != null && (request.auth.uid == uid || isAdmin());
+
+      // Профиль заводит себе сам человек. Почту подменить нельзя — она из токена.
+      allow create: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.email == myEmail();
+
+      // Менять можно имя, телефон и согласие на письма. Состояние подписки
+      // ставит сервер после оплаты, руками её себе не включить.
+      allow update: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.subscription == resource.data.subscription
+        && request.resource.data.trialEndsAt == resource.data.trialEndsAt;
+
+      allow delete: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // ---------------------------------------------------------------- приглашения
+
+    match /invites/{email} {
+      // Своё приглашение видит приглашённый; чужие — участники той семьи,
+      // куда зовут, чтобы показать список ожидающих.
+      allow read: if request.auth != null
+        && (email == myEmail() || isMember(resource.data.familyId));
+
+      // Звать можно только в свою семью.
+      allow create, update: if isMember(request.resource.data.familyId);
+
+      // Убрать приглашение может и позвавший, и сам приглашённый — после того
+      // как вошёл, оно ему больше не нужно.
+      allow delete: if request.auth != null
+        && (email == myEmail() || isMember(resource.data.familyId));
+    }
+
+    // ---------------------------------------------------------------- семьи
+
+    match /families/{familyId} {
+      allow read: if isMember(familyId) || invitedTo(familyId);
+
+      // Свою семью человек создаёт при регистрации: он в ней и владелец,
+      // и единственный участник. Записать себе чужих в момент создания нельзя.
+      allow create: if request.auth != null
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.memberUids == [request.auth.uid];
+
+      // Участник правит настройки семьи и состав.
+      // Приглашённый может добавить в состав только себя.
       allow update: if isMember(familyId)
         || (
-          isInvited(familyId)
-          && request.resource.data.allowedEmails == resource.data.allowedEmails
+          invitedTo(familyId)
           && request.resource.data.memberUids.hasAll(resource.data.memberUids)
           && request.resource.data.memberUids.hasOnly(
                resource.data.memberUids.concat([request.auth.uid])
              )
         );
 
-      // Создание/удаление семьи — только вручную через консоль.
-      allow create, delete: if false;
+      // Удаление семьи — только вручную через консоль: за ней тянутся все записи.
+      allow delete: if false;
 
       match /transactions/{txId} {
         allow read: if isMember(familyId);
@@ -70,6 +127,8 @@ service cloud.firestore {
         allow read, write: if isMember(familyId);
       }
     }
+
+    // ---------------------------------------------------------------- цены
 
     // Общая база цен: сколько стоил товар, в каком магазине и когда.
     // Читают её все авторизованные — в этом весь смысл сравнения цен.

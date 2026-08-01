@@ -153,8 +153,17 @@ function requireUser(array $config): array
     $claims = verifyFirebaseToken($m[1], (string)$config['firebase_project_id']);
 
     $email = strtolower((string)($claims['email'] ?? ''));
-    $allowed = array_map('strtolower', $config['allowed_emails']);
-    if ($email === '' || !in_array($email, $allowed, true)) {
+    if ($email === '') {
+        respond(403, ['error' => 'not_allowed']);
+    }
+
+    /**
+     * Белый список почт нужен, пока приложением пользуюсь я один: распознавание
+     * чеков идёт за мои деньги. Когда список пуст, пускаем любого, кто вошёл
+     * в это приложение через Google, — расход держит лимит запросов в час.
+     */
+    $allowed = array_map('strtolower', $config['allowed_emails'] ?? []);
+    if ($allowed !== [] && !in_array($email, $allowed, true)) {
         respond(403, ['error' => 'not_allowed']);
     }
 

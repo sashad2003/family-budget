@@ -31,9 +31,9 @@ import {
   writeBatch,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=24';
-import { FAMILY_ID } from '../config.js?v=24';
-import { tokenize, merchantKey, searchToken, normalizeText } from '../core/priceKey.js?v=24';
+import { db } from '../core/firebase.js?v=26';
+import { getFamilyId } from '../core/session.js?v=26';
+import { tokenize, merchantKey, searchToken, normalizeText } from '../core/priceKey.js?v=26';
 
 const pricesCollection = () => collection(db, 'prices');
 
@@ -123,7 +123,7 @@ const BACKFILL_VERSION = 1;
 export async function backfillPrices(transactions, uid) {
   if (!uid || !transactions?.length) return 0;
 
-  const markRef = doc(db, 'families', FAMILY_ID, 'meta', 'pricesBackfill');
+  const markRef = doc(db, 'families', getFamilyId(), 'meta', 'pricesBackfill');
   const mark = await getDoc(markRef);
   if (mark.exists() && (mark.data().version || 0) >= BACKFILL_VERSION) return 0;
 

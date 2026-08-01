@@ -40,14 +40,14 @@ import {
   writeBatch,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=24';
-import { FAMILY_ID } from '../config.js?v=24';
-import { DEFAULT_CATEGORIES } from '../data/categories.js?v=24';
-import { amountsInAllCurrencies } from '../core/money.js?v=24';
-import { monthOf } from '../core/dates.js?v=24';
+import { db } from '../core/firebase.js?v=26';
+import { getFamilyId } from '../core/session.js?v=26';
+import { DEFAULT_CATEGORIES } from '../data/categories.js?v=26';
+import { amountsInAllCurrencies } from '../core/money.js?v=26';
+import { monthOf } from '../core/dates.js?v=26';
 
-const txCollection = () => collection(db, 'families', FAMILY_ID, 'transactions');
-const catCollection = () => collection(db, 'families', FAMILY_ID, 'categories');
+const txCollection = () => collection(db, 'families', getFamilyId(), 'transactions');
+const catCollection = () => collection(db, 'families', getFamilyId(), 'categories');
 
 /** Живая подписка на операции. Лимит с запасом — семейный бюджет столько не набирает. */
 export function watchTransactions(onChange, onError) {
@@ -91,7 +91,7 @@ export async function seedCategoriesIfEmpty() {
  * категорию не воскрешаем: добавляется только то, чего семья ещё не видела.
  */
 export async function syncNewCategories() {
-  const seedRef = doc(db, 'families', FAMILY_ID, 'meta', 'categorySeed');
+  const seedRef = doc(db, 'families', getFamilyId(), 'meta', 'categorySeed');
   const [seedSnap, catSnap] = await Promise.all([getDoc(seedRef), getDocs(catCollection())]);
 
   const delivered = new Set(seedSnap.exists() ? seedSnap.data().ids || [] : []);
@@ -198,7 +198,7 @@ export async function createTransaction(input, { rates, user }) {
  */
 async function shareItemPrices(txId, tx, user) {
   try {
-    const { publishPrices } = await import('./prices.js?v=24');
+    const { publishPrices } = await import('./prices.js?v=26');
     await publishPrices(txId, tx, user.uid);
   } catch (error) {
     console.error('Не удалось обновить базу цен', error);
@@ -233,7 +233,7 @@ export async function deleteTransaction(id, user = null) {
 
   if (!user) return;
   try {
-    const { removePrices } = await import('./prices.js?v=24');
+    const { removePrices } = await import('./prices.js?v=26');
     await removePrices(id, user.uid);
   } catch (error) {
     console.error('Не удалось убрать цены удалённой операции', error);

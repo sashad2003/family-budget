@@ -11,12 +11,13 @@
 
 import { doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=24';
-import { FAMILY_ID, FALLBACK_RATES, PROXY_URL } from '../config.js?v=24';
-import { idToken } from './auth.js?v=24';
+import { db } from '../core/firebase.js?v=26';
+import { FALLBACK_RATES, PROXY_URL } from '../config.js?v=26';
+import { getFamilyId } from '../core/session.js?v=26';
+import { idToken } from './auth.js?v=26';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const ratesRef = () => doc(db, 'families', FAMILY_ID, 'meta', 'rates');
+const ratesRef = () => doc(db, 'families', getFamilyId(), 'meta', 'rates');
 
 /**
  * Возвращает актуальные курсы к EUR.

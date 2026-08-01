@@ -1073,6 +1073,19 @@ button { cursor: pointer; border: none; background: none; }
 
 .hint { margin-top: 8px; font-size: 13px; color: var(--fg-2); line-height: 1.55; }
 
+/* Согласие на письма: галочка и подпись в одну строку, обе кликабельны */
+.check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 4px 0 14px;
+  text-align: left;
+  font-size: 13.5px;
+  color: var(--fg-1);
+  cursor: pointer;
+}
+.check input { width: 18px; height: 18px; margin-top: 1px; flex: 0 0 auto; accent-color: #5b9fff; }
+
 /* ============================================================
    Планшет и десктоп: док уезжает в боковую колонку,
    контент разворачивается в сетку

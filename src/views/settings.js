@@ -1,14 +1,15 @@
 /** Настройки: профиль, участники, валюта, курсы, категории. */
 
-import { el, render } from '../core/dom.js?v=24';
-import { state, set } from '../core/store.js?v=24';
-import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=24';
-import { formatAmount, convert } from '../core/money.js?v=24';
-import { logout } from '../services/auth.js?v=24';
-import { refreshRates } from '../services/rates.js?v=24';
-import { saveCategory, deleteCategory } from '../services/transactions.js?v=24';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=24';
-import { toastOk, toastError } from '../ui/toast.js?v=24';
+import { el, render } from '../core/dom.js?v=26';
+import { state, set } from '../core/store.js?v=26';
+import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=26';
+import { formatAmount, convert } from '../core/money.js?v=26';
+import { logout } from '../services/auth.js?v=26';
+import { inviteToFamily, removeMember } from '../services/account.js?v=26';
+import { refreshRates } from '../services/rates.js?v=26';
+import { saveCategory, deleteCategory } from '../services/transactions.js?v=26';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=26';
+import { toastOk, toastError } from '../ui/toast.js?v=26';
 
 const PALETTE = ['#2dd98a', '#ff5b5b', '#5b9fff', '#ffb347', '#ff7eb3', '#3de8d0', '#8a8a94'];
 
@@ -79,19 +80,38 @@ function build(draw) {
     ]),
 
     // Участники
-    el('div', { class: 'section-title' }, [el('span', {}, `Семья · ${members.length}`)]),
+    el('div', { class: 'section-title' }, [
+      el('span', {}, `Семья · ${members.length}`),
+      el('button', { class: 'chip', onclick: () => openInviteSheet(draw) }, '＋ пригласить'),
+    ]),
     ...members.map(([uid, member]) =>
       el('div', { class: 'list-item' }, [
         el('div', { style: 'min-width:0' }, [
           el('div', {}, member.name || uid),
           el('div', { class: 'list-item__sub' }, member.email || ''),
         ]),
-        uid === state.user.uid ? el('span', { class: 'chip' }, 'вы') : null,
+        uid === state.user.uid
+          ? el('span', { class: 'chip' }, 'вы')
+          : el('button', {
+              class: 'chip',
+              onclick: () => confirmSheet({
+                title: 'Убрать из бюджета?',
+                text: `${member.name || member.email} потеряет доступ. Записи останутся на месте.`,
+                confirmLabel: 'Убрать',
+                onConfirm: async () => {
+                  try {
+                    await removeMember(state.family.id, uid);
+                    toastOk('Убрали');
+                  } catch {
+                    toastError('Не удалось убрать');
+                  }
+                },
+              }),
+            }, 'убрать'),
       ]),
     ),
     el('p', { class: 'hint' },
-      'Чтобы добавить члена семьи, впишите его Google-почту в поле allowedEmails ' +
-      'документа families/family_drutz — он подключится сам при первом входе.'),
+      'Приглашённый входит через Google той же почтой и сразу попадает в ваш бюджет.'),
 
     // Категории
     el('div', { class: 'section-title' }, [
@@ -229,4 +249,52 @@ function slug(name) {
     .replace(/^-|-$/g, '')
     .slice(0, 28);
   return `${base || 'cat'}-${Math.floor(Math.random() * 900 + 100)}`;
+}
+
+/**
+ * Приглашение в свой бюджет.
+ *
+ * Письмо не отправляем: почтовый сервис — отдельная история со своими
+ * настройками и деньгами. Достаточно сказать человеку самому, что его ждут:
+ * он войдёт через Google и окажется внутри.
+ */
+function openInviteSheet(draw) {
+  const email = el('input', {
+    class: 'input',
+    type: 'email',
+    placeholder: 'почта@gmail.com',
+    autocomplete: 'email',
+  });
+
+  openSheet({
+    title: 'Пригласить в бюджет',
+    body: [
+      el('div', { class: 'field' }, [
+        el('label', { class: 'field__label' }, 'Google-почта'),
+        email,
+      ]),
+      el('p', { class: 'hint' },
+        'Именно та почта, которой человек входит в Google — другой он не войдёт.'),
+    ],
+    footer: [
+      el('button', { class: 'btn btn--ghost', onclick: closeSheet }, 'Отмена'),
+      el('button', {
+        class: 'btn btn--primary',
+        onclick: async () => {
+          try {
+            const invited = await inviteToFamily(
+              state.family.id,
+              email.value,
+              state.profile?.name || state.user.displayName || '',
+            );
+            closeSheet();
+            toastOk(`Ждём ${invited}`);
+            draw();
+          } catch (error) {
+            toastError(error.message || 'Не удалось пригласить');
+          }
+        },
+      }, 'Пригласить'),
+    ],
+  });
 }

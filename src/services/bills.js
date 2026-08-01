@@ -26,10 +26,10 @@ import {
   serverTimestamp,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=24';
-import { FAMILY_ID } from '../config.js?v=24';
+import { db } from '../core/firebase.js?v=26';
+import { getFamilyId } from '../core/session.js?v=26';
 
-const billCollection = () => collection(db, 'families', FAMILY_ID, 'bills');
+const billCollection = () => collection(db, 'families', getFamilyId(), 'bills');
 
 export function watchBills(onChange, onError) {
   return onSnapshot(

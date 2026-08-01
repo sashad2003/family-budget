@@ -2,32 +2,36 @@
  * Точка входа: авторизация → загрузка семьи → подписки на данные → роутинг.
  */
 
-import { $, render } from './core/dom.js?v=24';
-import { state, set, subscribe } from './core/store.js?v=24';
-import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=24';
-import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=24';
-import { unpaidBills } from './core/selectors.js?v=24';
+import { $, render } from './core/dom.js?v=26';
+import { state, set, subscribe } from './core/store.js?v=26';
+import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=26';
+import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=26';
+import { unpaidBills } from './core/selectors.js?v=26';
 
-import { watchAuth, signIn, loadFamily } from './services/auth.js?v=24';
+import { watchAuth, signIn } from './services/auth.js?v=26';
+import { loadAccount, isAdmin } from './services/account.js?v=26';
+import { setFamilyId } from './core/session.js?v=26';
+import { askProfile } from './views/signup.js?v=26';
 import {
   watchTransactions,
   watchCategories,
   seedCategoriesIfEmpty,
   syncNewCategories,
-} from './services/transactions.js?v=24';
-import { watchBills } from './services/bills.js?v=24';
-import { loadRates } from './services/rates.js?v=24';
+} from './services/transactions.js?v=26';
+import { watchBills } from './services/bills.js?v=26';
+import { loadRates } from './services/rates.js?v=26';
 
-import { renderDashboard } from './views/dashboard.js?v=24';
-import { renderList } from './views/list.js?v=24';
-import { renderBills } from './views/bills.js?v=24';
-import { renderPrices } from './views/prices.js?v=24';
-import { renderCharts, destroyCharts } from './views/charts.js?v=24';
-import { renderSettings } from './views/settings.js?v=24';
-import { openTxForm } from './views/txForm.js?v=24';
-import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=24';
-import { closeSheet } from './ui/sheet.js?v=24';
-import { toastError } from './ui/toast.js?v=24';
+import { renderDashboard } from './views/dashboard.js?v=26';
+import { renderList } from './views/list.js?v=26';
+import { renderBills } from './views/bills.js?v=26';
+import { renderPrices } from './views/prices.js?v=26';
+import { renderAdmin } from './views/admin.js?v=26';
+import { renderCharts, destroyCharts } from './views/charts.js?v=26';
+import { renderSettings } from './views/settings.js?v=26';
+import { openTxForm } from './views/txForm.js?v=26';
+import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=26';
+import { closeSheet } from './ui/sheet.js?v=26';
+import { toastError } from './ui/toast.js?v=26';
 
 const ROUTES = {
   dashboard: renderDashboard,
@@ -36,6 +40,7 @@ const ROUTES = {
   prices: renderPrices,
   charts: renderCharts,
   settings: renderSettings,
+  admin: renderAdmin,
 };
 
 let unsubscribers = [];
@@ -46,33 +51,34 @@ watchAuth(async (user) => {
   teardown();
 
   if (!user) {
-    set({ user: null, family: null, isMember: false, transactions: [], loading: false });
+    setFamilyId(null);
+    set({ user: null, family: null, profile: null, isAdmin: false, transactions: [], loading: false });
     showScreen('auth');
     return;
   }
 
-  set({ user, loading: true });
+  set({ user, isAdmin: isAdmin(user), loading: true });
   showScreen('boot');
 
   try {
-    const { family, isMember } = await loadFamily(user);
-    set({ family, isMember });
+    let account = await loadAccount(user);
 
-    if (!isMember) {
-      showScreen('auth');
-      showAuthError(
-        `Аккаунт ${user.email} не входит в семью. Добавьте эту почту в поле allowedEmails ` +
-        'документа families/family_drutz и войдите снова.',
-      );
-      return;
+    // Профиля нет — человек здесь впервые. Анкета заводит и его, и семью.
+    if (!account.profile) {
+      showScreen('signup');
+      account = await askProfile(user);
+      showScreen('boot');
     }
+
+    setFamilyId(account.family.id);
+    set({ family: account.family, profile: account.profile });
 
     await startData();
     showScreen('app');
   } catch (error) {
     console.error(error);
     showScreen('auth');
-    showAuthError(error.message || 'Не удалось загрузить данные семьи');
+    showAuthError(error.message || 'Не удалось загрузить данные');
   }
 });
 
@@ -117,7 +123,7 @@ function shareOldPrices(transactions) {
   if (backfillStarted || !state.user || !transactions.length) return;
   backfillStarted = true;
 
-  import('./services/prices.js?v=24')
+  import('./services/prices.js?v=26')
     .then(({ backfillPrices }) => backfillPrices(transactions, state.user.uid))
     .catch((error) => console.error('Не удалось перенести историю цен', error));
 }
@@ -135,6 +141,7 @@ function teardown() {
 function showScreen(name) {
   $('#boot').hidden = name !== 'boot';
   $('#auth').hidden = name !== 'auth';
+  $('#signup').hidden = name !== 'signup';
   $('#app').hidden = name !== 'app';
 }
 
@@ -172,6 +179,9 @@ function drawChrome() {
 
   // На телефоне открытый раздел может лежать внутри «Ещё» — подсвечиваем её.
   $('#btn-more').classList.toggle('is-active', MORE_ROUTES.includes(state.route));
+
+  // Админ-панель существует только для меня.
+  $('.tab[data-route="admin"]').hidden = !state.isAdmin;
 
   // Профиль в боковой колонке (на телефоне скрыт стилями).
   const photo = $('#user-photo');

@@ -14,7 +14,9 @@ return [
     // ID проекта Firebase — проверяется как aud в ID-токене.
     'firebase_project_id' => getenv('FIREBASE_PROJECT_ID') ?: 'mony-y-hac-b-kormaney',
 
-    // Кто имеет право дёргать прокси. Совпадает с allowedEmails в Firestore.
+    // Кто имеет право дёргать прокси.
+    // Пустой массив = любой, кто вошёл в приложение через Google.
+    // Список нужен, пока распознавание чеков идёт за мой счёт без подписки.
     'allowed_emails' => [
         'sashad2003@gmail.com',
     ],

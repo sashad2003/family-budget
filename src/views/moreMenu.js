@@ -5,17 +5,18 @@
  * кнопка «Ещё» там скрыта и меню не используется.
  */
 
-import { el } from '../core/dom.js?v=24';
-import { state, set } from '../core/store.js?v=24';
-import { openSheet, closeSheet } from '../ui/sheet.js?v=24';
+import { el } from '../core/dom.js?v=26';
+import { state, set } from '../core/store.js?v=26';
+import { openSheet, closeSheet } from '../ui/sheet.js?v=26';
 
 /** Разделы дока, спрятанные под «Ещё». Порядок — от частого к редкому. */
-export const MORE_ROUTES = ['list', 'prices', 'charts', 'settings'];
+export const MORE_ROUTES = ['list', 'prices', 'charts', 'admin', 'settings'];
 
 const ITEMS = {
   list: { title: 'Операции', hint: 'Полный список за месяц с поиском и фильтрами' },
   prices: { title: 'Цены', hint: 'Где товар дешевле — по чекам всех пользователей' },
   charts: { title: 'Статистика', hint: 'Траты по категориям и динамика за период' },
+  admin: { title: 'Люди', hint: 'Кто зарегистрировался в приложении' },
   settings: { title: 'Настройки', hint: 'Категории, валюта, профиль' },
 };
 
@@ -29,7 +30,11 @@ function routeIcon(route) {
 }
 
 export function openMoreMenu() {
-  const body = MORE_ROUTES.map((route) => {
+  // Админ-панель есть не у всех — в меню её показываем по тому же признаку,
+  // что и кнопку в боковой колонке.
+  const routes = MORE_ROUTES.filter((route) => route !== 'admin' || state.isAdmin);
+
+  const body = routes.map((route) => {
     const item = ITEMS[route];
 
     return el('button', {
