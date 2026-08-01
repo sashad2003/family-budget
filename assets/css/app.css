@@ -440,7 +440,8 @@ button { cursor: pointer; border: none; background: none; }
   font-weight: 400;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--fg-2);
+  /* На тёмном фоне --fg-2 сливался — заголовок разделов надо читать. */
+  color: var(--fg-1);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -825,6 +826,52 @@ button { cursor: pointer; border: none; background: none; }
 .list-item + .list-item { margin-top: 8px; }
 .list-item:hover { border-color: var(--edge-strong); }
 .list-item__sub { font-size: 12.5px; color: var(--fg-2); }
+
+/* ------------------------------------------------ бюджеты */
+
+.budget-list { display: flex; flex-direction: column; gap: 8px; }
+
+.budget {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 15px 16px;
+  text-align: left;
+  border: 1px solid var(--edge);
+  border-radius: var(--r-md);
+  background: linear-gradient(158deg, var(--glass-2), var(--glass-1));
+  transition: border-color 0.18s, background 0.18s;
+}
+.budget:hover { border-color: var(--edge-strong); }
+
+.budget__name { font-size: 15.5px; }
+
+/* Кружок слева: пустой у закрытых, залитый у открытого — состояние видно
+   с одного взгляда, ещё до чтения подписей. */
+.budget__dot {
+  width: 11px; height: 11px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  border: 1.5px solid var(--fg-2);
+}
+
+.budget.is-open {
+  border-color: rgba(45, 217, 138, 0.5);
+  background: linear-gradient(158deg, rgba(45, 217, 138, 0.14), rgba(45, 217, 138, 0.04));
+}
+.budget.is-open .budget__name { color: var(--income); font-weight: 500; }
+.budget.is-open .budget__dot { background: var(--income); border-color: var(--income); }
+
+.budget__mark {
+  flex: 0 0 auto;
+  padding: 4px 11px;
+  border-radius: var(--r-pill);
+  font-size: 12px;
+  color: var(--income);
+  background: rgba(45, 217, 138, 0.12);
+  border: 1px solid rgba(45, 217, 138, 0.3);
+}
 
 /* ------------------------------------------------ выбор валюты */
 

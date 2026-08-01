@@ -1,15 +1,15 @@
 /** Настройки: профиль, участники, валюта, курсы, категории. */
 
-import { el, render } from '../core/dom.js?v=28';
-import { state, set } from '../core/store.js?v=28';
-import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=28';
-import { formatAmount, convert } from '../core/money.js?v=28';
-import { logout } from '../services/auth.js?v=28';
-import { inviteLink, resetInviteLink, removeMember, listFamilies, switchFamily } from '../services/account.js?v=28';
-import { refreshRates } from '../services/rates.js?v=28';
-import { saveCategory, deleteCategory } from '../services/transactions.js?v=28';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=28';
-import { toastOk, toastError } from '../ui/toast.js?v=28';
+import { el, render } from '../core/dom.js?v=29';
+import { state, set } from '../core/store.js?v=29';
+import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=29';
+import { formatAmount, convert } from '../core/money.js?v=29';
+import { logout } from '../services/auth.js?v=29';
+import { inviteLink, resetInviteLink, removeMember, listFamilies, switchFamily } from '../services/account.js?v=29';
+import { refreshRates } from '../services/rates.js?v=29';
+import { saveCategory, deleteCategory } from '../services/transactions.js?v=29';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=29';
+import { toastOk, toastError } from '../ui/toast.js?v=29';
 
 const PALETTE = ['#2dd98a', '#ff5b5b', '#5b9fff', '#ffb347', '#ff7eb3', '#3de8d0', '#8a8a94'];
 
@@ -24,6 +24,10 @@ function build(draw) {
   const members = Object.entries(state.family?.members || {});
 
   return [
+    // Бюджеты — первым делом: между ними переключаются чаще, чем правят всё
+    // остальное на этом экране.
+    budgetSwitcher(),
+
     // Профиль
     el('div', { class: 'card', style: 'display:flex;align-items:center;gap:12px' }, [
       state.user.photoURL
@@ -113,9 +117,6 @@ function build(draw) {
     el('p', { class: 'hint' },
       'Пошлите ссылку-приглашение мужу, жене или кому угодно: кто по ней войдёт, '
       + 'окажется в этом бюджете.'),
-
-    // Переключатель бюджетов
-    budgetSwitcher(),
 
     // Категории
     el('div', { class: 'section-title' }, [
@@ -314,42 +315,59 @@ function openInviteSheet() {
 /**
  * Переключатель бюджетов.
  *
- * Свой бюджет и те, куда позвали, — разные наборы операций. Список подгружаем
- * отдельно: в состоянии лежит только открытый сейчас.
+ * Свой бюджет и те, куда позвали, — разные наборы операций. Открытый помечен
+ * зелёным: на этом экране это единственное, что меняет содержимое всех
+ * остальных, и промахнуться тут дороже, чем где-либо ещё.
+ *
+ * Список подгружаем отдельно: в состоянии лежит только открытый сейчас.
  */
 function budgetSwitcher() {
   const box = el('div');
 
   listFamilies(state.profile || { familyId: state.family.id })
     .then((families) => {
+      // Один бюджет — переключать не из чего, место не занимаем.
       if (families.length < 2) return;
 
       render(box, [
-        el('div', { class: 'section-title' }, [el('span', {}, `Бюджеты · ${families.length}`)]),
-        ...families.map((family) => el('button', {
-          class: `list-item ${family.id === state.family.id ? 'is-active' : ''}`,
-          style: 'width:100%;text-align:left',
-          onclick: async () => {
-            if (family.id === state.family.id) return;
-            try {
-              await switchFamily(state.user.uid, family.id);
-              // Данные всех экранов завязаны на семью — проще перезайти начисто.
-              location.reload();
-            } catch {
-              toastError('Не удалось переключить бюджет');
-            }
-          },
-        }, [
-          el('div', { style: 'min-width:0' }, [
-            el('div', {}, family.name || family.title || 'Бюджет'),
-            el('div', { class: 'list-item__sub' },
-              `${(family.memberUids || []).length} участник(ов)`),
-          ]),
-          family.id === state.family.id ? el('span', { class: 'chip' }, 'открыт') : null,
-        ])),
+        el('div', { class: 'section-title' }, [el('span', {}, 'Бюджеты')]),
+        el('div', { class: 'budget-list' }, families.map((family) => {
+          const isOpen = family.id === state.family.id;
+
+          return el('button', {
+            class: `budget ${isOpen ? 'is-open' : ''}`,
+            onclick: () => openBudget(family, isOpen),
+          }, [
+            el('span', { class: 'budget__dot' }),
+            el('span', { style: 'min-width:0;flex:1' }, [
+              el('div', { class: 'budget__name' }, family.name || family.title || 'Бюджет'),
+              el('div', { class: 'list-item__sub' }, membersLabel(family)),
+            ]),
+            isOpen ? el('span', { class: 'budget__mark' }, 'открыт') : null,
+          ]);
+        })),
       ]);
     })
     .catch(() => {});
 
   return box;
+}
+
+async function openBudget(family, isOpen) {
+  if (isOpen) return;
+  try {
+    await switchFamily(state.user.uid, family.id);
+    // Данные всех экранов завязаны на семью — проще перезайти начисто.
+    location.reload();
+  } catch {
+    toastError('Не удалось переключить бюджет');
+  }
+}
+
+function membersLabel(family) {
+  const count = (family.memberUids || []).length;
+  const tail = count % 10 === 1 && count % 100 !== 11 ? '' : 'а';
+  return count > 4 || (count % 100 >= 11 && count % 100 <= 14)
+    ? `${count} участников`
+    : `${count} участник${tail}`;
 }
