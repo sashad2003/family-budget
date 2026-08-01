@@ -2,7 +2,7 @@ rules_version = '2';
 
 // Схема:
 //   users/{uid}                профиль: имя, почта, телефон, подписка, familyId
-//   invites/{email}            кого и куда позвали
+//   inviteCodes/{code}         ссылка-приглашение в конкретный бюджет
 //   families/{familyId}
 //     ├─ transactions/{txId}
 //     ├─ categories/{catId}
@@ -11,7 +11,7 @@ rules_version = '2';
 //   prices/{priceId}           общая база цен, читают все
 //
 // Доступ к бюджету: только участники семьи (uid в memberUids).
-// Присоединиться можно, только если на твою почту выписано приглашение.
+// Присоединиться можно, только предъявив код из ссылки-приглашения.
 
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -36,11 +36,19 @@ service cloud.firestore {
         && myEmail() in ['sashad2003@gmail.com'];
     }
 
-    // Приглашение выписано лично на эту почту.
-    function invitedTo(familyId) {
+    /**
+     * Человек предъявил код приглашения в самом запросе.
+     *
+     * Знание кода и есть пропуск: код лежит только в ссылке, которую хозяин
+     * бюджета послал лично. Проверять сохранённое в семье значение бессмысленно —
+     * при обновлении оно попадает в запрос само, ничего не доказывая.
+     */
+    function joinsWithCode(familyId) {
       return request.auth != null
-        && exists(/databases/$(database)/documents/invites/$(myEmail()))
-        && get(/databases/$(database)/documents/invites/$(myEmail())).data.familyId == familyId;
+        && request.resource.data.joinCode is string
+        && exists(/databases/$(database)/documents/inviteCodes/$(request.resource.data.joinCode))
+        && get(/databases/$(database)/documents/inviteCodes/$(request.resource.data.joinCode))
+             .data.familyId == familyId;
     }
 
     // ---------------------------------------------------------------- профили
@@ -66,25 +74,21 @@ service cloud.firestore {
 
     // ---------------------------------------------------------------- приглашения
 
-    match /invites/{email} {
-      // Своё приглашение видит приглашённый; чужие — участники той семьи,
-      // куда зовут, чтобы показать список ожидающих.
-      allow read: if request.auth != null
-        && (email == myEmail() || isMember(resource.data.familyId));
+    match /inviteCodes/{code} {
+      // Читает любой вошедший: код известен только тому, кому дали ссылку,
+      // а по нему нужно узнать, в какой бюджет он ведёт.
+      allow read: if request.auth != null;
 
-      // Звать можно только в свою семью.
-      allow create, update: if isMember(request.resource.data.familyId);
-
-      // Убрать приглашение может и позвавший, и сам приглашённый — после того
-      // как вошёл, оно ему больше не нужно.
-      allow delete: if request.auth != null
-        && (email == myEmail() || isMember(resource.data.familyId));
+      // Заводит и отзывает ссылку только участник этого бюджета.
+      allow create: if isMember(request.resource.data.familyId);
+      allow delete: if isMember(resource.data.familyId);
+      allow update: if false;
     }
 
     // ---------------------------------------------------------------- семьи
 
     match /families/{familyId} {
-      allow read: if isMember(familyId) || invitedTo(familyId);
+      allow read: if isMember(familyId);
 
       // Свою семью человек создаёт при регистрации: он в ней и владелец,
       // и единственный участник. Записать себе чужих в момент создания нельзя.
@@ -93,10 +97,10 @@ service cloud.firestore {
         && request.resource.data.memberUids == [request.auth.uid];
 
       // Участник правит настройки семьи и состав.
-      // Приглашённый может добавить в состав только себя.
+      // Пришедший по ссылке может добавить в состав только себя.
       allow update: if isMember(familyId)
         || (
-          invitedTo(familyId)
+          joinsWithCode(familyId)
           && request.resource.data.memberUids.hasAll(resource.data.memberUids)
           && request.resource.data.memberUids.hasOnly(
                resource.data.memberUids.concat([request.auth.uid])

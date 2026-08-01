@@ -5,20 +5,20 @@
  *   name        имя и фамилия — как ввёл человек, а не как записано в Google
  *   email       почта из Google, менять нельзя
  *   phone       телефон с кодом страны
- *   familyId    в какой семье он ведёт бюджет
+ *   familyId    какой бюджет открыт сейчас
+ *   familyIds   все бюджеты, куда он входит: свой и те, куда позвали
  *   marketing   согласился ли получать письма о новых возможностях
  *   createdAt   когда зарегистрировался
  *   trialEndsAt до какого числа бесплатно
  *   subscription 'trial' | 'active' | 'expired'
  *
- * invites/{email}
- *   familyId    куда приглашён
- *   byName      кто позвал — показываем при входе
- *   createdAt
+ * inviteCodes/{code}
+ *   familyId    в какой бюджет ведёт ссылка
+ *   title       название бюджета — показать до входа
  *
- * Приглашение лежит отдельным документом с почтой в имени: так приглашённый
- * читает ровно свою запись и не видит чужих. Искать семью перебором нельзя —
- * это открыло бы список всех семей приложения.
+ * Приглашение — случайный код в ссылке. Знание кода и есть пропуск: правила
+ * пускают в семью того, кто передал код в запросе. Искать семью перебором
+ * нельзя — это открыло бы список всех бюджетов приложения.
  */
 
 import {
@@ -39,11 +39,11 @@ import {
   limit,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=26';
-import { ADMIN_EMAILS, LEGACY_FAMILY_ID, TRIAL_DAYS } from '../config.js?v=26';
+import { db } from '../core/firebase.js?v=27';
+import { ADMIN_EMAILS, LEGACY_FAMILY_ID, TRIAL_DAYS } from '../config.js?v=27';
 
 const userRef = (uid) => doc(db, 'users', uid);
-const inviteRef = (email) => doc(db, 'invites', String(email).toLowerCase());
+const codeRef = (code) => doc(db, 'inviteCodes', String(code));
 const familyRef = (id) => doc(db, 'families', id);
 
 export function isAdmin(user) {
@@ -80,23 +80,12 @@ export async function loadAccount(user) {
   return { profile: null, family: null };
 }
 
-/** Данные приглашения, если этого человека куда-то звали. */
-export async function pendingInvite(email) {
-  const snap = await getDoc(inviteRef(email));
-  return snap.exists() ? { email: snap.id, ...snap.data() } : null;
-}
-
 /**
  * Регистрация: заводим профиль и либо создаём свою семью, либо входим в ту,
  * куда позвали.
  */
 export async function registerUser(user, { name, phone, marketing }) {
-  const invite = await pendingInvite(user.email);
-
-  const familyId = invite
-    ? await joinFamily(user, invite, name)
-    : await createFamily(user, name);
-
+  const familyId = await createFamily(user, name);
   const profile = await createProfile(user, { familyId, name, phone, marketing });
   return { profile, family: await loadFamily(familyId) };
 }
@@ -110,6 +99,7 @@ async function createProfile(user, { familyId, name, phone, marketing }) {
     email: String(user.email || '').toLowerCase(),
     phone: String(phone || '').trim(),
     familyId,
+    familyIds: [familyId],
     marketing: Boolean(marketing),
     createdAt: serverTimestamp(),
     trialEndsAt: trialEndsAt.toISOString().slice(0, 10),
@@ -132,14 +122,53 @@ async function createFamily(user, name) {
   return ref.id;
 }
 
-/** Вход по приглашению. Приглашение после этого больше не нужно. */
-async function joinFamily(user, invite, name) {
-  await updateDoc(familyRef(invite.familyId), {
-    memberUids: arrayUnion(user.uid),
-    [`members.${user.uid}`]: profileOf(user, name),
-  });
-  await deleteDoc(inviteRef(user.email)).catch(() => {});
+/** Куда ведёт ссылка-приглашение. null — код выдуман или отозван. */
+export async function inviteByCode(code) {
+  const snap = await getDoc(codeRef(code)).catch(() => null);
+  return snap?.exists() ? { code: snap.id, ...snap.data() } : null;
+}
+
+/**
+ * Вход в чужой бюджет по коду из ссылки.
+ *
+ * Код передаём и в запись семьи: правила по нему проверяют, что человек
+ * действительно получил приглашение, а не подобрал номер бюджета.
+ */
+export async function joinByCode(user, profile, code) {
+  const invite = await inviteByCode(code);
+  if (!invite) throw new Error('Ссылка-приглашение больше не действует');
+
+  const already = (profile.familyIds || [profile.familyId]).includes(invite.familyId);
+
+  if (!already) {
+    await updateDoc(familyRef(invite.familyId), {
+      memberUids: arrayUnion(user.uid),
+      [`members.${user.uid}`]: profileOf(user, profile.name),
+      joinCode: code,
+    });
+    await updateDoc(userRef(user.uid), {
+      familyIds: arrayUnion(invite.familyId),
+      familyId: invite.familyId,
+    });
+  } else {
+    await updateDoc(userRef(user.uid), { familyId: invite.familyId });
+  }
+
   return invite.familyId;
+}
+
+/** Переключение между своими бюджетами. */
+export async function switchFamily(uid, familyId) {
+  await updateDoc(userRef(uid), { familyId });
+}
+
+/** Бюджеты, в которых человек состоит — для переключателя. */
+export async function listFamilies(profile) {
+  const ids = profile.familyIds?.length ? profile.familyIds : [profile.familyId];
+  const docs = await Promise.all(ids.map((id) => getDoc(familyRef(id)).catch(() => null)));
+  return docs
+    .filter((d) => d?.exists())
+    .map((d) => ({ id: d.id, ...d.data() }));
 }
 
 async function loadFamily(familyId) {
@@ -158,28 +187,43 @@ function profileOf(user, name) {
 
 // ---------------------------------------------------------------- приглашения
 
-/** Зовём человека в свою семью по почте. Он войдёт через Google и попадёт к нам. */
-export async function inviteToFamily(familyId, email, byName) {
-  const clean = String(email || '').trim().toLowerCase();
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(clean)) {
-    throw new Error('Проверьте адрес почты');
-  }
-
-  const existing = await getDoc(inviteRef(clean));
-  if (existing.exists() && existing.data().familyId !== familyId) {
-    throw new Error('Этого человека уже позвали в другой бюджет');
-  }
-
-  await setDoc(inviteRef(clean), {
-    familyId,
-    byName: String(byName || ''),
-    createdAt: serverTimestamp(),
-  });
-  return clean;
+/**
+ * Ссылка-приглашение в свой бюджет.
+ *
+ * Код заводится один раз и живёт с семьёй: его можно послать в мессенджере
+ * кому угодно, а письма мы не шлём — почтовый сервис это отдельная история
+ * со своими настройками и деньгами.
+ */
+export async function inviteLink(family) {
+  const code = family.joinCode || await createCode(family);
+  return `${location.origin}${location.pathname}?join=${code}`;
 }
 
-export function cancelInvite(email) {
-  return deleteDoc(inviteRef(email));
+/** Новый код взамен старого: разосланная раньше ссылка перестаёт работать. */
+export async function resetInviteLink(family) {
+  if (family.joinCode) await deleteDoc(codeRef(family.joinCode)).catch(() => {});
+  const code = await createCode(family);
+  return `${location.origin}${location.pathname}?join=${code}`;
+}
+
+async function createCode(family) {
+  // Код короткий, но подобрать его перебором нельзя: правила пускают только
+  // по точному совпадению, а бюджетов в базе несопоставимо меньше вариантов.
+  const code = randomCode();
+  await setDoc(codeRef(code), {
+    familyId: family.id,
+    title: family.name || family.title || 'Семейный бюджет',
+    createdAt: serverTimestamp(),
+  });
+  await updateDoc(familyRef(family.id), { joinCode: code });
+  family.joinCode = code;
+  return code;
+}
+
+function randomCode() {
+  const alphabet = 'abcdefghijkmnpqrstuvwxyz23456789';
+  const bytes = crypto.getRandomValues(new Uint8Array(12));
+  return [...bytes].map((b) => alphabet[b % alphabet.length]).join('');
 }
 
 /** Убрать участника из семьи. Его записи остаются — это общий бюджет. */

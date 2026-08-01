@@ -8,10 +8,10 @@
  * ни один сервис рассылок не станет отправлять письма этому адресу.
  */
 
-import { el, render, $ } from '../core/dom.js?v=26';
-import { registerUser, pendingInvite } from '../services/account.js?v=26';
-import { logout } from '../services/auth.js?v=26';
-import { toastError } from '../ui/toast.js?v=26';
+import { el, render, $ } from '../core/dom.js?v=27';
+import { registerUser } from '../services/account.js?v=27';
+import { logout } from '../services/auth.js?v=27';
+import { toastError } from '../ui/toast.js?v=27';
 
 /**
  * Показывает анкету и ждёт, пока человек её заполнит.
@@ -23,9 +23,7 @@ export function askProfile(user) {
   });
 }
 
-async function renderForm(user, done) {
-  const invite = await pendingInvite(user.email).catch(() => null);
-
+function renderForm(user, done) {
   const name = el('input', {
     class: 'input',
     type: 'text',
@@ -75,11 +73,10 @@ async function renderForm(user, done) {
   });
 
   render($('#signup-card'), [
-    el('h1', { class: 'auth__title' }, invite ? 'Вас пригласили' : 'Ещё пара слов'),
+    el('h1', { class: 'auth__title' }, 'Ещё пара слов'),
 
-    el('p', { class: 'auth__sub' }, invite
-      ? `${invite.byName || 'Вас'} зовёт вести общий бюджет. Заполните данные — и вы внутри.`
-      : 'Заводим ваш бюджет. Пригласить мужа или жену можно сразу после.'),
+    el('p', { class: 'auth__sub' },
+      'Заводим ваш бюджет. Пригласить мужа или жену можно сразу после.'),
 
     el('div', { class: 'field' }, [el('label', { class: 'field__label' }, 'Как вас зовут'), name]),
     el('div', { class: 'field' }, [el('label', { class: 'field__label' }, 'Телефон'), phone]),

@@ -1,15 +1,15 @@
 /** Настройки: профиль, участники, валюта, курсы, категории. */
 
-import { el, render } from '../core/dom.js?v=26';
-import { state, set } from '../core/store.js?v=26';
-import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=26';
-import { formatAmount, convert } from '../core/money.js?v=26';
-import { logout } from '../services/auth.js?v=26';
-import { inviteToFamily, removeMember } from '../services/account.js?v=26';
-import { refreshRates } from '../services/rates.js?v=26';
-import { saveCategory, deleteCategory } from '../services/transactions.js?v=26';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=26';
-import { toastOk, toastError } from '../ui/toast.js?v=26';
+import { el, render } from '../core/dom.js?v=27';
+import { state, set } from '../core/store.js?v=27';
+import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=27';
+import { formatAmount, convert } from '../core/money.js?v=27';
+import { logout } from '../services/auth.js?v=27';
+import { inviteLink, resetInviteLink, removeMember, listFamilies, switchFamily } from '../services/account.js?v=27';
+import { refreshRates } from '../services/rates.js?v=27';
+import { saveCategory, deleteCategory } from '../services/transactions.js?v=27';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=27';
+import { toastOk, toastError } from '../ui/toast.js?v=27';
 
 const PALETTE = ['#2dd98a', '#ff5b5b', '#5b9fff', '#ffb347', '#ff7eb3', '#3de8d0', '#8a8a94'];
 
@@ -82,7 +82,7 @@ function build(draw) {
     // Участники
     el('div', { class: 'section-title' }, [
       el('span', {}, `Семья · ${members.length}`),
-      el('button', { class: 'chip', onclick: () => openInviteSheet(draw) }, '＋ пригласить'),
+      el('button', { class: 'chip', onclick: () => openInviteSheet() }, '🔗 пригласить'),
     ]),
     ...members.map(([uid, member]) =>
       el('div', { class: 'list-item' }, [
@@ -111,7 +111,11 @@ function build(draw) {
       ]),
     ),
     el('p', { class: 'hint' },
-      'Приглашённый входит через Google той же почтой и сразу попадает в ваш бюджет.'),
+      'Пошлите ссылку-приглашение мужу, жене или кому угодно: кто по ней войдёт, '
+      + 'окажется в этом бюджете.'),
+
+    // Переключатель бюджетов
+    budgetSwitcher(),
 
     // Категории
     el('div', { class: 'section-title' }, [
@@ -258,43 +262,94 @@ function slug(name) {
  * настройками и деньгами. Достаточно сказать человеку самому, что его ждут:
  * он войдёт через Google и окажется внутри.
  */
-function openInviteSheet(draw) {
-  const email = el('input', {
-    class: 'input',
-    type: 'email',
-    placeholder: 'почта@gmail.com',
-    autocomplete: 'email',
+function openInviteSheet() {
+  const link = el('input', { class: 'input', type: 'text', readonly: true, value: 'Готовим ссылку…' });
+
+  const copy = el('button', { class: 'btn btn--primary' }, 'Скопировать');
+  copy.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(link.value);
+      toastOk('Ссылка скопирована');
+    } catch {
+      // Буфер обмена закрыт (бывает в старых браузерах) — выделяем текст руками.
+      link.select();
+      toastError('Скопируйте ссылку вручную');
+    }
   });
 
   openSheet({
     title: 'Пригласить в бюджет',
     body: [
       el('div', { class: 'field' }, [
-        el('label', { class: 'field__label' }, 'Google-почта'),
-        email,
+        el('label', { class: 'field__label' }, 'Ссылка-приглашение'),
+        link,
       ]),
       el('p', { class: 'hint' },
-        'Именно та почта, которой человек входит в Google — другой он не войдёт.'),
-    ],
-    footer: [
-      el('button', { class: 'btn btn--ghost', onclick: closeSheet }, 'Отмена'),
+        'Пошлите её в любом мессенджере. Человек откроет ссылку, войдёт через Google '
+        + 'и попадёт в этот бюджет. Ссылка постоянная — кто её получит, тот и войдёт.'),
       el('button', {
-        class: 'btn btn--primary',
+        class: 'btn btn--ghost btn--wide',
+        style: 'margin-top:12px',
         onclick: async () => {
           try {
-            const invited = await inviteToFamily(
-              state.family.id,
-              email.value,
-              state.profile?.name || state.user.displayName || '',
-            );
-            closeSheet();
-            toastOk(`Ждём ${invited}`);
-            draw();
-          } catch (error) {
-            toastError(error.message || 'Не удалось пригласить');
+            link.value = await resetInviteLink(state.family);
+            toastOk('Старая ссылка больше не работает');
+          } catch {
+            toastError('Не удалось обновить ссылку');
           }
         },
-      }, 'Пригласить'),
+      }, 'Сделать новую ссылку'),
+    ],
+    footer: [
+      el('button', { class: 'btn btn--ghost', onclick: closeSheet }, 'Закрыть'),
+      copy,
     ],
   });
+
+  inviteLink(state.family)
+    .then((url) => { link.value = url; })
+    .catch(() => { link.value = ''; toastError('Не удалось создать ссылку'); });
+}
+
+/**
+ * Переключатель бюджетов.
+ *
+ * Свой бюджет и те, куда позвали, — разные наборы операций. Список подгружаем
+ * отдельно: в состоянии лежит только открытый сейчас.
+ */
+function budgetSwitcher() {
+  const box = el('div');
+
+  listFamilies(state.profile || { familyId: state.family.id })
+    .then((families) => {
+      if (families.length < 2) return;
+
+      render(box, [
+        el('div', { class: 'section-title' }, [el('span', {}, `Бюджеты · ${families.length}`)]),
+        ...families.map((family) => el('button', {
+          class: `list-item ${family.id === state.family.id ? 'is-active' : ''}`,
+          style: 'width:100%;text-align:left',
+          onclick: async () => {
+            if (family.id === state.family.id) return;
+            try {
+              await switchFamily(state.user.uid, family.id);
+              // Данные всех экранов завязаны на семью — проще перезайти начисто.
+              location.reload();
+            } catch {
+              toastError('Не удалось переключить бюджет');
+            }
+          },
+        }, [
+          el('div', { style: 'min-width:0' }, [
+            el('div', {}, family.name || family.title || 'Бюджет'),
+            el('div', { class: 'list-item__sub' },
+              `${(family.memberUids || []).length} участник(ов)`),
+          ]),
+          family.id === state.family.id ? el('span', { class: 'chip' }, 'открыт') : null,
+        ])),
+      ]);
+    })
+    .catch(() => {});
+
+  return box;
 }

@@ -2,36 +2,36 @@
  * Точка входа: авторизация → загрузка семьи → подписки на данные → роутинг.
  */
 
-import { $, render } from './core/dom.js?v=26';
-import { state, set, subscribe } from './core/store.js?v=26';
-import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=26';
-import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=26';
-import { unpaidBills } from './core/selectors.js?v=26';
+import { $, render } from './core/dom.js?v=27';
+import { state, set, subscribe } from './core/store.js?v=27';
+import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=27';
+import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=27';
+import { unpaidBills } from './core/selectors.js?v=27';
 
-import { watchAuth, signIn } from './services/auth.js?v=26';
-import { loadAccount, isAdmin } from './services/account.js?v=26';
-import { setFamilyId } from './core/session.js?v=26';
-import { askProfile } from './views/signup.js?v=26';
+import { watchAuth, signIn } from './services/auth.js?v=27';
+import { loadAccount, isAdmin, joinByCode } from './services/account.js?v=27';
+import { setFamilyId } from './core/session.js?v=27';
+import { askProfile } from './views/signup.js?v=27';
 import {
   watchTransactions,
   watchCategories,
   seedCategoriesIfEmpty,
   syncNewCategories,
-} from './services/transactions.js?v=26';
-import { watchBills } from './services/bills.js?v=26';
-import { loadRates } from './services/rates.js?v=26';
+} from './services/transactions.js?v=27';
+import { watchBills } from './services/bills.js?v=27';
+import { loadRates } from './services/rates.js?v=27';
 
-import { renderDashboard } from './views/dashboard.js?v=26';
-import { renderList } from './views/list.js?v=26';
-import { renderBills } from './views/bills.js?v=26';
-import { renderPrices } from './views/prices.js?v=26';
-import { renderAdmin } from './views/admin.js?v=26';
-import { renderCharts, destroyCharts } from './views/charts.js?v=26';
-import { renderSettings } from './views/settings.js?v=26';
-import { openTxForm } from './views/txForm.js?v=26';
-import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=26';
-import { closeSheet } from './ui/sheet.js?v=26';
-import { toastError } from './ui/toast.js?v=26';
+import { renderDashboard } from './views/dashboard.js?v=27';
+import { renderList } from './views/list.js?v=27';
+import { renderBills } from './views/bills.js?v=27';
+import { renderPrices } from './views/prices.js?v=27';
+import { renderAdmin } from './views/admin.js?v=27';
+import { renderCharts, destroyCharts } from './views/charts.js?v=27';
+import { renderSettings } from './views/settings.js?v=27';
+import { openTxForm } from './views/txForm.js?v=27';
+import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=27';
+import { closeSheet } from './ui/sheet.js?v=27';
+import { toastError, toastOk } from './ui/toast.js?v=27';
 
 const ROUTES = {
   dashboard: renderDashboard,
@@ -70,6 +70,8 @@ watchAuth(async (user) => {
       showScreen('boot');
     }
 
+    account = await acceptInvite(user, account);
+
     setFamilyId(account.family.id);
     set({ family: account.family, profile: account.profile });
 
@@ -81,6 +83,31 @@ watchAuth(async (user) => {
     showAuthError(error.message || 'Не удалось загрузить данные');
   }
 });
+
+/**
+ * Переход по ссылке-приглашению: ?join=код в адресе.
+ *
+ * Код убираем из адреса сразу — иначе он останется в истории браузера и
+ * при следующем открытии приложение снова полезет вступать в тот же бюджет.
+ */
+async function acceptInvite(user, account) {
+  const code = new URLSearchParams(location.search).get('join');
+  if (!code) return account;
+
+  history.replaceState(null, '', location.pathname);
+
+  try {
+    await joinByCode(user, account.profile, code);
+    // Состав семьи и список бюджетов изменились — перечитываем начисто.
+    const fresh = await loadAccount(user);
+    toastOk('Вы в общем бюджете');
+    return fresh;
+  } catch (error) {
+    console.error(error);
+    toastError(error.message || 'Ссылка-приглашение не сработала');
+    return account;
+  }
+}
 
 async function startData() {
   const { rates, fetchedAt, stale } = await loadRates();
@@ -123,7 +150,7 @@ function shareOldPrices(transactions) {
   if (backfillStarted || !state.user || !transactions.length) return;
   backfillStarted = true;
 
-  import('./services/prices.js?v=26')
+  import('./services/prices.js?v=27')
     .then(({ backfillPrices }) => backfillPrices(transactions, state.user.uid))
     .catch((error) => console.error('Не удалось перенести историю цен', error));
 }
