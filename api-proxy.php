@@ -26,6 +26,14 @@ const MAX_PDF_BYTES    = 4 * 1024 * 1024;   // если по ссылке отд
 const MAX_SMS_CHARS    = 2000;              // банковская SMS во много раз короче
 const MAX_TOKENS      = 8000;
 
+/**
+ * Цена модели в долларах за миллион токенов — чтобы знать, во что обходится
+ * один чек. Нужно для решения о подписке: пока считаем, а не гадаем.
+ * При смене модели в config.php поправить и здесь.
+ */
+const PRICE_IN_PER_MTOK  = 5.0;
+const PRICE_OUT_PER_MTOK = 25.0;
+
 // Публичные ключи, которыми Google подписывает Firebase ID-токены
 const FIREBASE_CERTS_URL =
     'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com';
@@ -494,13 +502,36 @@ TXT;
         respond(422, ['error' => 'refused']);
     }
 
+    $usage = costOf($resp['usage'] ?? []);
+
     foreach ($resp['content'] ?? [] as $block) {
         if (($block['type'] ?? '') === 'text') {
             $parsed = json_decode((string)$block['text'], true);
             if (is_array($parsed)) {
-                return ['ok' => true, 'receipt' => $parsed];
+                return ['ok' => true, 'receipt' => $parsed, 'usage' => $usage];
             }
         }
     }
     respond(502, ['error' => 'claude_unparsable']);
+}
+
+/**
+ * Во что обошёлся один разбор чека.
+ *
+ * Записываем в журнал сервера и отдаём клиенту: без реальных чисел нельзя
+ * решить, окупается ли бесплатное пользование и сколько просить за подписку.
+ */
+function costOf(array $usage): array
+{
+    $in  = (int)($usage['input_tokens'] ?? 0);
+    $out = (int)($usage['output_tokens'] ?? 0);
+    // Кешированное чтение стоит дешевле, но у нас его нет — считаем как обычный вход.
+    $in += (int)($usage['cache_read_input_tokens'] ?? 0)
+         + (int)($usage['cache_creation_input_tokens'] ?? 0);
+
+    $cost = $in / 1000000 * PRICE_IN_PER_MTOK + $out / 1000000 * PRICE_OUT_PER_MTOK;
+
+    error_log(sprintf('budget receipt: in=%d out=%d cost=$%.4f', $in, $out, $cost));
+
+    return ['input' => $in, 'output' => $out, 'cost_usd' => round($cost, 4)];
 }

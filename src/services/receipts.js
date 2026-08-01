@@ -5,10 +5,10 @@
  * AI ошибается в названиях товаров, поэтому ни одно поле не считается финальным.
  */
 
-import { PROXY_URL, CURRENCY_CODES } from '../config.js?v=23';
-import { idToken } from './auth.js?v=23';
-import { normalizeDate, today } from '../core/dates.js?v=23';
-import { parseBankSms } from '../core/smsParse.js?v=23';
+import { PROXY_URL, CURRENCY_CODES } from '../config.js?v=24';
+import { idToken } from './auth.js?v=24';
+import { normalizeDate, today } from '../core/dates.js?v=24';
+import { parseBankSms } from '../core/smsParse.js?v=24';
 
 /** Сколько пикселей по длинной стороне отправляем. Больше — дороже и медленнее без выигрыша. */
 const MAX_EDGE = 1600;
@@ -73,6 +73,18 @@ async function callProxy(payload) {
   if (!response.ok || !data?.receipt) {
     throw new Error(errorText(data?.error, response.status));
   }
+
+  /**
+   * Во что обошёлся разбор — в консоль браузера. Нужно, чтобы понимать
+   * настоящую стоимость чека: от неё зависит, сколько стоит подписка.
+   */
+  if (data.usage) {
+    console.info(
+      `Чек разобран: ${data.usage.input} вх. + ${data.usage.output} исх. токенов, `
+      + `$${data.usage.cost_usd}`,
+    );
+  }
+
   return data;
 }
 

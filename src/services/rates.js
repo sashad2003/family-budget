@@ -11,9 +11,9 @@
 
 import { doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=23';
-import { FAMILY_ID, FALLBACK_RATES, PROXY_URL } from '../config.js?v=23';
-import { idToken } from './auth.js?v=23';
+import { db } from '../core/firebase.js?v=24';
+import { FAMILY_ID, FALLBACK_RATES, PROXY_URL } from '../config.js?v=24';
+import { idToken } from './auth.js?v=24';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const ratesRef = () => doc(db, 'families', FAMILY_ID, 'meta', 'rates');
