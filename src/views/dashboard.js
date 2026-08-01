@@ -1,14 +1,15 @@
 /** Обзор: баланс месяца, доходы/расходы, разбивка по категориям, последние операции. */
 
-import { el } from '../core/dom.js?v=35';
-import { state } from '../core/store.js?v=35';
-import { formatAmount } from '../core/money.js?v=35';
-import { monthTransactions, totals, byCategory, unpaidBills } from '../core/selectors.js?v=35';
-import { set } from '../core/store.js?v=35';
-import { txRow, tileGradient } from './list.js?v=35';
-import { openTxForm } from './txForm.js?v=35';
-import { openScanSheet } from './scan.js?v=35';
-import { section } from '../ui/section.js?v=35';
+import { el } from '../core/dom.js?v=36';
+import { state } from '../core/store.js?v=36';
+import { formatAmount } from '../core/money.js?v=36';
+import { monthTransactions, totals, byCategory, unpaidBills } from '../core/selectors.js?v=36';
+import { set } from '../core/store.js?v=36';
+import { txRow, tileGradient } from './list.js?v=36';
+import { openTxForm } from './txForm.js?v=36';
+import { openScanSheet } from './scan.js?v=36';
+import { section } from '../ui/section.js?v=36';
+import { t } from '../core/i18n.js?v=36';
 
 export function renderDashboard() {
   const list = monthTransactions(state);
@@ -43,12 +44,12 @@ export function renderDashboard() {
     ]),
 
     el('div', { class: 'dash__side' }, [
-      section('Последние операции',
+      section(t('dash.recent'),
         recent.map((tx) => txRow(tx, () => openTxForm({ tx }))),
         el('button', {
           class: 'chip',
           onclick: () => window.dispatchEvent(new CustomEvent('goto-list')),
-        }, 'все')),
+        }, t('common.all'))),
     ]),
   ]);
 }
@@ -95,7 +96,7 @@ function balanceBlock(balance, income, expense) {
 }
 
 function categoriesCard(categories) {
-  return section('Куда уходят деньги', [
+  return section(t('dash.where'), [
     el('div', { class: 'card' }, [
       el('div', { class: 'bar-legend' }, categories.slice(0, 7).map((row) =>
         el('div', {}, [

@@ -199,6 +199,10 @@ button { cursor: pointer; border: none; background: none; }
 .auth__sub { margin: 0 0 30px; color: var(--fg-1); font-size: 15px; }
 .auth__error { margin-top: 18px; color: #ffb0b0; font-size: 14px; line-height: 1.55; }
 
+.auth__legal { margin: 24px 0 0; font-size: 12.5px; line-height: 1.9; color: var(--fg-2); }
+.auth__legal a { color: var(--fg-2); text-decoration: none; }
+.auth__legal a:hover { color: var(--fg-0); }
+
 /* ------------------------------------------------ каркас */
 
 .app { min-height: 100dvh; }
@@ -334,7 +338,7 @@ button { cursor: pointer; border: none; background: none; }
   background: var(--glass-1);
   border: 1px solid var(--edge);
   color: var(--fg-0);
-  text-align: left;
+  text-align: start;
 }
 .more-item + .more-item { margin-top: 8px; }
 .more-item:active { transform: scale(0.99); }
@@ -362,7 +366,7 @@ button { cursor: pointer; border: none; background: none; }
 
 .fab {
   position: fixed;
-  right: 18px;
+  inset-inline-end: 18px;
   bottom: calc(var(--dock-h) + 24px + env(safe-area-inset-bottom));
   z-index: 41;
   width: 56px; height: 56px;
@@ -486,7 +490,7 @@ button { cursor: pointer; border: none; background: none; }
   gap: 13px;
   width: 100%;
   padding: 12px 14px;
-  text-align: left;
+  text-align: start;
   border: 1px solid var(--edge);
   border-radius: var(--r-md);
   background: linear-gradient(158deg, var(--glass-2), var(--glass-1));
@@ -514,7 +518,7 @@ button { cursor: pointer; border: none; background: none; }
 .tx__title { font-size: 16px; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tx__meta { font-size: 13px; color: var(--fg-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-.tx__amount { font-size: 16.5px; font-weight: 500; white-space: nowrap; text-align: right; }
+.tx__amount { font-size: 16.5px; font-weight: 500; white-space: nowrap; text-align: end; }
 .tx__amount--in { color: var(--income); }
 .tx__converted { display: block; margin-top: 1px; font-size: 12px; color: var(--fg-2); font-weight: 400; }
 
@@ -677,12 +681,12 @@ button { cursor: pointer; border: none; background: none; }
   align-items: center;
 }
 .item-row .input { padding: 11px 11px; font-size: 14.5px; }
-.item-row .input--num { font-family: var(--mono); text-align: right; }
+.item-row .input--num { font-family: var(--mono); text-align: end; }
 .item-row__del { color: var(--fg-2); font-size: 16px; height: 36px; border-radius: 9px; transition: background 0.18s, color 0.18s; }
 .item-row__del:hover { background: rgba(255, 91, 91, 0.14); color: var(--expense); }
 
 .items__head { font-size: 11.5px; color: var(--fg-2); padding: 0 2px 2px; }
-.items__head span:nth-child(n+2) { text-align: right; }
+.items__head span:nth-child(n+2) { text-align: end; }
 
 /* ------------------------------------------------ шторка */
 
@@ -807,10 +811,10 @@ button { cursor: pointer; border: none; background: none; }
   padding: 9px 0;
   align-items: center;
   font-size: 13.5px;
-  text-align: right;
+  text-align: end;
 }
 .mrow + .mrow { border-top: 1px solid rgba(255, 255, 255, 0.05); }
-.mrow > span:first-child { text-align: left; }
+.mrow > span:first-child { text-align: start; }
 .mrow__month { color: var(--fg-1); text-transform: capitalize; }
 .mrow--head {
   font-size: 11.5px;
@@ -838,7 +842,7 @@ button { cursor: pointer; border: none; background: none; }
   gap: 12px;
   width: 100%;
   padding: 14px 16px;
-  text-align: left;
+  text-align: start;
   border: 1px solid var(--edge);
   border-radius: var(--r-md);
   background: linear-gradient(158deg, var(--glass-2), var(--glass-1));
@@ -858,7 +862,7 @@ button { cursor: pointer; border: none; background: none; }
   gap: 12px;
   width: 100%;
   padding: 15px 16px;
-  text-align: left;
+  text-align: start;
   border: 1px solid var(--edge);
   border-radius: var(--r-md);
   background: linear-gradient(158deg, var(--glass-2), var(--glass-1));
@@ -931,7 +935,7 @@ button { cursor: pointer; border: none; background: none; }
   border: 1px solid var(--edge);
   background: rgba(255, 255, 255, 0.045);
   color: var(--fg-0);
-  text-align: left;
+  text-align: start;
   transition: border-color 0.18s, background 0.18s;
 }
 .cur:hover { background: rgba(255, 255, 255, 0.08); }
@@ -964,7 +968,7 @@ button { cursor: pointer; border: none; background: none; }
     radial-gradient(120% 130% at 20% 0%, rgba(255, 91, 91, 0.2), transparent 62%),
     linear-gradient(158deg, var(--glass-2), var(--glass-1));
 }
-.card--action { display: block; width: 100%; text-align: left; color: inherit; }
+.card--action { display: block; width: 100%; text-align: start; color: inherit; }
 .card--action:hover { border-color: rgba(255, 91, 91, 0.7); }
 
 /* Крупная сумма в окне подтверждения оплаты */
@@ -1009,7 +1013,7 @@ button { cursor: pointer; border: none; background: none; }
   align-items: center;
   gap: 13px;
   padding: 13px 4px 13px 14px;
-  text-align: left;
+  text-align: start;
   color: inherit;
 }
 
@@ -1054,7 +1058,7 @@ button { cursor: pointer; border: none; background: none; }
   border: 1px solid var(--edge);
   background: rgba(255, 255, 255, 0.045);
   color: var(--fg-1);
-  text-align: left;
+  text-align: start;
   transition: border-color 0.18s, background 0.18s, color 0.18s;
 }
 .toggle__title { display: block; font-size: 15px; color: var(--fg-0); }
@@ -1071,7 +1075,7 @@ button { cursor: pointer; border: none; background: none; }
 .toggle__knob::after {
   content: '';
   position: absolute;
-  top: 3px; left: 3px;
+  top: 3px; inset-inline-start: 3px;
   width: 20px; height: 20px;
   border-radius: 50%;
   background: #f4f4f8;
@@ -1079,13 +1083,16 @@ button { cursor: pointer; border: none; background: none; }
 }
 .toggle.is-on { border-color: rgba(91, 159, 255, 0.5); }
 .toggle.is-on .toggle__knob { background: linear-gradient(150deg, #5b9fff, #3a63ff); }
+/* В иврите переключатель едет в другую сторону — логического аналога
+   у translateX нет, поэтому вторая сторона задана отдельно ниже. */
 .toggle.is-on .toggle__knob::after { transform: translateX(18px); }
+[dir="rtl"] .toggle.is-on .toggle__knob::after { transform: translateX(-18px); }
 
 /* Метка с числом на вкладке */
 .tab__ico { position: relative; }
 .badge {
   position: absolute;
-  top: -5px; right: -8px;
+  top: -5px; inset-inline-end: -8px;
   min-width: 17px;
   height: 17px;
   padding: 0 4px;
@@ -1121,7 +1128,7 @@ button { cursor: pointer; border: none; background: none; }
   background: rgba(255, 255, 255, 0.045);
   color: var(--fg-1);
   font-size: 14.5px;
-  text-align: left;
+  text-align: start;
   transition: background 0.16s, border-color 0.16s, color 0.16s;
 }
 .pick:hover { background: rgba(255, 255, 255, 0.08); color: var(--fg-0); }
@@ -1169,7 +1176,7 @@ button { cursor: pointer; border: none; background: none; }
   align-items: flex-start;
   gap: 10px;
   margin: 4px 0 14px;
-  text-align: left;
+  text-align: start;
   font-size: 13.5px;
   color: var(--fg-1);
   cursor: pointer;
@@ -1250,7 +1257,7 @@ button { cursor: pointer; border: none; background: none; }
     background: rgba(255, 255, 255, 0.04);
     color: var(--fg-1);
     font-size: 14px;
-    text-align: left;
+    text-align: start;
     transition: background 0.18s, color 0.18s;
   }
   .rail__user:hover { background: rgba(255, 255, 255, 0.08); color: var(--fg-0); }
@@ -1310,4 +1317,30 @@ button { cursor: pointer; border: none; background: none; }
   .dash { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; }
   .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
   .chart-grid > *:first-child { grid-column: 1 / -1; }
+}
+
+/* ============================================================
+   Иврит: страница разворачивается справа налево
+   ============================================================ */
+
+/*
+ * Основную работу делает dir="rtl" на документе — браузер сам зеркалит
+ * раскладку, отступы и порядок колонок. Отдельно правим только то, где
+ * сторона задана жёстко и логического аналога нет.
+ */
+
+/* Стрелки листания месяцев показывают направление во времени, а не на экране:
+   «назад» в иврите — это стрелка вправо. */
+[dir="rtl"] .topbar__period { flex-direction: row-reverse; }
+
+/* Раскрывающая галочка у выбора бюджета смотрит вниз в любом языке. */
+[dir="rtl"] .budget-pick__caret { transform: none; }
+
+@media (min-width: 900px) {
+  /* Колонка навигации уходит к правому краю вместе со всей раскладкой. */
+  [dir="rtl"] .toast-root {
+    left: auto;
+    right: calc(50% + var(--rail-w) / 2);
+    transform: translateX(50%);
+  }
 }

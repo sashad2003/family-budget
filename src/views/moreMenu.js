@@ -5,20 +5,16 @@
  * кнопка «Ещё» там скрыта и меню не используется.
  */
 
-import { el } from '../core/dom.js?v=35';
-import { state, set } from '../core/store.js?v=35';
-import { openSheet, closeSheet } from '../ui/sheet.js?v=35';
+import { el } from '../core/dom.js?v=36';
+import { state, set } from '../core/store.js?v=36';
+import { openSheet, closeSheet } from '../ui/sheet.js?v=36';
+import { t } from '../core/i18n.js?v=36';
 
 /** Разделы дока, спрятанные под «Ещё». Порядок — от частого к редкому. */
 export const MORE_ROUTES = ['list', 'prices', 'charts', 'admin', 'settings'];
 
-const ITEMS = {
-  list: { title: 'Операции', hint: 'Полный список за месяц с поиском и фильтрами' },
-  prices: { title: 'Цены', hint: 'Где товар дешевле — по чекам всех пользователей' },
-  charts: { title: 'Статистика', hint: 'Траты по категориям и динамика за период' },
-  admin: { title: 'Люди', hint: 'Кто зарегистрировался в приложении' },
-  settings: { title: 'Настройки', hint: 'Категории, валюта, профиль' },
-};
+/** Подписи берём из словаря: ключи те же, что у кнопок в боковой колонке. */
+const ITEMS = (route) => ({ title: t(`nav.${route}`), hint: t(`more.${route}`) });
 
 /**
  * Значок берём из соответствующей кнопки дока: разметка иконок живёт
@@ -35,7 +31,7 @@ export function openMoreMenu() {
   const routes = MORE_ROUTES.filter((route) => route !== 'admin' || state.isAdmin);
 
   const body = routes.map((route) => {
-    const item = ITEMS[route];
+    const item = ITEMS(route);
 
     return el('button', {
       class: `more-item ${state.route === route ? 'is-active' : ''}`,
@@ -49,5 +45,5 @@ export function openMoreMenu() {
     ]);
   });
 
-  openSheet({ title: 'Ещё', body });
+  openSheet({ title: t('nav.more'), body });
 }

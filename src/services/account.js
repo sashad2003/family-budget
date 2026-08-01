@@ -39,8 +39,8 @@ import {
   limit,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=35';
-import { ADMIN_EMAILS, LEGACY_FAMILY_ID, TRIAL_DAYS } from '../config.js?v=35';
+import { db } from '../core/firebase.js?v=36';
+import { ADMIN_EMAILS, LEGACY_FAMILY_ID, TRIAL_DAYS } from '../config.js?v=36';
 
 const userRef = (uid) => doc(db, 'users', uid);
 const codeRef = (code) => doc(db, 'inviteCodes', String(code));

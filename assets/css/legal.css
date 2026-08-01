@@ -1,0 +1,45 @@
+/*
+ * Юридические страницы. Отдельные стили, а не общие: страницы читают до входа
+ * в приложение — например, проверяющий из Google, — и тянуть ради текста весь
+ * интерфейс незачем.
+ */
+
+:root { color-scheme: dark; }
+
+body {
+  margin: 0;
+  padding: 40px 22px 80px;
+  background: #08080f;
+  color: #d7d7e4;
+  font-family: 'Geologica', system-ui, -apple-system, sans-serif;
+  font-weight: 350;
+  font-size: 16px;
+  line-height: 1.65;
+}
+
+main { max-width: 720px; margin: 0 auto; }
+
+h1 { font-size: 27px; font-weight: 500; letter-spacing: -0.02em; margin: 0 0 6px; color: #f4f4f8; }
+h2 { font-size: 18px; font-weight: 500; margin: 34px 0 8px; color: #f4f4f8; }
+p, li { margin: 0 0 12px; }
+ul { padding-inline-start: 22px; }
+a { color: #5b9fff; }
+
+.updated { color: #7a7a92; font-size: 13.5px; margin-bottom: 28px; }
+
+.langs { display: flex; gap: 8px; margin-bottom: 26px; flex-wrap: wrap; }
+.langs a {
+  padding: 7px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  text-decoration: none;
+  color: #9a9ab0;
+  font-size: 14px;
+}
+.langs a.is-active { color: #f4f4f8; border-color: rgba(255, 255, 255, 0.3); background: rgba(255, 255, 255, 0.07); }
+
+.back { display: inline-block; margin-top: 34px; color: #5b9fff; text-decoration: none; }
+
+/* Показываем только выбранный язык; остальные лежат в разметке рядом. */
+article { display: none; }
+article.is-shown { display: block; }

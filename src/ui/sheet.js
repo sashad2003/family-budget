@@ -1,6 +1,6 @@
 /** Нижняя шторка — единственный тип модального окна в приложении. */
 
-import { el } from '../core/dom.js?v=35';
+import { el } from '../core/dom.js?v=36';
 
 let current = null;
 

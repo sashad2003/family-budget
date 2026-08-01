@@ -1,18 +1,18 @@
 /** Настройки: профиль, участники, валюта, курсы, категории. */
 
-import { el, render } from '../core/dom.js?v=35';
-import { state, set } from '../core/store.js?v=35';
-import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=35';
-import { formatAmount, convert } from '../core/money.js?v=35';
-import { logout } from '../services/auth.js?v=35';
+import { el, render } from '../core/dom.js?v=36';
+import { state, set } from '../core/store.js?v=36';
+import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=36';
+import { formatAmount, convert } from '../core/money.js?v=36';
+import { logout } from '../services/auth.js?v=36';
 import {
   inviteLink, resetInviteLink, removeMember, leaveFamily, isOwner,
-} from '../services/account.js?v=35';
-import { refreshRates } from '../services/rates.js?v=35';
-import { saveCategory, deleteCategory } from '../services/transactions.js?v=35';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=35';
-import { section } from '../ui/section.js?v=35';
-import { toastOk, toastError } from '../ui/toast.js?v=35';
+} from '../services/account.js?v=36';
+import { refreshRates } from '../services/rates.js?v=36';
+import { saveCategory, deleteCategory } from '../services/transactions.js?v=36';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=36';
+import { section } from '../ui/section.js?v=36';
+import { toastOk, toastError } from '../ui/toast.js?v=36';
 
 const PALETTE = ['#2dd98a', '#ff5b5b', '#5b9fff', '#ffb347', '#ff7eb3', '#3de8d0', '#8a8a94'];
 
@@ -108,8 +108,7 @@ function build(draw) {
       ]),
     ), el('button', { class: 'chip', onclick: () => openCategoryEditor(null, draw) }, '＋ добавить')),
 
-    el('p', { class: 'hint', style: 'margin-top:26px;text-align:center' },
-      'Семейный бюджет · данные в Firestore, распознавание чеков через Claude'),
+    el('p', { class: 'hint', style: 'margin-top:26px;text-align:center' }, t('settings.footer')),
   ];
 }
 
@@ -125,16 +124,16 @@ function memberRow(uid, member, owner) {
 
   let action = null;
   if (me && !isTheOwner) {
-    action = el('button', { class: 'chip', onclick: () => askLeave() }, 'выйти');
+    action = el('button', { class: 'chip', onclick: () => askLeave() }, t('family.leave'));
   } else if (me) {
-    action = el('span', { class: 'chip' }, 'вы');
+    action = el('span', { class: 'chip' }, t('common.you'));
   } else if (owner) {
-    action = el('button', { class: 'chip', onclick: () => askRemove(member, uid) }, 'убрать');
+    action = el('button', { class: 'chip', onclick: () => askRemove(member, uid) }, t('family.remove'));
   }
 
   return el('div', { class: 'list-item' }, [
     el('div', { style: 'min-width:0' }, [
-      el('div', {}, `${member.name || uid}${isTheOwner ? ' · хозяин' : ''}`),
+      el('div', {}, `${member.name || uid}${isTheOwner ? ` · ${t('family.owner')}` : ''}`),
       el('div', { class: 'list-item__sub' }, member.email || ''),
     ]),
     action,
@@ -143,21 +142,21 @@ function memberRow(uid, member, owner) {
 
 function ownerName() {
   const owner = state.family?.members?.[state.family?.ownerUid];
-  return owner?.name || owner?.email || 'другой человек';
+  return owner?.name || owner?.email || '—';
 }
 
 /** Подтверждение перед тем, как выкинуть человека из бюджета. */
 function askRemove(member, uid) {
   confirmSheet({
-    title: 'Убрать из бюджета?',
-    text: `${member.name || member.email} потеряет доступ. Записи останутся на месте.`,
-    confirmLabel: 'Убрать',
+    title: t('family.removeTitle'),
+    text: t('family.removeText', { name: member.name || member.email }),
+    confirmLabel: t('family.remove'),
     onConfirm: async () => {
       try {
         await removeMember(state.family.id, uid);
-        toastOk('Убрали');
+        toastOk(t('family.removed'));
       } catch {
-        toastError('Не удалось убрать');
+        toastError(t('family.removeFailed'));
       }
     },
   });
@@ -165,18 +164,18 @@ function askRemove(member, uid) {
 
 function askLeave() {
   confirmSheet({
-    title: 'Выйти из бюджета?',
-    text: 'Вы перестанете его видеть. Записи, которые вы вносили, останутся у семьи.',
-    confirmLabel: 'Выйти',
+    title: t('family.leaveTitle'),
+    text: t('family.leaveText'),
+    confirmLabel: t('family.leave'),
     onConfirm: async () => {
       try {
         const next = await leaveFamily(state.user, state.profile, state.family.id);
         // Список бюджетов и открытый бюджет поменялись — начинаем заново.
         set({ families: (state.families || []).filter((f) => f.id !== state.family.id) });
         window.dispatchEvent(new CustomEvent('switch-budget', { detail: next }));
-        toastOk('Вышли из бюджета');
+        toastOk(t('family.left'));
       } catch (error) {
-        toastError(error.message || 'Не удалось выйти');
+        toastError(error.message || t('family.leaveFailed'));
       }
     },
   });
@@ -300,50 +299,109 @@ function slug(name) {
  * он войдёт через Google и окажется внутри.
  */
 function openInviteSheet() {
-  const link = el('input', { class: 'input', type: 'text', readonly: true, value: 'Готовим ссылку…' });
+  const link = el('input', { class: 'input', type: 'text', readonly: true, value: t('invite.preparing') });
 
-  const copy = el('button', { class: 'btn btn--primary' }, 'Скопировать');
+  const copy = el('button', { class: 'btn btn--primary' }, t('common.copy'));
   copy.addEventListener('click', async () => {
     try {
       await navigator.clipboard.writeText(link.value);
-      toastOk('Ссылка скопирована');
+      toastOk(t('invite.copied'));
     } catch {
       // Буфер обмена закрыт (бывает в старых браузерах) — выделяем текст руками.
       link.select();
-      toastError('Скопируйте ссылку вручную');
+      toastError(t('invite.copyManually'));
     }
   });
 
   openSheet({
-    title: 'Пригласить в бюджет',
+    title: t('invite.title'),
     body: [
       el('div', { class: 'field' }, [
-        el('label', { class: 'field__label' }, 'Ссылка-приглашение'),
+        el('label', { class: 'field__label' }, t('invite.link')),
         link,
       ]),
-      el('p', { class: 'hint' },
-        'Пошлите её в любом мессенджере. Человек откроет ссылку, войдёт через Google '
-        + 'и попадёт в этот бюджет. Ссылка постоянная — кто её получит, тот и войдёт.'),
+      el('p', { class: 'hint' }, t('invite.hint')),
       el('button', {
         class: 'btn btn--ghost btn--wide',
         style: 'margin-top:12px',
         onclick: async () => {
           try {
             link.value = await resetInviteLink(state.family);
-            toastOk('Старая ссылка больше не работает');
+            toastOk(t('invite.resetDone'));
           } catch {
-            toastError('Не удалось обновить ссылку');
+            toastError(t('invite.resetFailed'));
           }
         },
-      }, 'Сделать новую ссылку'),
+      }, t('invite.reset')),
     ],
     footer: [
-      el('button', { class: 'btn btn--ghost', onclick: closeSheet }, 'Закрыть'),
+      el('button', { class: 'btn btn--ghost', onclick: closeSheet }, t('common.close')),
       copy,
     ],
   });
 
   inviteLink(state.family)
     .then((url) => { link.value = url; })
-    .catch(() => { link.value = ''; toastError('Не удалось создать ссылку'); });
+    .catch(() => { link.value = ''; toastError(t('invite.createFailed')); });
+}
+
+/**
+ * Выбор языка.
+ *
+ * Отдельным разделом наверху: человеку, который не читает по-русски, надо
+ * добраться до него, не понимая ни одной другой надписи на экране, — поэтому
+ * названия языков написаны каждое на себе самом.
+ */
+function languageSection(draw) {
+  return section(t('settings.language'),
+    el('div', { class: 'segmented' }, LOCALES.map((lang) =>
+      el('button', {
+        class: getLocale() === lang.code ? 'is-active' : '',
+        lang: lang.code,
+        onclick: () => {
+          setLocale(lang.code);
+          // Перерисовываем всё: язык меняет и статическую разметку, и экраны.
+          translateDocument();
+          set({});
+          draw();
+        },
+      }, lang.name),
+    )),
+  );
+}
+
+/**
+ * Документы и связь.
+ *
+ * Страницы открываются в новой вкладке и живут отдельными файлами: их читают
+ * до входа в приложение — например, когда Google проверяет, что мы за сервис.
+ */
+function legalSection() {
+  const links = [
+    ['privacy.html', t('legal.privacy')],
+    ['terms.html', t('legal.terms')],
+    ['accessibility.html', t('legal.accessibility')],
+    ['cookies.html', t('legal.cookies')],
+  ];
+
+  return section(t('legal.title'), [
+    ...links.map(([href, title]) => el('a', {
+      class: 'list-item',
+      href: `${href}?lang=${getLocale()}`,
+      target: '_blank',
+      rel: 'noopener',
+      style: 'color:inherit;text-decoration:none',
+    }, [el('span', {}, title), el('span', { class: 'list-item__sub' }, '↗')])),
+
+    SUPPORT_WHATSAPP
+      ? el('a', {
+          class: 'btn btn--ghost btn--wide',
+          style: 'margin-top:10px',
+          href: `https://wa.me/${SUPPORT_WHATSAPP}`,
+          target: '_blank',
+          rel: 'noopener',
+        }, `💬 ${t('support.whatsapp')}`)
+      : null,
+    SUPPORT_WHATSAPP ? el('p', { class: 'hint' }, t('support.hint')) : null,
+  ]);
 }

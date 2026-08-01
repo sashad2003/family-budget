@@ -29,6 +29,12 @@ export const LEGACY_FAMILY_ID = 'family_drutz';
  */
 export const ADMIN_EMAILS = ['sashad2003@gmail.com'];
 
+/**
+ * Номер WhatsApp для связи — в международном виде, только цифры.
+ * Пусто — кнопки «написать» в приложении не будет.
+ */
+export const SUPPORT_WHATSAPP = '';
+
 /** Сколько дней бесплатно до подписки. */
 export const TRIAL_DAYS = 60;
 

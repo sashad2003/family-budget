@@ -2,37 +2,42 @@
  * Точка входа: авторизация → загрузка семьи → подписки на данные → роутинг.
  */
 
-import { $, render } from './core/dom.js?v=35';
-import { state, set, subscribe } from './core/store.js?v=35';
-import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=35';
-import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=35';
-import { unpaidBills } from './core/selectors.js?v=35';
+import { $, render } from './core/dom.js?v=36';
+import { t, applyDocumentLocale, translateDocument } from './core/i18n.js?v=36';
+import { state, set, subscribe } from './core/store.js?v=36';
+import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=36';
+import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=36';
+import { unpaidBills } from './core/selectors.js?v=36';
 
-import { watchAuth, signIn } from './services/auth.js?v=35';
-import { loadAccount, isAdmin, joinByCode, listFamilies } from './services/account.js?v=35';
-import { setFamilyId } from './core/session.js?v=35';
-import { askProfile } from './views/signup.js?v=35';
+import { watchAuth, signIn } from './services/auth.js?v=36';
+import { loadAccount, isAdmin, joinByCode, listFamilies } from './services/account.js?v=36';
+import { setFamilyId } from './core/session.js?v=36';
+import { askProfile } from './views/signup.js?v=36';
 import {
   watchTransactions,
   watchCategories,
   seedCategoriesIfEmpty,
   syncNewCategories,
-} from './services/transactions.js?v=35';
-import { watchBills } from './services/bills.js?v=35';
-import { loadRates } from './services/rates.js?v=35';
+} from './services/transactions.js?v=36';
+import { watchBills } from './services/bills.js?v=36';
+import { loadRates } from './services/rates.js?v=36';
 
-import { renderDashboard } from './views/dashboard.js?v=35';
-import { renderList } from './views/list.js?v=35';
-import { renderBills } from './views/bills.js?v=35';
-import { renderPrices } from './views/prices.js?v=35';
-import { renderAdmin } from './views/admin.js?v=35';
-import { openBudgetMenu, budgetName } from './views/budgetMenu.js?v=35';
-import { renderCharts, destroyCharts } from './views/charts.js?v=35';
-import { renderSettings } from './views/settings.js?v=35';
-import { openTxForm } from './views/txForm.js?v=35';
-import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=35';
-import { closeSheet } from './ui/sheet.js?v=35';
-import { toastError, toastOk } from './ui/toast.js?v=35';
+import { renderDashboard } from './views/dashboard.js?v=36';
+import { renderList } from './views/list.js?v=36';
+import { renderBills } from './views/bills.js?v=36';
+import { renderPrices } from './views/prices.js?v=36';
+import { renderAdmin } from './views/admin.js?v=36';
+import { openBudgetMenu, budgetName } from './views/budgetMenu.js?v=36';
+import { renderCharts, destroyCharts } from './views/charts.js?v=36';
+import { renderSettings } from './views/settings.js?v=36';
+import { openTxForm } from './views/txForm.js?v=36';
+import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=36';
+import { closeSheet } from './ui/sheet.js?v=36';
+import { toastError, toastOk } from './ui/toast.js?v=36';
+
+// Язык ставим до первой отрисовки: иначе видно, как надписи меняются на ходу.
+applyDocumentLocale();
+translateDocument();
 
 const ROUTES = {
   dashboard: renderDashboard,
@@ -91,7 +96,7 @@ watchAuth(async (user) => {
   } catch (error) {
     console.error(error);
     showScreen('auth');
-    showAuthError(error.message || 'Не удалось загрузить данные');
+    showAuthError(error.message || t('auth.loadFailed'));
   }
 });
 
@@ -111,11 +116,11 @@ async function acceptInvite(user, account) {
     await joinByCode(user, account.profile, code);
     // Состав семьи и список бюджетов изменились — перечитываем начисто.
     const fresh = await loadAccount(user);
-    toastOk('Вы в общем бюджете');
+    toastOk(t('invite.joined'));
     return fresh;
   } catch (error) {
     console.error(error);
-    toastError(error.message || 'Ссылка-приглашение не сработала');
+    toastError(error.message || t('invite.failed'));
     return account;
   }
 }
@@ -134,18 +139,18 @@ async function startData() {
   unsubscribers.push(
     watchCategories(
       (categories) => set({ categories }),
-      (error) => { console.error(error); toastError('Нет доступа к категориям'); },
+      (error) => { console.error(error); toastError(t('error.categories')); },
     ),
     watchTransactions(
       (transactions) => {
         set({ transactions, loading: false });
         shareOldPrices(transactions);
       },
-      (error) => { console.error(error); toastError('Нет доступа к операциям'); },
+      (error) => { console.error(error); toastError(t('error.transactions')); },
     ),
     watchBills(
       (bills) => set({ bills }),
-      (error) => { console.error(error); toastError('Нет доступа к платежам'); },
+      (error) => { console.error(error); toastError(t('error.bills')); },
     ),
   );
 
@@ -155,7 +160,7 @@ async function startData() {
     .then(({ rates, fetchedAt, stale }) => {
       if (state.family?.id !== familyId) return;
       set({ rates, ratesFetchedAt: fetchedAt });
-      if (stale) toastError('Курсы валют не обновились, используются сохранённые');
+      if (stale) toastError(t('error.rates'));
     })
     .catch((error) => console.error(error));
 
@@ -196,7 +201,7 @@ async function switchBudget(familyId) {
 window.addEventListener('switch-budget', (event) => {
   switchBudget(event.detail).catch((error) => {
     console.error(error);
-    toastError('Не удалось открыть бюджет');
+    toastError(t('budget.openFailed'));
   });
 });
 
@@ -213,7 +218,7 @@ function shareOldPrices(transactions) {
   if (backfillStarted || !state.user || !transactions.length) return;
   backfillStarted = true;
 
-  import('./services/prices.js?v=35')
+  import('./services/prices.js?v=36')
     .then(({ backfillPrices }) => backfillPrices(transactions, state.user.uid))
     .catch((error) => console.error('Не удалось перенести историю цен', error));
 }
@@ -328,7 +333,7 @@ $('#btn-signin').addEventListener('click', async () => {
     await signIn();
   } catch (error) {
     console.error(error);
-    showAuthError('Не удалось войти. Проверьте, что домен разрешён в Firebase Auth.');
+    showAuthError(t('auth.failed'));
   }
 });
 

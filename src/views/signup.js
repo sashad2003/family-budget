@@ -8,10 +8,11 @@
  * ни один сервис рассылок не станет отправлять письма этому адресу.
  */
 
-import { el, render, $ } from '../core/dom.js?v=35';
-import { registerUser } from '../services/account.js?v=35';
-import { logout } from '../services/auth.js?v=35';
-import { toastError } from '../ui/toast.js?v=35';
+import { el, render, $ } from '../core/dom.js?v=36';
+import { registerUser } from '../services/account.js?v=36';
+import { logout } from '../services/auth.js?v=36';
+import { toastError } from '../ui/toast.js?v=36';
+import { t } from '../core/i18n.js?v=36';
 
 /**
  * Показывает анкету и ждёт, пока человек её заполнит.
@@ -27,7 +28,7 @@ function renderForm(user, done) {
   const name = el('input', {
     class: 'input',
     type: 'text',
-    placeholder: 'Имя и фамилия',
+    placeholder: t('signup.namePlaceholder'),
     value: user.displayName || '',
     autocomplete: 'name',
   });
@@ -41,21 +42,21 @@ function renderForm(user, done) {
 
   const marketing = el('input', { type: 'checkbox', id: 'signup-marketing' });
 
-  const submit = el('button', { class: 'btn btn--primary btn--wide' }, 'Продолжить');
+  const submit = el('button', { class: 'btn btn--primary btn--wide' }, t('signup.submit'));
 
   submit.addEventListener('click', async () => {
     if (name.value.trim().length < 2) {
-      toastError('Напишите имя');
+      toastError(t('signup.nameRequired'));
       return;
     }
     // Телефон свободной формы: страны пишут его по-разному, придираться не к чему.
     if (phone.value.replace(/\D/g, '').length < 8) {
-      toastError('Проверьте номер телефона');
+      toastError(t('signup.phoneRequired'));
       return;
     }
 
     submit.disabled = true;
-    submit.textContent = 'Создаём…';
+    submit.textContent = t('signup.creating');
 
     try {
       const result = await registerUser(user, {
@@ -66,29 +67,26 @@ function renderForm(user, done) {
       done(result);
     } catch (error) {
       console.error(error);
-      toastError(error.message || 'Не удалось завершить регистрацию');
+      toastError(error.message || t('signup.failed'));
       submit.disabled = false;
-      submit.textContent = 'Продолжить';
+      submit.textContent = t('signup.submit');
     }
   });
 
   render($('#signup-card'), [
-    el('h1', { class: 'auth__title' }, 'Ещё пара слов'),
+    el('h1', { class: 'auth__title' }, t('signup.title')),
 
-    el('p', { class: 'auth__sub' },
-      'Заводим ваш бюджет. Пригласить мужа или жену можно сразу после.'),
+    el('p', { class: 'auth__sub' }, t('signup.sub')),
 
-    el('div', { class: 'field' }, [el('label', { class: 'field__label' }, 'Как вас зовут'), name]),
-    el('div', { class: 'field' }, [el('label', { class: 'field__label' }, 'Телефон'), phone]),
+    el('div', { class: 'field' }, [el('label', { class: 'field__label' }, t('signup.name')), name]),
+    el('div', { class: 'field' }, [el('label', { class: 'field__label' }, t('signup.phone')), phone]),
 
     el('label', { class: 'check', for: 'signup-marketing' }, [
       marketing,
-      el('span', {}, 'Присылайте мне письма о новых возможностях приложения'),
+      el('span', {}, t('signup.marketing')),
     ]),
 
-    el('p', { class: 'hint' },
-      'Имя, почту и телефон храним, чтобы вести ваш аккаунт и отвечать на вопросы. '
-      + 'Никому не передаём. Удалить их можно в настройках.'),
+    el('p', { class: 'hint' }, t('signup.privacy')),
 
     submit,
 
@@ -96,6 +94,6 @@ function renderForm(user, done) {
       class: 'btn btn--ghost btn--wide',
       style: 'margin-top:10px',
       onclick: () => logout(),
-    }, `Выйти из ${user.email}`),
+    }, t('signup.signOut', { email: user.email })),
   ]);
 }

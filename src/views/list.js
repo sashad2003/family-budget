@@ -1,12 +1,13 @@
 /** Список операций с фильтрами по типу, категории и тексту. */
 
-import { el, render } from '../core/dom.js?v=35';
-import { state } from '../core/store.js?v=35';
-import { formatAmount, txAmountIn } from '../core/money.js?v=35';
-import { dayLabel } from '../core/dates.js?v=35';
-import { monthTransactions, groupByDate, totals } from '../core/selectors.js?v=35';
-import { openTxForm } from './txForm.js?v=35';
-import { section } from '../ui/section.js?v=35';
+import { el, render } from '../core/dom.js?v=36';
+import { state } from '../core/store.js?v=36';
+import { formatAmount, txAmountIn } from '../core/money.js?v=36';
+import { dayLabel } from '../core/dates.js?v=36';
+import { monthTransactions, groupByDate, totals } from '../core/selectors.js?v=36';
+import { openTxForm } from './txForm.js?v=36';
+import { section } from '../ui/section.js?v=36';
+import { t, getLocale } from '../core/i18n.js?v=36';
 
 /** Фильтры живут вне state: они локальны для экрана и не влияют на другие. */
 const filters = { type: 'all', categoryId: null, query: '' };
@@ -23,7 +24,7 @@ export function renderList() {
 
       list.length
         ? section(
-            `${list.length} операц${plural(list.length)}`,
+            countLabel(list.length),
             groupByDate(list).map(([date, items]) =>
               el('div', {}, [
                 el('div', { class: 'tx-group__date' }, dayLabel(date)),
@@ -35,7 +36,7 @@ export function renderList() {
           )
         : el('div', { class: 'empty' }, [
             el('span', { class: 'empty__ico' }, '🔍'),
-            el('div', {}, 'Ничего не найдено'),
+            el('div', {}, t('common.notFound')),
           ]),
     ]);
   };
@@ -48,7 +49,7 @@ function filterBar(draw) {
   const search = el('input', {
     class: 'input',
     type: 'search',
-    placeholder: 'Поиск по описанию, магазину, товарам',
+    placeholder: t('list.searchPlaceholder'),
     value: filters.query,
     oninput: (e) => { filters.query = e.target.value; draw(); },
   });
@@ -57,7 +58,7 @@ function filterBar(draw) {
     el('button', {
       class: `chip ${filters.type === value ? 'is-active' : ''}`,
       onclick: () => { filters.type = value; filters.categoryId = null; draw(); },
-    }, { all: 'Все', expense: 'Расходы', income: 'Доходы' }[value]),
+    }, { all: t('list.typeAll'), expense: t('list.typeExpense'), income: t('list.typeIncome') }[value]),
   );
 
   const pool = state.categories.filter(
@@ -87,15 +88,15 @@ export function txRow(tx, onClick) {
   const cat = state.categories.find((c) => c.id === tx.categoryId);
   const isIncome = tx.type === 'income';
 
-  const title = tx.merchant || cat?.name || 'Операция';
+  const title = tx.merchant || cat?.name || t('tx.operation');
   const metaParts = [];
   // Список уже сгруппирован по дням, поэтому в строке полезно только время.
   if (tx.time) metaParts.push(tx.time);
   if (tx.merchant && cat) metaParts.push(cat.name);
   if (tx.note) metaParts.push(tx.note);
-  else if (tx.items?.length) metaParts.push(`${tx.items.length} поз.`);
-  if (tx.source === 'sms') metaParts.push('SMS');
-  else if (tx.source !== 'manual') metaParts.push('чек');
+  else if (tx.items?.length) metaParts.push(t('tx.items', { n: tx.items.length }));
+  if (tx.source === 'sms') metaParts.push(t('tx.fromSms'));
+  else if (tx.source !== 'manual') metaParts.push(t('tx.fromReceipt'));
 
   const inBase = txAmountIn(tx, state.base, state.rates);
 
@@ -138,10 +139,18 @@ export function tileGradient(hex) {
   return `linear-gradient(150deg, #${value}, #${darker})`;
 }
 
-function plural(n) {
+/**
+ * «12 операций».
+ *
+ * Русский требует три формы в зависимости от числа, остальные языки обходятся
+ * одной — им отдаём готовую строку из словаря.
+ */
+function countLabel(n) {
+  if (getLocale() !== 'ru') return t('list.count', { n });
+
   const mod10 = n % 10;
   const mod100 = n % 100;
-  if (mod10 === 1 && mod100 !== 11) return 'ия';
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'ии';
-  return 'ий';
+  if (mod10 === 1 && mod100 !== 11) return `${n} операция`;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return `${n} операции`;
+  return `${n} операций`;
 }
