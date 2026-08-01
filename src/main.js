@@ -2,37 +2,37 @@
  * Точка входа: авторизация → загрузка семьи → подписки на данные → роутинг.
  */
 
-import { $, render } from './core/dom.js?v=32';
-import { state, set, subscribe } from './core/store.js?v=32';
-import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=32';
-import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=32';
-import { unpaidBills } from './core/selectors.js?v=32';
+import { $, render } from './core/dom.js?v=33';
+import { state, set, subscribe } from './core/store.js?v=33';
+import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=33';
+import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=33';
+import { unpaidBills } from './core/selectors.js?v=33';
 
-import { watchAuth, signIn } from './services/auth.js?v=32';
-import { loadAccount, isAdmin, joinByCode, listFamilies } from './services/account.js?v=32';
-import { setFamilyId } from './core/session.js?v=32';
-import { askProfile } from './views/signup.js?v=32';
+import { watchAuth, signIn } from './services/auth.js?v=33';
+import { loadAccount, isAdmin, joinByCode, listFamilies } from './services/account.js?v=33';
+import { setFamilyId } from './core/session.js?v=33';
+import { askProfile } from './views/signup.js?v=33';
 import {
   watchTransactions,
   watchCategories,
   seedCategoriesIfEmpty,
   syncNewCategories,
-} from './services/transactions.js?v=32';
-import { watchBills } from './services/bills.js?v=32';
-import { loadRates } from './services/rates.js?v=32';
+} from './services/transactions.js?v=33';
+import { watchBills } from './services/bills.js?v=33';
+import { loadRates } from './services/rates.js?v=33';
 
-import { renderDashboard } from './views/dashboard.js?v=32';
-import { renderList } from './views/list.js?v=32';
-import { renderBills } from './views/bills.js?v=32';
-import { renderPrices } from './views/prices.js?v=32';
-import { renderAdmin } from './views/admin.js?v=32';
-import { openBudgetMenu, budgetName } from './views/budgetMenu.js?v=32';
-import { renderCharts, destroyCharts } from './views/charts.js?v=32';
-import { renderSettings } from './views/settings.js?v=32';
-import { openTxForm } from './views/txForm.js?v=32';
-import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=32';
-import { closeSheet } from './ui/sheet.js?v=32';
-import { toastError, toastOk } from './ui/toast.js?v=32';
+import { renderDashboard } from './views/dashboard.js?v=33';
+import { renderList } from './views/list.js?v=33';
+import { renderBills } from './views/bills.js?v=33';
+import { renderPrices } from './views/prices.js?v=33';
+import { renderAdmin } from './views/admin.js?v=33';
+import { openBudgetMenu, budgetName } from './views/budgetMenu.js?v=33';
+import { renderCharts, destroyCharts } from './views/charts.js?v=33';
+import { renderSettings } from './views/settings.js?v=33';
+import { openTxForm } from './views/txForm.js?v=33';
+import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=33';
+import { closeSheet } from './ui/sheet.js?v=33';
+import { toastError, toastOk } from './ui/toast.js?v=33';
 
 const ROUTES = {
   dashboard: renderDashboard,
@@ -213,7 +213,7 @@ function shareOldPrices(transactions) {
   if (backfillStarted || !state.user || !transactions.length) return;
   backfillStarted = true;
 
-  import('./services/prices.js?v=32')
+  import('./services/prices.js?v=33')
     .then(({ backfillPrices }) => backfillPrices(transactions, state.user.uid))
     .catch((error) => console.error('Не удалось перенести историю цен', error));
 }

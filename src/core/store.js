@@ -3,8 +3,8 @@
  * Никакой магии — set() сливает патч и уведомляет слушателей.
  */
 
-import { DEFAULT_BASE_CURRENCY, FALLBACK_RATES } from '../config.js?v=32';
-import { monthKey } from './dates.js?v=32';
+import { DEFAULT_BASE_CURRENCY, FALLBACK_RATES } from '../config.js?v=33';
+import { monthKey } from './dates.js?v=33';
 
 const listeners = new Set();
 

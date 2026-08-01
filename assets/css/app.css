@@ -434,20 +434,33 @@ button { cursor: pointer; border: none; background: none; }
 .stat--out .stat__value { color: var(--expense); }
 .stat--out .stat__dot { background: var(--expense); box-shadow: 0 0 10px var(--expense); }
 
+/**
+ * Заголовок раздела.
+ *
+ * Часто держит справа кнопку («пригласить», «обновить»), и та выше самой
+ * строки. При тесных отступах кнопка почти касалась карточек сверху и снизу,
+ * поэтому воздуха здесь заметно больше, чем нужно одному тексту.
+ *
+ * Цвет — не самый тусклый из палитры: подписи набраны капителью мелким
+ * кеглем, и на чёрном фоне серый на грани читаемости просто теряется.
+ */
 .section-title {
-  margin: 26px 0 12px;
+  margin: 34px 0 14px;
+  min-height: 38px;
   font-size: 12.5px;
-  font-weight: 400;
-  letter-spacing: 0.05em;
+  font-weight: 500;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  /* На тёмном фоне --fg-2 сливался — заголовок разделов надо читать. */
-  color: var(--fg-1);
+  color: #c2c2d6;
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 10px;
 }
 .section-title > span:first-child { white-space: nowrap; }
+
+/* Верхнему заголовку экрана лишний отступ не нужен — над ним шапка. */
+.section-title:first-child { margin-top: 8px; }
 
 /* ------------------------------------------------ операции */
 
