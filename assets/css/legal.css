@@ -6,6 +6,8 @@
 
 :root { color-scheme: dark; }
 
+html[lang="he"] body { font-family: 'Heebo', system-ui, -apple-system, sans-serif; }
+
 body {
   margin: 0;
   padding: 40px 22px 80px;

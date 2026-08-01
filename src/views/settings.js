@@ -1,22 +1,22 @@
 /** Настройки: профиль, участники, валюта, курсы, категории. */
 
-import { el, render } from '../core/dom.js?v=39';
-import { state, set } from '../core/store.js?v=39';
-import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=39';
-import { formatAmount, convert } from '../core/money.js?v=39';
-import { logout } from '../services/auth.js?v=39';
+import { el, render } from '../core/dom.js?v=40';
+import { state, set } from '../core/store.js?v=40';
+import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=40';
+import { formatAmount, convert } from '../core/money.js?v=40';
+import { logout } from '../services/auth.js?v=40';
 import {
   inviteLink, resetInviteLink, removeMember, leaveFamily, isOwner,
-} from '../services/account.js?v=39';
-import { refreshRates } from '../services/rates.js?v=39';
-import { saveCategory, deleteCategory } from '../services/transactions.js?v=39';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=39';
-import { section } from '../ui/section.js?v=39';
+} from '../services/account.js?v=40';
+import { refreshRates } from '../services/rates.js?v=40';
+import { saveCategory, deleteCategory } from '../services/transactions.js?v=40';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=40';
+import { section } from '../ui/section.js?v=40';
 import {
   t, LOCALES, getLocale, setLocale, intlLocale, translateDocument,
-} from '../core/i18n.js?v=39';
-import { SUPPORT_WHATSAPP } from '../config.js?v=39';
-import { toastOk, toastError } from '../ui/toast.js?v=39';
+} from '../core/i18n.js?v=40';
+import { SUPPORT_WHATSAPP } from '../config.js?v=40';
+import { toastOk, toastError } from '../ui/toast.js?v=40';
 
 const PALETTE = ['#2dd98a', '#ff5b5b', '#5b9fff', '#ffb347', '#ff7eb3', '#3de8d0', '#8a8a94'];
 

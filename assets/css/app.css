@@ -40,10 +40,18 @@
   --content-max: 1160px;
 
   --font: 'Geologica', system-ui, sans-serif;
+  /* Иврит набирается Heebo — см. правило ниже. */
   --mono: 'JetBrains Mono', ui-monospace, monospace;
 
   --ease: cubic-bezier(0.22, 0.9, 0.28, 1);
 }
+
+/*
+ * У Geologica нет еврейских букв, и на иврите система подставляла бы
+ * случайный запасной шрифт — обычно с другой высотой строки и толщиной.
+ * Heebo нарисован под ту же плотность, поэтому раскладка не едет.
+ */
+html[lang="he"] { --font: 'Heebo', system-ui, sans-serif; }
 
 * { box-sizing: border-box; }
 
