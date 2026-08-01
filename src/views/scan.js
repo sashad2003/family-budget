@@ -4,13 +4,13 @@
  * открывается в редактируемой форме.
  */
 
-import { el, render } from '../core/dom.js?v=20';
-import { openSheet, closeSheet } from '../ui/sheet.js?v=20';
-import { toastError } from '../ui/toast.js?v=20';
-import { state } from '../core/store.js?v=20';
-import { findDuplicates, sameMoment } from '../core/selectors.js?v=20';
-import { formatAmount } from '../core/money.js?v=20';
-import { scanReceiptImages, scanReceiptUrl, scanSmsText, MAX_RECEIPT_IMAGES } from '../services/receipts.js?v=20';
+import { el, render } from '../core/dom.js?v=21';
+import { openSheet, closeSheet } from '../ui/sheet.js?v=21';
+import { toastError } from '../ui/toast.js?v=21';
+import { state } from '../core/store.js?v=21';
+import { findDuplicates, sameMoment } from '../core/selectors.js?v=21';
+import { formatAmount } from '../core/money.js?v=21';
+import { scanReceiptImages, scanReceiptUrl, scanSmsText, MAX_RECEIPT_IMAGES } from '../services/receipts.js?v=21';
 
 /** Шторка «распознаём…» — на время запроса заменяет собой форму. */
 function showBusy(text) {

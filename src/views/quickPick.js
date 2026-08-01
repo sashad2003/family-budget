@@ -3,12 +3,12 @@
  * Отмечаешь нужное, суммы подставляются из прошлых покупок и правятся в форме.
  */
 
-import { el, render } from '../core/dom.js?v=20';
-import { state } from '../core/store.js?v=20';
-import { quickItemSuggestions } from '../core/selectors.js?v=20';
-import { DEFAULT_QUICK_ITEMS } from '../data/quickItems.js?v=20';
-import { openSheet, closeSheet } from '../ui/sheet.js?v=20';
-import { formatAmount } from '../core/money.js?v=20';
+import { el, render } from '../core/dom.js?v=21';
+import { state } from '../core/store.js?v=21';
+import { quickItemSuggestions } from '../core/selectors.js?v=21';
+import { DEFAULT_QUICK_ITEMS } from '../data/quickItems.js?v=21';
+import { openSheet, closeSheet } from '../ui/sheet.js?v=21';
+import { formatAmount } from '../core/money.js?v=21';
 
 /**
  * openQuickPick(currency, { onDone, onCancel })
@@ -73,12 +73,10 @@ export function openQuickPick(currency, { onDone, onCancel }) {
     render(footer, [
       el('button', {
         class: 'btn btn--ghost',
-        style: 'flex:0 0 auto',
         onclick: () => closeSheet(),
       }, 'Отмена'),
       el('button', {
         class: 'btn btn--primary',
-        style: 'flex:1',
         disabled: count === 0,
         onclick: () => {
           done = true;

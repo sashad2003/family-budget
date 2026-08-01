@@ -3,19 +3,19 @@
  * после сканирования каждое поле и каждая строка товара остаются редактируемыми.
  */
 
-import { el, render } from '../core/dom.js?v=20';
-import { state } from '../core/store.js?v=20';
-import { CURRENCY_CODES } from '../config.js?v=20';
-import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=20';
-import { today, dayLabel } from '../core/dates.js?v=20';
-import { guessCategory } from '../data/categories.js?v=20';
-import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=20';
-import { tileGradient } from './list.js?v=20';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=20';
-import { toastOk, toastError } from '../ui/toast.js?v=20';
-import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=20';
-import { openQuickPick } from './quickPick.js?v=20';
-import { findDuplicates, sameMoment } from '../core/selectors.js?v=20';
+import { el, render } from '../core/dom.js?v=21';
+import { state } from '../core/store.js?v=21';
+import { CURRENCY_CODES } from '../config.js?v=21';
+import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=21';
+import { today, dayLabel } from '../core/dates.js?v=21';
+import { guessCategory } from '../data/categories.js?v=21';
+import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=21';
+import { tileGradient } from './list.js?v=21';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=21';
+import { toastOk, toastError } from '../ui/toast.js?v=21';
+import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=21';
+import { openQuickPick } from './quickPick.js?v=21';
+import { findDuplicates, sameMoment } from '../core/selectors.js?v=21';
 
 /**
  * openTxForm({ tx })      — правка существующей операции
@@ -27,7 +27,8 @@ export function openTxForm({ tx = null, draft = null, model: restored = null } =
   const model = restored || (tx ? fromTx(tx) : fromDraft(draft));
 
   const body = el('div');
-  const footer = el('div', { style: 'display:flex;gap:10px;flex:1' });
+  // Перенос — как в подвале шторки: длинные подписи не должны уезжать за край.
+  const footer = el('div', { style: 'display:flex;flex-wrap:wrap;gap:10px;flex:1' });
 
   const rerender = () => {
     render(body, buildBody(model, rerender));
@@ -519,7 +520,6 @@ function buildFooter(model, tx) {
   return [
     el('button', {
       class: 'btn btn--danger',
-      style: 'flex:0 0 auto',
       onclick: () => {
         closeSheet();
         confirmSheet({

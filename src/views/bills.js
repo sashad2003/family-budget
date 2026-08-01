@@ -3,18 +3,18 @@
  * оплаченные отмечены галочкой, забытые горят красным.
  */
 
-import { el, render } from '../core/dom.js?v=20';
-import { state, set } from '../core/store.js?v=20';
-import { CURRENCY_CODES } from '../config.js?v=20';
-import { formatAmount, parseAmount, currencyInfo, convert } from '../core/money.js?v=20';
-import { monthLabel, monthKey, today } from '../core/dates.js?v=20';
-import { billsForMonth } from '../core/selectors.js?v=20';
-import { createBill, updateBill, deleteBill } from '../services/bills.js?v=20';
-import { createTransaction, deleteTransaction } from '../services/transactions.js?v=20';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=20';
-import { toastOk, toastError } from '../ui/toast.js?v=20';
-import { openTxForm } from './txForm.js?v=20';
-import { tileGradient } from './list.js?v=20';
+import { el, render } from '../core/dom.js?v=21';
+import { state, set } from '../core/store.js?v=21';
+import { CURRENCY_CODES } from '../config.js?v=21';
+import { formatAmount, parseAmount, currencyInfo, convert } from '../core/money.js?v=21';
+import { monthLabel, monthKey, today } from '../core/dates.js?v=21';
+import { billsForMonth } from '../core/selectors.js?v=21';
+import { createBill, updateBill, deleteBill } from '../services/bills.js?v=21';
+import { createTransaction, deleteTransaction } from '../services/transactions.js?v=21';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=21';
+import { toastOk, toastError } from '../ui/toast.js?v=21';
+import { openTxForm } from './txForm.js?v=21';
+import { tileGradient } from './list.js?v=21';
 
 export function renderBills() {
   const rows = billsForMonth(state);
@@ -159,7 +159,7 @@ function payBill(bill, expected) {
     return;
   }
 
-  const write = el('button', { class: 'btn btn--primary', style: 'flex:1' }, 'Записать оплату');
+  const write = el('button', { class: 'btn btn--primary' }, 'Записать оплату');
   write.addEventListener('click', async () => {
     write.disabled = true;
     try {
@@ -183,12 +183,10 @@ function payBill(bill, expected) {
     footer: [
       el('button', {
         class: 'btn btn--ghost',
-        style: 'flex:0 0 auto',
         onclick: () => closeSheet(),
       }, 'Отмена'),
       el('button', {
         class: 'btn btn--ghost',
-        style: 'flex:0 0 auto',
         onclick: () => openTxForm({ model }),
       }, 'Другая сумма'),
       write,
@@ -209,7 +207,6 @@ function openPaidBill(bill, tx) {
     footer: [
       el('button', {
         class: 'btn btn--danger',
-        style: 'flex:0 0 auto',
         onclick: async () => {
           try {
             await deleteTransaction(tx.id);
@@ -222,7 +219,6 @@ function openPaidBill(bill, tx) {
       }, 'Отменить оплату'),
       el('button', {
         class: 'btn btn--primary',
-        style: 'flex:1',
         onclick: () => openTxForm({ tx }),
       }, 'Изменить'),
     ],
@@ -259,7 +255,7 @@ export function openBillForm(bill = null) {
   const rerender = () => render(body, buildBillBody(model, rerender));
   rerender();
 
-  const save = el('button', { class: 'btn btn--primary', style: 'flex:1' }, bill ? 'Сохранить' : 'Добавить');
+  const save = el('button', { class: 'btn btn--primary' }, bill ? 'Сохранить' : 'Добавить');
   save.addEventListener('click', async () => {
     if (!model.name.trim()) { toastError('Введите название'); return; }
     if (!model.categoryId) { toastError('Выберите категорию'); return; }
@@ -282,7 +278,6 @@ export function openBillForm(bill = null) {
     ? [
         el('button', {
           class: 'btn btn--danger',
-          style: 'flex:0 0 auto',
           onclick: () => {
             closeSheet();
             confirmSheet({

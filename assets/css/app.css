@@ -705,11 +705,25 @@ button { cursor: pointer; border: none; background: none; }
 .sheet__body { padding: 18px; overflow-y: auto; -webkit-overflow-scrolling: touch; }
 .sheet__foot {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   padding: 13px 18px calc(16px + env(safe-area-inset-bottom));
   border-top: 1px solid var(--edge);
 }
-.sheet__foot .btn { flex: 1; }
+
+/*
+ * Кнопки тянутся, но с правом переноса. Раньше стояло просто flex: 1, а флекс
+ * по умолчанию не сжимает элемент уже его текста — три длинные подписи
+ * («Отмена», «Другая сумма», «Записать оплату») вылезали за край экрана.
+ * Базовые 130px означают: на узком экране третья кнопка уходит на свою строку
+ * во всю ширину, на широком все три остаются в ряд.
+ */
+.sheet__foot .btn {
+  flex: 1 1 130px;
+  min-width: 0;
+  padding-left: 14px;
+  padding-right: 14px;
+}
 
 @keyframes slide-up { from { transform: translate(-50%, 100%); } }
 @keyframes fade { from { opacity: 0; } }
