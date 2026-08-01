@@ -3,19 +3,19 @@
  * после сканирования каждое поле и каждая строка товара остаются редактируемыми.
  */
 
-import { el, render } from '../core/dom.js?v=22';
-import { state } from '../core/store.js?v=22';
-import { CURRENCY_CODES } from '../config.js?v=22';
-import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=22';
-import { today, dayLabel } from '../core/dates.js?v=22';
-import { guessCategory } from '../data/categories.js?v=22';
-import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=22';
-import { tileGradient } from './list.js?v=22';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=22';
-import { toastOk, toastError } from '../ui/toast.js?v=22';
-import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=22';
-import { openQuickPick } from './quickPick.js?v=22';
-import { findDuplicates, sameMoment } from '../core/selectors.js?v=22';
+import { el, render } from '../core/dom.js?v=23';
+import { state } from '../core/store.js?v=23';
+import { CURRENCY_CODES } from '../config.js?v=23';
+import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=23';
+import { today, dayLabel } from '../core/dates.js?v=23';
+import { guessCategory } from '../data/categories.js?v=23';
+import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=23';
+import { tileGradient } from './list.js?v=23';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=23';
+import { toastOk, toastError } from '../ui/toast.js?v=23';
+import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=23';
+import { openQuickPick } from './quickPick.js?v=23';
+import { findDuplicates, sameMoment } from '../core/selectors.js?v=23';
 
 /**
  * openTxForm({ tx })      — правка существующей операции
@@ -55,6 +55,7 @@ function fromTx(tx) {
     time: tx.time || '',
     note: tx.note || '',
     merchant: tx.merchant || '',
+    address: tx.address || '',
     items: (tx.items || []).map((it) => ({ ...it })),
     source: tx.source || 'manual',
     receiptUrl: tx.receiptUrl || '',
@@ -76,6 +77,7 @@ function fromDraft(draft) {
       time: '',
       note: '',
       merchant: '',
+      address: '',
       items: [],
       source: 'manual',
       receiptUrl: '',
@@ -99,6 +101,7 @@ function fromDraft(draft) {
     time: draft.time || '',
     note: '',
     merchant: draft.merchant || '',
+    address: draft.address || '',
     items: draft.items || [],
     source: draft.source || 'manual',
     receiptUrl: draft.receiptUrl || '',

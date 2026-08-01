@@ -5,14 +5,15 @@
  * Данные берутся из общей базы: свои чеки и чеки других пользователей.
  */
 
-import { el, render } from '../core/dom.js?v=22';
-import { state } from '../core/store.js?v=22';
-import { formatAmount, convert } from '../core/money.js?v=22';
-import { dayLabel } from '../core/dates.js?v=22';
-import { searchPrices, groupByShop } from '../services/prices.js?v=22';
-import { quickItemSuggestions } from '../core/selectors.js?v=22';
-import { toastError } from '../ui/toast.js?v=22';
-import { tileGradient } from './list.js?v=22';
+import { el, render } from '../core/dom.js?v=23';
+import { state } from '../core/store.js?v=23';
+import { formatAmount, convert } from '../core/money.js?v=23';
+import { dayLabel } from '../core/dates.js?v=23';
+import { searchPrices, groupByShop } from '../services/prices.js?v=23';
+import { quickItemSuggestions } from '../core/selectors.js?v=23';
+import { toastError } from '../ui/toast.js?v=23';
+import { tileGradient } from './list.js?v=23';
+import { openTxForm } from './txForm.js?v=23';
 
 /** Запрос живёт вне state: он локален для экрана. */
 const search = { query: '', rows: null, busy: false };
@@ -150,12 +151,23 @@ function shopRow(shop, cheapest) {
   const overpay = cheapestBase > 0 ? Math.round((inBase / cheapestBase - 1) * 100) : 0;
 
   const meta = [dayLabel(last.date)];
+  if (last.address) meta.push(last.address);
   if (shop.count > 1) meta.push(`${shop.count} записей`);
   if (Number(shop.min.price) < Number(last.price)) {
     meta.push(`дешевле было ${formatAmount(shop.min.price, shop.currency, { exact: true })}`);
   }
 
-  return el('div', { class: 'tx' }, [
+  /**
+   * По своей цене можно провалиться в чек, откуда она взялась: там видно всё
+   * остальное, что покупалось тогда же. Чужие записи не открываем — операции
+   * другой семьи нам недоступны.
+   */
+  const source = state.transactions.find((tx) => tx.id === last.txId) || null;
+
+  return el(source ? 'button' : 'div', {
+    class: 'tx',
+    onclick: source ? () => openTxForm({ tx: source }) : null,
+  }, [
     el('div', {
       class: 'tx__ico',
       style: `background:${tileGradient(overpay === 0 ? '#2dd98a' : '#5b9fff')}`,

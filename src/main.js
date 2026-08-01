@@ -2,32 +2,32 @@
  * Точка входа: авторизация → загрузка семьи → подписки на данные → роутинг.
  */
 
-import { $, render } from './core/dom.js?v=22';
-import { state, set, subscribe } from './core/store.js?v=22';
-import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=22';
-import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=22';
-import { unpaidBills } from './core/selectors.js?v=22';
+import { $, render } from './core/dom.js?v=23';
+import { state, set, subscribe } from './core/store.js?v=23';
+import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=23';
+import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=23';
+import { unpaidBills } from './core/selectors.js?v=23';
 
-import { watchAuth, signIn, loadFamily } from './services/auth.js?v=22';
+import { watchAuth, signIn, loadFamily } from './services/auth.js?v=23';
 import {
   watchTransactions,
   watchCategories,
   seedCategoriesIfEmpty,
   syncNewCategories,
-} from './services/transactions.js?v=22';
-import { watchBills } from './services/bills.js?v=22';
-import { loadRates } from './services/rates.js?v=22';
+} from './services/transactions.js?v=23';
+import { watchBills } from './services/bills.js?v=23';
+import { loadRates } from './services/rates.js?v=23';
 
-import { renderDashboard } from './views/dashboard.js?v=22';
-import { renderList } from './views/list.js?v=22';
-import { renderBills } from './views/bills.js?v=22';
-import { renderPrices } from './views/prices.js?v=22';
-import { renderCharts, destroyCharts } from './views/charts.js?v=22';
-import { renderSettings } from './views/settings.js?v=22';
-import { openTxForm } from './views/txForm.js?v=22';
-import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=22';
-import { closeSheet } from './ui/sheet.js?v=22';
-import { toastError } from './ui/toast.js?v=22';
+import { renderDashboard } from './views/dashboard.js?v=23';
+import { renderList } from './views/list.js?v=23';
+import { renderBills } from './views/bills.js?v=23';
+import { renderPrices } from './views/prices.js?v=23';
+import { renderCharts, destroyCharts } from './views/charts.js?v=23';
+import { renderSettings } from './views/settings.js?v=23';
+import { openTxForm } from './views/txForm.js?v=23';
+import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=23';
+import { closeSheet } from './ui/sheet.js?v=23';
+import { toastError } from './ui/toast.js?v=23';
 
 const ROUTES = {
   dashboard: renderDashboard,
@@ -117,7 +117,7 @@ function shareOldPrices(transactions) {
   if (backfillStarted || !state.user || !transactions.length) return;
   backfillStarted = true;
 
-  import('./services/prices.js?v=22')
+  import('./services/prices.js?v=23')
     .then(({ backfillPrices }) => backfillPrices(transactions, state.user.uid))
     .catch((error) => console.error('Не удалось перенести историю цен', error));
 }

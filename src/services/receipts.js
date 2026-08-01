@@ -5,10 +5,10 @@
  * AI ошибается в названиях товаров, поэтому ни одно поле не считается финальным.
  */
 
-import { PROXY_URL, CURRENCY_CODES } from '../config.js?v=22';
-import { idToken } from './auth.js?v=22';
-import { normalizeDate, today } from '../core/dates.js?v=22';
-import { parseBankSms } from '../core/smsParse.js?v=22';
+import { PROXY_URL, CURRENCY_CODES } from '../config.js?v=23';
+import { idToken } from './auth.js?v=23';
+import { normalizeDate, today } from '../core/dates.js?v=23';
+import { parseBankSms } from '../core/smsParse.js?v=23';
 
 /** Сколько пикселей по длинной стороне отправляем. Больше — дороже и медленнее без выигрыша. */
 const MAX_EDGE = 1600;
@@ -145,6 +145,8 @@ function normalizeReceipt(raw, source) {
 
   return {
     merchant: String(raw?.merchant || '').trim(),
+    /** Адрес точки: отличает один магазин сети от другого. */
+    address: String(raw?.address || '').trim(),
     date: normalizeDate(raw?.date) || today(),
     time: normalizeTime(raw?.time),
     currency,

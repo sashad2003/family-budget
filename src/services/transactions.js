@@ -14,6 +14,7 @@
  *   month      'YYYY-MM' — для выборок и графиков
  *   note       комментарий
  *   merchant   магазин (с чека)
+ *   address    адрес точки, если он был в чеке
  *   items      [{ name, norm, qty, price, total }] — строки чека, редактируемые;
  *              norm — то же название обычными словами, для базы цен
  *   source     'manual' | 'receipt-photo' | 'receipt-url' | 'sms' | 'bill'
@@ -39,11 +40,11 @@ import {
   writeBatch,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=22';
-import { FAMILY_ID } from '../config.js?v=22';
-import { DEFAULT_CATEGORIES } from '../data/categories.js?v=22';
-import { amountsInAllCurrencies } from '../core/money.js?v=22';
-import { monthOf } from '../core/dates.js?v=22';
+import { db } from '../core/firebase.js?v=23';
+import { FAMILY_ID } from '../config.js?v=23';
+import { DEFAULT_CATEGORIES } from '../data/categories.js?v=23';
+import { amountsInAllCurrencies } from '../core/money.js?v=23';
+import { monthOf } from '../core/dates.js?v=23';
 
 const txCollection = () => collection(db, 'families', FAMILY_ID, 'transactions');
 const catCollection = () => collection(db, 'families', FAMILY_ID, 'categories');
@@ -162,6 +163,12 @@ function buildTx(input, rates) {
     month: monthOf(input.date),
     note: String(input.note || '').trim(),
     merchant: String(input.merchant || '').trim(),
+    /**
+     * Адрес точки. В шапке чека часто стоит юрлицо («DELHAIZE SERBIA»),
+     * которому принадлежит несколько сетей, — по одному названию не понять,
+     * где именно человек был. Адрес это и разводит.
+     */
+    address: String(input.address || '').trim(),
     items,
     source: input.source || 'manual',
     receiptUrl: input.receiptUrl || '',
@@ -191,7 +198,7 @@ export async function createTransaction(input, { rates, user }) {
  */
 async function shareItemPrices(txId, tx, user) {
   try {
-    const { publishPrices } = await import('./prices.js?v=22');
+    const { publishPrices } = await import('./prices.js?v=23');
     await publishPrices(txId, tx, user.uid);
   } catch (error) {
     console.error('Не удалось обновить базу цен', error);
@@ -226,7 +233,7 @@ export async function deleteTransaction(id, user = null) {
 
   if (!user) return;
   try {
-    const { removePrices } = await import('./prices.js?v=22');
+    const { removePrices } = await import('./prices.js?v=23');
     await removePrices(id, user.uid);
   } catch (error) {
     console.error('Не удалось убрать цены удалённой операции', error);

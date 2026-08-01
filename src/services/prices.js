@@ -8,6 +8,7 @@
  *   norm       понятное название по-русски, если Claude его дал
  *   tokens     слова для поиска (см. core/priceKey.js)
  *   merchant   магазин как записан
+ *   address    адрес точки, если он был в чеке
  *   shop       ключ магазина, чтобы «MAXI 236>» и «Maxi» слиплись
  *   price      цена за единицу
  *   qty, total сколько взяли и на сколько
@@ -30,9 +31,9 @@ import {
   writeBatch,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=22';
-import { FAMILY_ID } from '../config.js?v=22';
-import { tokenize, merchantKey, searchToken, normalizeText } from '../core/priceKey.js?v=22';
+import { db } from '../core/firebase.js?v=23';
+import { FAMILY_ID } from '../config.js?v=23';
+import { tokenize, merchantKey, searchToken, normalizeText } from '../core/priceKey.js?v=23';
 
 const pricesCollection = () => collection(db, 'prices');
 
@@ -83,6 +84,7 @@ export async function publishPrices(txId, tx, uid) {
       norm: String(item.norm || '').trim(),
       tokens: tokenize(name, item.norm),
       merchant: String(tx.merchant || '').trim(),
+      address: String(tx.address || '').trim(),
       shop: merchantKey(tx.merchant),
       price,
       qty,

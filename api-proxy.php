@@ -414,7 +414,10 @@ function extractReceipt(array $config, array $content): array
     $schema = [
         'type' => 'object',
         'properties' => [
-            'merchant'      => ['type' => 'string', 'description' => 'Название магазина, "" если не видно'],
+            // Вывеска, а не юрлицо: по «DELHAIZE SERBIA» не понять, был человек
+            // в Maxi, в Tempo или в Shop&Go — это всё одна компания.
+            'merchant'      => ['type' => 'string', 'description' => 'Название магазина как на вывеске (Maxi, Shop&Go, Lidl, Idea), а не юридическое лицо владельца (DELHAIZE SERBIA DOO, MERCATOR-S). Если в чеке есть и то и другое — бери вывеску. "" если не видно'],
+            'address'       => ['type' => 'string', 'description' => 'Улица и номер дома или район точки — коротко, чтобы отличить один магазин сети от другого. "" если не видно'],
             'date'          => ['type' => 'string', 'description' => 'Дата чека в формате YYYY-MM-DD, "" если не видно'],
             'time'          => ['type' => 'string', 'description' => 'Время покупки в формате HH:MM (24 часа), "" если не видно'],
             'currency'      => ['type' => 'string', 'enum' => ['RSD', 'EUR', 'ILS', 'USD', '']],
@@ -438,13 +441,15 @@ function extractReceipt(array $config, array $content): array
                 ],
             ],
         ],
-        'required' => ['merchant', 'date', 'time', 'currency', 'total', 'category_hint', 'items'],
+        'required' => ['merchant', 'address', 'date', 'time', 'currency', 'total', 'category_hint', 'items'],
         'additionalProperties' => false,
     ];
 
     $system = <<<'TXT'
 Ты разбираешь чеки из магазинов Сербии, Израиля и еврозоны.
 Переноси названия товаров ровно так, как они напечатаны, ничего не додумывая.
+В шапке чека обычно стоят и юрлицо, и название точки — в merchant пиши то,
+что написано на вывеске и знакомо покупателю, служебные номера точки отбрасывай.
 Валюту определяй по символу или коду: дин/RSD/РСД → RSD, ₪/ILS/ש"ח → ILS, €/EUR → EUR.
 Если поле не читается — ставь "" для строк и 0 для чисел, не выдумывай значения.
 Цены — числа без разделителей тысяч, десятичный разделитель — точка.
