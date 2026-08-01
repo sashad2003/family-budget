@@ -426,11 +426,14 @@ function extractReceipt(array $config, array $content): array
                     'type' => 'object',
                     'properties' => [
                         'name'  => ['type' => 'string'],
+                        // Понятное название нужно для базы цен: в чеке пишут
+                        // SLADOLED KING 100G, а искать человек будет «мороженое».
+                        'norm'  => ['type' => 'string', 'description' => 'То же название по-русски, обычными словами: "SLADOLED KING 100G" → "Мороженое King 100 г". "" если непонятно, что это'],
                         'qty'   => ['type' => 'number'],
                         'price' => ['type' => 'number'],
                         'total' => ['type' => 'number'],
                     ],
-                    'required' => ['name', 'qty', 'price', 'total'],
+                    'required' => ['name', 'norm', 'qty', 'price', 'total'],
                     'additionalProperties' => false,
                 ],
             ],

@@ -5,10 +5,10 @@
  * AI ошибается в названиях товаров, поэтому ни одно поле не считается финальным.
  */
 
-import { PROXY_URL, CURRENCY_CODES } from '../config.js?v=21';
-import { idToken } from './auth.js?v=21';
-import { normalizeDate, today } from '../core/dates.js?v=21';
-import { parseBankSms } from '../core/smsParse.js?v=21';
+import { PROXY_URL, CURRENCY_CODES } from '../config.js?v=22';
+import { idToken } from './auth.js?v=22';
+import { normalizeDate, today } from '../core/dates.js?v=22';
+import { parseBankSms } from '../core/smsParse.js?v=22';
 
 /** Сколько пикселей по длинной стороне отправляем. Больше — дороже и медленнее без выигрыша. */
 const MAX_EDGE = 1600;
@@ -128,7 +128,14 @@ function normalizeReceipt(raw, source) {
       const qty = num(item?.qty) || 1;
       const price = num(item?.price);
       const total = num(item?.total) || price * qty;
-      return { name: String(item?.name || '').trim(), qty, price: price || (qty ? total / qty : 0), total };
+      return {
+        name: String(item?.name || '').trim(),
+        /** Название обычными словами — по нему товар ищется в базе цен. */
+        norm: String(item?.norm || '').trim(),
+        qty,
+        price: price || (qty ? total / qty : 0),
+        total,
+      };
     })
     .filter((item) => item.name !== '');
 

@@ -3,19 +3,19 @@
  * после сканирования каждое поле и каждая строка товара остаются редактируемыми.
  */
 
-import { el, render } from '../core/dom.js?v=21';
-import { state } from '../core/store.js?v=21';
-import { CURRENCY_CODES } from '../config.js?v=21';
-import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=21';
-import { today, dayLabel } from '../core/dates.js?v=21';
-import { guessCategory } from '../data/categories.js?v=21';
-import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=21';
-import { tileGradient } from './list.js?v=21';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=21';
-import { toastOk, toastError } from '../ui/toast.js?v=21';
-import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=21';
-import { openQuickPick } from './quickPick.js?v=21';
-import { findDuplicates, sameMoment } from '../core/selectors.js?v=21';
+import { el, render } from '../core/dom.js?v=22';
+import { state } from '../core/store.js?v=22';
+import { CURRENCY_CODES } from '../config.js?v=22';
+import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=22';
+import { today, dayLabel } from '../core/dates.js?v=22';
+import { guessCategory } from '../data/categories.js?v=22';
+import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=22';
+import { tileGradient } from './list.js?v=22';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=22';
+import { toastOk, toastError } from '../ui/toast.js?v=22';
+import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=22';
+import { openQuickPick } from './quickPick.js?v=22';
+import { findDuplicates, sameMoment } from '../core/selectors.js?v=22';
 
 /**
  * openTxForm({ tx })      — правка существующей операции
@@ -527,7 +527,7 @@ function buildFooter(model, tx) {
           text: 'Действие необратимо.',
           onConfirm: async () => {
             try {
-              await deleteTransaction(tx.id);
+              await deleteTransaction(tx.id, state.user);
               toastOk('Удалено');
             } catch {
               toastError('Не удалось удалить');

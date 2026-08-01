@@ -5,15 +5,16 @@
  * кнопка «Ещё» там скрыта и меню не используется.
  */
 
-import { el } from '../core/dom.js?v=21';
-import { state, set } from '../core/store.js?v=21';
-import { openSheet, closeSheet } from '../ui/sheet.js?v=21';
+import { el } from '../core/dom.js?v=22';
+import { state, set } from '../core/store.js?v=22';
+import { openSheet, closeSheet } from '../ui/sheet.js?v=22';
 
 /** Разделы дока, спрятанные под «Ещё». Порядок — от частого к редкому. */
-export const MORE_ROUTES = ['list', 'charts', 'settings'];
+export const MORE_ROUTES = ['list', 'prices', 'charts', 'settings'];
 
 const ITEMS = {
   list: { title: 'Операции', hint: 'Полный список за месяц с поиском и фильтрами' },
+  prices: { title: 'Цены', hint: 'Где товар дешевле — по чекам всех пользователей' },
   charts: { title: 'Статистика', hint: 'Траты по категориям и динамика за период' },
   settings: { title: 'Настройки', hint: 'Категории, валюта, профиль' },
 };

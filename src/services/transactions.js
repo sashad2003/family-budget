@@ -14,7 +14,8 @@
  *   month      'YYYY-MM' — для выборок и графиков
  *   note       комментарий
  *   merchant   магазин (с чека)
- *   items      [{ name, qty, price, total }] — строки чека, редактируемые
+ *   items      [{ name, norm, qty, price, total }] — строки чека, редактируемые;
+ *              norm — то же название обычными словами, для базы цен
  *   source     'manual' | 'receipt-photo' | 'receipt-url' | 'sms' | 'bill'
  *   billId     ссылка на bills/{id}, если это оплата регулярного платежа
  *   receiptUrl исходная ссылка на страницу чека
@@ -38,11 +39,11 @@ import {
   writeBatch,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=21';
-import { FAMILY_ID } from '../config.js?v=21';
-import { DEFAULT_CATEGORIES } from '../data/categories.js?v=21';
-import { amountsInAllCurrencies } from '../core/money.js?v=21';
-import { monthOf } from '../core/dates.js?v=21';
+import { db } from '../core/firebase.js?v=22';
+import { FAMILY_ID } from '../config.js?v=22';
+import { DEFAULT_CATEGORIES } from '../data/categories.js?v=22';
+import { amountsInAllCurrencies } from '../core/money.js?v=22';
+import { monthOf } from '../core/dates.js?v=22';
 
 const txCollection = () => collection(db, 'families', FAMILY_ID, 'transactions');
 const catCollection = () => collection(db, 'families', FAMILY_ID, 'categories');
@@ -136,6 +137,12 @@ function buildTx(input, rates) {
     .filter((it) => String(it.name || '').trim() !== '')
     .map((it) => ({
       name: String(it.name).trim(),
+      /**
+       * Понятное название по-русски: в чеках печатают `SLADOLED KING 100G`,
+       * и без перевода поиск по базе цен не нашёл бы «мороженое».
+       * Заполняется при распознавании чека, у ручного ввода пустое.
+       */
+      norm: String(it.norm || '').trim(),
       qty: Number(it.qty) || 1,
       price: Number(it.price) || 0,
       total: Number(it.total) || 0,
@@ -163,20 +170,39 @@ function buildTx(input, rates) {
   };
 }
 
-export function createTransaction(input, { rates, user }) {
-  return addDoc(txCollection(), {
-    ...buildTx(input, rates),
+export async function createTransaction(input, { rates, user }) {
+  const data = buildTx(input, rates);
+  const ref = await addDoc(txCollection(), {
+    ...data,
     createdBy: { uid: user.uid, name: user.displayName || user.email, photo: user.photoURL || '' },
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
+
+  await shareItemPrices(ref.id, data, user);
+  return ref;
+}
+
+/**
+ * Товары чека уходят в общую базу цен отдельно от самой операции.
+ *
+ * Сбой здесь не должен ронять сохранение: операция уже записана, а цены —
+ * дело второе, их подхватит следующая правка или разовый перенос истории.
+ */
+async function shareItemPrices(txId, tx, user) {
+  try {
+    const { publishPrices } = await import('./prices.js?v=22');
+    await publishPrices(txId, tx, user.uid);
+  } catch (error) {
+    console.error('Не удалось обновить базу цен', error);
+  }
 }
 
 /**
  * Правка операции. Курсы пересчитываем только если поменялись сумма или валюта —
  * иначе исходный снимок остаётся нетронутым.
  */
-export function updateTransaction(id, input, { rates, user, previous }) {
+export async function updateTransaction(id, input, { rates, user, previous }) {
   const currencyChanged = previous?.currency !== input.currency;
   const amountChanged = Number(previous?.amount) !== Number(input.amount);
   const effectiveRates = currencyChanged || amountChanged ? rates : previous?.rates || rates;
@@ -186,13 +212,23 @@ export function updateTransaction(id, input, { rates, user, previous }) {
     patch.rateDate = previous.rateDate;
   }
 
-  return updateDoc(doc(txCollection(), id), {
+  await updateDoc(doc(txCollection(), id), {
     ...patch,
     updatedAt: serverTimestamp(),
     updatedBy: { uid: user.uid, name: user.displayName || user.email },
   });
+
+  await shareItemPrices(id, patch, user);
 }
 
-export function deleteTransaction(id) {
-  return deleteDoc(doc(txCollection(), id));
+export async function deleteTransaction(id, user = null) {
+  await deleteDoc(doc(txCollection(), id));
+
+  if (!user) return;
+  try {
+    const { removePrices } = await import('./prices.js?v=22');
+    await removePrices(id, user.uid);
+  } catch (error) {
+    console.error('Не удалось убрать цены удалённой операции', error);
+  }
 }
