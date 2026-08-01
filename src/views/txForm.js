@@ -3,19 +3,19 @@
  * после сканирования каждое поле и каждая строка товара остаются редактируемыми.
  */
 
-import { el, render } from '../core/dom.js?v=30';
-import { state } from '../core/store.js?v=30';
-import { CURRENCY_CODES } from '../config.js?v=30';
-import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=30';
-import { today, dayLabel } from '../core/dates.js?v=30';
-import { guessCategory } from '../data/categories.js?v=30';
-import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=30';
-import { tileGradient } from './list.js?v=30';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=30';
-import { toastOk, toastError } from '../ui/toast.js?v=30';
-import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=30';
-import { openQuickPick } from './quickPick.js?v=30';
-import { findDuplicates, sameMoment } from '../core/selectors.js?v=30';
+import { el, render } from '../core/dom.js?v=31';
+import { state } from '../core/store.js?v=31';
+import { CURRENCY_CODES } from '../config.js?v=31';
+import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=31';
+import { today, dayLabel } from '../core/dates.js?v=31';
+import { guessCategory } from '../data/categories.js?v=31';
+import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=31';
+import { tileGradient } from './list.js?v=31';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=31';
+import { toastOk, toastError } from '../ui/toast.js?v=31';
+import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=31';
+import { openQuickPick } from './quickPick.js?v=31';
+import { findDuplicates, sameMoment } from '../core/selectors.js?v=31';
 
 /**
  * openTxForm({ tx })      — правка существующей операции

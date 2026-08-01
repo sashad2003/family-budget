@@ -5,11 +5,11 @@
  * на телефоне, — но список один и тот же, поэтому и код один.
  */
 
-import { el } from '../core/dom.js?v=30';
-import { state } from '../core/store.js?v=30';
-import { switchFamily } from '../services/account.js?v=30';
-import { openSheet, closeSheet } from '../ui/sheet.js?v=30';
-import { toastError } from '../ui/toast.js?v=30';
+import { el } from '../core/dom.js?v=31';
+import { state } from '../core/store.js?v=31';
+import { switchFamily } from '../services/account.js?v=31';
+import { openSheet, closeSheet } from '../ui/sheet.js?v=31';
+import { toastError } from '../ui/toast.js?v=31';
 
 export function budgetName(family) {
   return family?.name || family?.title || 'Бюджет';
@@ -48,13 +48,16 @@ async function choose(family, isOpen) {
     return;
   }
 
-  try {
-    await switchFamily(state.user.uid, family.id);
-    // От бюджета зависят все экраны разом — проще перезайти начисто.
-    location.reload();
-  } catch {
-    toastError('Не удалось переключить бюджет');
-  }
+  closeSheet();
+
+  // Экраны перерисовывает main.js: страницу не перезагружаем, меняются только
+  // подписки на данные. Отметку в профиле пишем следом, она нужна лишь чтобы
+  // при следующем входе открылся тот же бюджет.
+  window.dispatchEvent(new CustomEvent('switch-budget', { detail: family.id }));
+
+  switchFamily(state.user.uid, family.id).catch(() => {
+    toastError('Бюджет открыт, но запомнить выбор не вышло');
+  });
 }
 
 export function membersLabel(family) {

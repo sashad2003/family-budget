@@ -2,37 +2,37 @@
  * Точка входа: авторизация → загрузка семьи → подписки на данные → роутинг.
  */
 
-import { $, render } from './core/dom.js?v=30';
-import { state, set, subscribe } from './core/store.js?v=30';
-import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=30';
-import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=30';
-import { unpaidBills } from './core/selectors.js?v=30';
+import { $, render } from './core/dom.js?v=31';
+import { state, set, subscribe } from './core/store.js?v=31';
+import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=31';
+import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=31';
+import { unpaidBills } from './core/selectors.js?v=31';
 
-import { watchAuth, signIn } from './services/auth.js?v=30';
-import { loadAccount, isAdmin, joinByCode, listFamilies } from './services/account.js?v=30';
-import { setFamilyId } from './core/session.js?v=30';
-import { askProfile } from './views/signup.js?v=30';
+import { watchAuth, signIn } from './services/auth.js?v=31';
+import { loadAccount, isAdmin, joinByCode, listFamilies } from './services/account.js?v=31';
+import { setFamilyId } from './core/session.js?v=31';
+import { askProfile } from './views/signup.js?v=31';
 import {
   watchTransactions,
   watchCategories,
   seedCategoriesIfEmpty,
   syncNewCategories,
-} from './services/transactions.js?v=30';
-import { watchBills } from './services/bills.js?v=30';
-import { loadRates } from './services/rates.js?v=30';
+} from './services/transactions.js?v=31';
+import { watchBills } from './services/bills.js?v=31';
+import { loadRates } from './services/rates.js?v=31';
 
-import { renderDashboard } from './views/dashboard.js?v=30';
-import { renderList } from './views/list.js?v=30';
-import { renderBills } from './views/bills.js?v=30';
-import { renderPrices } from './views/prices.js?v=30';
-import { renderAdmin } from './views/admin.js?v=30';
-import { openBudgetMenu, budgetName } from './views/budgetMenu.js?v=30';
-import { renderCharts, destroyCharts } from './views/charts.js?v=30';
-import { renderSettings } from './views/settings.js?v=30';
-import { openTxForm } from './views/txForm.js?v=30';
-import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=30';
-import { closeSheet } from './ui/sheet.js?v=30';
-import { toastError, toastOk } from './ui/toast.js?v=30';
+import { renderDashboard } from './views/dashboard.js?v=31';
+import { renderList } from './views/list.js?v=31';
+import { renderBills } from './views/bills.js?v=31';
+import { renderPrices } from './views/prices.js?v=31';
+import { renderAdmin } from './views/admin.js?v=31';
+import { openBudgetMenu, budgetName } from './views/budgetMenu.js?v=31';
+import { renderCharts, destroyCharts } from './views/charts.js?v=31';
+import { renderSettings } from './views/settings.js?v=31';
+import { openTxForm } from './views/txForm.js?v=31';
+import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=31';
+import { closeSheet } from './ui/sheet.js?v=31';
+import { toastError, toastOk } from './ui/toast.js?v=31';
 
 const ROUTES = {
   dashboard: renderDashboard,
@@ -118,14 +118,16 @@ async function acceptInvite(user, account) {
   }
 }
 
+/**
+ * Подписки на данные семьи.
+ *
+ * Сначала подписки, потом всё остальное. Раньше экран ждал курсы валют, а за
+ * ними досев категорий — три запроса подряд, и только после них появлялись
+ * операции. Курсы нужны лишь для пересчёта в валюту сводных сумм: до их
+ * приезда считаем по сохранённым, и разницы никто не замечает.
+ */
 async function startData() {
-  const { rates, fetchedAt, stale } = await loadRates();
-  set({ rates, ratesFetchedAt: fetchedAt });
-  if (stale) toastError('Курсы валют не обновились, используются сохранённые');
-
-  await seedCategoriesIfEmpty().catch(() => {});
-  // Категории, добавленные в код позже первого запуска, довозим молча.
-  await syncNewCategories().catch((error) => console.error(error));
+  const familyId = state.family.id;
 
   unsubscribers.push(
     watchCategories(
@@ -144,7 +146,57 @@ async function startData() {
       (error) => { console.error(error); toastError('Нет доступа к платежам'); },
     ),
   );
+
+  // Дальше — в фоне. Ответ может прийти уже после смены бюджета, поэтому
+  // сверяем, к тому ли бюджету он относится.
+  loadRates()
+    .then(({ rates, fetchedAt, stale }) => {
+      if (state.family?.id !== familyId) return;
+      set({ rates, ratesFetchedAt: fetchedAt });
+      if (stale) toastError('Курсы валют не обновились, используются сохранённые');
+    })
+    .catch((error) => console.error(error));
+
+  seedCategoriesIfEmpty()
+    // Категории, добавленные в код позже первого запуска, довозим молча.
+    .then(() => syncNewCategories())
+    .catch((error) => console.error(error));
 }
+
+/**
+ * Смена бюджета без перезагрузки страницы.
+ *
+ * Раньше здесь стоял location.reload(): он тянул заново весь код, шрифты и
+ * вход в Google — секунд семь на ровном месте. Данных же меняется всего
+ * ничего, достаточно отписаться от старой семьи и подписаться на новую.
+ */
+async function switchBudget(familyId) {
+  const family = (state.families || []).find((f) => f.id === familyId);
+  if (!family || family.id === state.family?.id) return;
+
+  teardown();
+  setFamilyId(family.id);
+
+  set({
+    family,
+    profile: state.profile ? { ...state.profile, familyId } : null,
+    transactions: [],
+    categories: [],
+    bills: [],
+    loading: true,
+    // Экраны у бюджетов свои: показываем главный, а не тот, где стояли.
+    route: 'dashboard',
+  });
+
+  await startData();
+}
+
+window.addEventListener('switch-budget', (event) => {
+  switchBudget(event.detail).catch((error) => {
+    console.error(error);
+    toastError('Не удалось открыть бюджет');
+  });
+});
 
 /**
  * Товары из чеков, внесённых до появления базы цен, переносим туда один раз.
@@ -159,7 +211,7 @@ function shareOldPrices(transactions) {
   if (backfillStarted || !state.user || !transactions.length) return;
   backfillStarted = true;
 
-  import('./services/prices.js?v=30')
+  import('./services/prices.js?v=31')
     .then(({ backfillPrices }) => backfillPrices(transactions, state.user.uid))
     .catch((error) => console.error('Не удалось перенести историю цен', error));
 }
