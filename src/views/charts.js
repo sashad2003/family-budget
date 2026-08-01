@@ -7,12 +7,13 @@
  * Chart.js грузится с CDN по требованию — на других экранах он не нужен.
  */
 
-import { el, render } from '../core/dom.js?v=37';
-import { state, set } from '../core/store.js?v=37';
-import { formatAmount } from '../core/money.js?v=37';
-import { monthLabel } from '../core/dates.js?v=37';
-import { PERIODS, resolvePeriod } from '../core/period.js?v=37';
-import { rangeTransactions, byCategory, totals, seriesForMonths } from '../core/selectors.js?v=37';
+import { el, render } from '../core/dom.js?v=38';
+import { state, set } from '../core/store.js?v=38';
+import { formatAmount } from '../core/money.js?v=38';
+import { monthLabel } from '../core/dates.js?v=38';
+import { PERIODS, resolvePeriod } from '../core/period.js?v=38';
+import { rangeTransactions, byCategory, totals, seriesForMonths } from '../core/selectors.js?v=38';
+import { t, getLocale } from '../core/i18n.js?v=38';
 
 const CHART_JS = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.7/+esm';
 
@@ -48,7 +49,7 @@ export function renderCharts() {
       ...head,
       el('div', { class: 'empty' }, [
         el('span', { class: 'empty__ico' }, '📊'),
-        el('div', {}, 'За этот период нет данных'),
+        el('div', {}, t('charts.noData')),
       ]),
     ]);
     return container;
@@ -69,7 +70,7 @@ export function renderCharts() {
 
     el('div', { class: 'chart-grid' }, [
       el('div', { class: 'card' }, [
-        el('div', { class: 'card__label' }, 'Расходы по категориям'),
+        el('div', { class: 'card__label' }, t('charts.byCategory')),
         el('div', { class: 'chart-box' }, donutCanvas),
         el('div', { class: 'bar-legend', style: 'margin-top:16px' }, cats.map((row) =>
           el('div', { class: 'legend-row' }, [
@@ -83,12 +84,12 @@ export function renderCharts() {
 
       el('div', { class: 'card' }, [
         el('div', { class: 'card__label' },
-          series.length > 1 ? `Динамика · ${series.length} мес` : 'Динамика'),
+          series.length > 1 ? t('charts.trendN', { n: series.length }) : t('charts.trend')),
         el('div', { class: 'chart-box' }, trendCanvas),
       ]),
 
       el('div', { class: 'card' }, [
-        el('div', { class: 'card__label' }, 'Доходы и расходы за период'),
+        el('div', { class: 'card__label' }, t('charts.inOut')),
         el('div', { class: 'chart-box', style: 'height:190px' }, compareCanvas),
       ]),
     ]),
@@ -123,8 +124,8 @@ export function renderCharts() {
       data: {
         labels: series.map((row) => shortMonth(row.month)),
         datasets: [
-          lineSet('Доходы', series.map((r) => Math.round(r.income)), '#2dd98a'),
-          lineSet('Расходы', series.map((r) => Math.round(r.expense)), '#ff5b5b'),
+          lineSet(t('charts.income'), series.map((r) => Math.round(r.income)), '#2dd98a'),
+          lineSet(t('charts.expense'), series.map((r) => Math.round(r.expense)), '#ff5b5b'),
         ],
       },
       options: {
@@ -140,7 +141,7 @@ export function renderCharts() {
     charts.push(new Chart(compareCanvas, {
       type: 'bar',
       data: {
-        labels: ['Доходы', 'Расходы'],
+        labels: [t('charts.income'), t('charts.expense')],
         datasets: [{
           data: [Math.round(income), Math.round(expense)],
           backgroundColor: ['#2dd98a', '#ff5b5b'],
@@ -157,7 +158,7 @@ export function renderCharts() {
     }));
   }).catch((error) => {
     console.error(error);
-    container.append(el('p', { class: 'hint' }, 'Не удалось загрузить библиотеку графиков'));
+    container.append(el('p', { class: 'hint' }, t('charts.libFailed')));
   });
 
   return container;
@@ -176,7 +177,7 @@ function periodPicker() {
           ? { kind: 'custom', from: state.period?.from || '', to: state.period?.to || '' }
           : { kind: item.kind },
       }),
-    }, item.label),
+    }, t(`period.${item.kind}`)),
   ));
 
   if (kind !== 'custom') return chips;
@@ -192,36 +193,36 @@ function periodPicker() {
   return el('div', {}, [
     chips,
     el('div', { class: 'row', style: 'margin-top:12px' }, [
-      el('div', {}, [el('label', { class: 'field__label' }, 'С даты'), dateInput('from')]),
-      el('div', {}, [el('label', { class: 'field__label' }, 'По дату'), dateInput('to')]),
+      el('div', {}, [el('label', { class: 'field__label' }, t('charts.from')), dateInput('from')]),
+      el('div', {}, [el('label', { class: 'field__label' }, t('charts.to')), dateInput('to')]),
     ]),
   ]);
 }
 
 function periodCaption(period, count) {
   return el('p', { class: 'hint', style: 'margin:12px 0 16px' },
-    `${period.label} · ${count} ${plural(count, 'операция', 'операции', 'операций')}`);
+    `${period.label} · ${txCount(count)}`);
 }
 
 // ---------------------------------------------------------------- итоги
 
 function summaryCard(income, expense, balance, monthCount) {
   return el('div', { class: 'card balance' }, [
-    el('div', { class: 'balance__label' }, balance < 0 ? 'Минус за период' : 'Плюс за период'),
+    el('div', { class: 'balance__label' }, t(balance < 0 ? 'charts.minus' : 'charts.plus')),
     el('div', {
       class: 'balance__value num',
       style: `color:${balance < 0 ? 'var(--expense)' : 'var(--income)'}`,
     }, formatAmount(balance, state.base, { sign: true })),
 
     el('div', { class: 'sum-rows' }, [
-      sumRow('Доходы', income, 'var(--income)'),
-      sumRow('Расходы', expense, 'var(--expense)'),
+      sumRow(t('charts.income'), income, 'var(--income)'),
+      sumRow(t('charts.expense'), expense, 'var(--expense)'),
     ]),
 
     monthCount > 1
       ? el('div', { class: 'sum-rows' }, [
-          sumRow('В среднем за месяц', balance / monthCount, balance < 0 ? 'var(--expense)' : 'var(--fg-0)', true),
-          sumRow('Расходы в месяц', expense / monthCount, 'var(--fg-1)'),
+          sumRow(t('charts.avgMonth'), balance / monthCount, balance < 0 ? 'var(--expense)' : 'var(--fg-0)', true),
+          sumRow(t('charts.expenseMonth'), expense / monthCount, 'var(--fg-1)'),
         ])
       : null,
   ]);
@@ -237,13 +238,13 @@ function sumRow(label, value, color, sign = false) {
 /** Таблица по месяцам — видно, какой именно месяц утащил в минус. */
 function monthTable(series) {
   return el('div', {}, [
-    el('div', { class: 'section__head' }, el('h2', { class: 'section__title' }, 'По месяцам')),
+    el('div', { class: 'section__head' }, el('h2', { class: 'section__title' }, t('charts.byMonth'))),
     el('div', { class: 'card' }, [
       el('div', { class: 'mrow mrow--head' }, [
-        el('span', {}, 'Месяц'),
-        el('span', {}, 'Доход'),
-        el('span', {}, 'Расход'),
-        el('span', {}, 'Итог'),
+        el('span', {}, t('charts.colMonth')),
+        el('span', {}, t('charts.colIncome')),
+        el('span', {}, t('charts.colExpense')),
+        el('span', {}, t('charts.colTotal')),
       ]),
       ...series.slice().reverse().map((row) => {
         const balance = row.income - row.expense;
@@ -317,10 +318,13 @@ function shortMonth(key) {
   return year ? `${name.slice(0, 3)} ${year.slice(2)}` : name.slice(0, 3);
 }
 
-function plural(n, one, few, many) {
+/** «12 операций» — три формы нужны только русскому. */
+function txCount(n) {
+  if (getLocale() !== 'ru') return t('charts.txCount', { n });
+
   const mod10 = n % 10;
   const mod100 = n % 100;
-  if (mod10 === 1 && mod100 !== 11) return one;
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return few;
-  return many;
+  if (mod10 === 1 && mod100 !== 11) return `${n} операция`;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return `${n} операции`;
+  return `${n} операций`;
 }

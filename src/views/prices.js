@@ -5,16 +5,17 @@
  * Данные берутся из общей базы: свои чеки и чеки других пользователей.
  */
 
-import { el, render } from '../core/dom.js?v=37';
-import { state } from '../core/store.js?v=37';
-import { formatAmount, convert } from '../core/money.js?v=37';
-import { dayLabel } from '../core/dates.js?v=37';
-import { searchPrices, groupByShop } from '../services/prices.js?v=37';
-import { quickItemSuggestions } from '../core/selectors.js?v=37';
-import { toastError } from '../ui/toast.js?v=37';
-import { tileGradient } from './list.js?v=37';
-import { openTxForm } from './txForm.js?v=37';
-import { section } from '../ui/section.js?v=37';
+import { el, render } from '../core/dom.js?v=38';
+import { state } from '../core/store.js?v=38';
+import { formatAmount, convert } from '../core/money.js?v=38';
+import { dayLabel } from '../core/dates.js?v=38';
+import { searchPrices, groupByShop } from '../services/prices.js?v=38';
+import { quickItemSuggestions } from '../core/selectors.js?v=38';
+import { toastError } from '../ui/toast.js?v=38';
+import { tileGradient } from './list.js?v=38';
+import { openTxForm } from './txForm.js?v=38';
+import { section } from '../ui/section.js?v=38';
+import { t, getLocale } from '../core/i18n.js?v=38';
 
 /** Запрос живёт вне state: он локален для экрана. */
 const search = { query: '', rows: null, busy: false };
@@ -27,7 +28,7 @@ export function renderPrices() {
   const input = el('input', {
     class: 'input',
     type: 'search',
-    placeholder: 'Название товара: мороженое, молоко, кофе…',
+    placeholder: t('prices.search'),
     value: search.query,
     oninput: (e) => {
       search.query = e.target.value;
@@ -38,8 +39,7 @@ export function renderPrices() {
   render(container, [
     el('div', { style: 'margin-bottom:12px' }, [
       input,
-      el('div', { class: 'hint', style: 'margin-top:8px' },
-        'Цены собираются из чеков — ваших и других пользователей приложения.'),
+      el('div', { class: 'hint', style: 'margin-top:8px' }, t('prices.source')),
     ]),
     suggestionRow((name) => {
       search.query = name;
@@ -76,7 +76,7 @@ async function run(results) {
   } catch (error) {
     console.error(error);
     search.rows = [];
-    toastError('Не удалось получить цены');
+    toastError(t('prices.failed'));
   } finally {
     search.busy = false;
     drawResults(results);
@@ -110,7 +110,7 @@ function drawResults(node) {
   if (search.rows === null) {
     render(node, el('div', { class: 'empty' }, [
       el('span', { class: 'empty__ico' }, '🏷️'),
-      el('div', {}, 'Введите название товара'),
+      el('div', {}, t('prices.prompt')),
     ]));
     return;
   }
@@ -118,9 +118,8 @@ function drawResults(node) {
   if (!search.rows.length) {
     render(node, el('div', { class: 'empty' }, [
       el('span', { class: 'empty__ico' }, '🤷'),
-      el('div', {}, 'Такого товара в базе цен пока нет'),
-      el('div', { class: 'hint', style: 'margin-top:6px' },
-        'Он появится, когда кто-нибудь отсканирует чек с ним.'),
+      el('div', {}, t('prices.empty')),
+      el('div', { class: 'hint', style: 'margin-top:6px' }, t('prices.emptyHint')),
     ]));
     return;
   }
@@ -130,9 +129,9 @@ function drawResults(node) {
   const cheapest = shops[0];
 
   render(node, [
-    section(`${shops.length} магазин${plural(shops.length)}`,
+    section(shopsLabel(shops.length),
       shops.map((shop) => shopRow(shop, cheapest)),
-      el('span', { class: 'hint' }, `${search.rows.length} записей о цене`)),
+      el('span', { class: 'hint' }, t('prices.records', { n: search.rows.length }))),
   ]);
 }
 
@@ -151,9 +150,11 @@ function shopRow(shop, cheapest) {
 
   const meta = [dayLabel(last.date)];
   if (last.address) meta.push(last.address);
-  if (shop.count > 1) meta.push(`${shop.count} записей`);
+  if (shop.count > 1) meta.push(t('prices.entries', { n: shop.count }));
   if (Number(shop.min.price) < Number(last.price)) {
-    meta.push(`дешевле было ${formatAmount(shop.min.price, shop.currency, { exact: true })}`);
+    meta.push(t('prices.wasCheaper', {
+      price: formatAmount(shop.min.price, shop.currency, { exact: true }),
+    }));
   }
 
   /**
@@ -184,15 +185,18 @@ function shopRow(shop, cheapest) {
       }, formatAmount(last.price, last.currency, { exact: true })),
 
       el('span', { class: 'tx__converted num' },
-        overpay === 0 ? 'дешевле всего' : `+${overpay}%`),
+        overpay === 0 ? t('prices.cheapest') : `+${overpay}%`),
     ]),
   ]);
 }
 
-function plural(n) {
+/** «3 магазина» — склонение нужно только русскому. */
+function shopsLabel(n) {
+  if (getLocale() !== 'ru') return t('prices.shops', { n });
+
   const mod10 = n % 10;
   const mod100 = n % 100;
-  if (mod10 === 1 && mod100 !== 11) return '';
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return 'а';
-  return 'ов';
+  if (mod10 === 1 && mod100 !== 11) return `${n} магазин`;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return `${n} магазина`;
+  return `${n} магазинов`;
 }

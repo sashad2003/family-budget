@@ -1,9 +1,15 @@
 /**
  * Категории. При первом запуске набор ниже засевается в Firestore,
  * дальше семья правит его через настройки.
+ *
+ * Названия переводятся в момент засева, а не при отрисовке: категория — это
+ * запись в базе, которую человек переименовывает как хочет. Переводить её
+ * каждый раз значило бы затирать его собственное название.
  */
 
-export const DEFAULT_CATEGORIES = [
+import { t } from '../core/i18n.js?v=38';
+
+const CATEGORIES = [
   // Расходы
   { id: 'groceries',  name: 'Продукты',    type: 'expense', icon: '🛒', color: '#2dd98a', order: 10 },
   { id: 'cafe',       name: 'Кафе',        type: 'expense', icon: '☕', color: '#ffb347', order: 20 },
@@ -29,6 +35,14 @@ export const DEFAULT_CATEGORIES = [
   { id: 'gift',       name: 'Подарок',     type: 'income',  icon: '🎁', color: '#ff7eb3', order: 30 },
   { id: 'other-inc',  name: 'Прочее',      type: 'income',  icon: '•',  color: '#8a8a94', order: 999 },
 ];
+
+/**
+ * Набор для засева на языке того, кто заводит бюджет.
+ * Ключ перевода совпадает с id категории.
+ */
+export function defaultCategories() {
+  return CATEGORIES.map((cat) => ({ ...cat, name: t(`category.${cat.id}`) }));
+}
 
 /** Ключевые слова для подсказки категории по ответу AI и названию магазина. */
 const HINTS = {

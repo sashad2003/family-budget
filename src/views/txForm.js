@@ -3,19 +3,20 @@
  * после сканирования каждое поле и каждая строка товара остаются редактируемыми.
  */
 
-import { el, render } from '../core/dom.js?v=37';
-import { state } from '../core/store.js?v=37';
-import { CURRENCY_CODES } from '../config.js?v=37';
-import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=37';
-import { today, dayLabel } from '../core/dates.js?v=37';
-import { guessCategory } from '../data/categories.js?v=37';
-import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=37';
-import { tileGradient } from './list.js?v=37';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=37';
-import { toastOk, toastError } from '../ui/toast.js?v=37';
-import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=37';
-import { openQuickPick } from './quickPick.js?v=37';
-import { findDuplicates, sameMoment } from '../core/selectors.js?v=37';
+import { el, render } from '../core/dom.js?v=38';
+import { state } from '../core/store.js?v=38';
+import { CURRENCY_CODES } from '../config.js?v=38';
+import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=38';
+import { today, dayLabel } from '../core/dates.js?v=38';
+import { guessCategory } from '../data/categories.js?v=38';
+import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=38';
+import { tileGradient } from './list.js?v=38';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=38';
+import { toastOk, toastError } from '../ui/toast.js?v=38';
+import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=38';
+import { openQuickPick } from './quickPick.js?v=38';
+import { findDuplicates, sameMoment } from '../core/selectors.js?v=38';
+import { t } from '../core/i18n.js?v=38';
 
 /**
  * openTxForm({ tx })      — правка существующей операции
@@ -37,7 +38,7 @@ export function openTxForm({ tx = null, draft = null, model: restored = null } =
   rerender();
 
   openSheet({
-    title: tx ? 'Операция' : 'Новая операция',
+    title: t(tx ? 'form.title' : 'form.newTitle'),
     body,
     footer: [footer],
   });
@@ -123,8 +124,8 @@ function buildBody(model, rerender) {
   // Тип операции
   nodes.push(
     el('div', { class: 'segmented', style: 'margin-bottom:14px' }, [
-      typeButton('expense', 'Расход', model, rerender),
-      typeButton('income', 'Доход', model, rerender),
+      typeButton('expense', t('form.expense'), model, rerender),
+      typeButton('income', t('form.income'), model, rerender),
     ]),
   );
 
@@ -142,7 +143,7 @@ function buildBody(model, rerender) {
   const updateHint = () => {
     if (model.currency === state.base || !model.amount) { hint.textContent = ''; return; }
     const converted = convert(model.amount, model.currency, state.base, state.rates);
-    hint.textContent = `≈ ${formatAmount(converted, state.base)} по сегодняшнему курсу`;
+    hint.textContent = t('form.converted', { sum: formatAmount(converted, state.base) });
   };
 
   nodes.push(el('div', { class: 'field' }, [amountInput, hint]));
@@ -164,7 +165,7 @@ function buildBody(model, rerender) {
   const pool = state.categories.filter((c) => c.type === model.type && !c.archived);
   nodes.push(
     el('div', { class: 'field' }, [
-      el('label', { class: 'field__label' }, 'Категория'),
+      el('label', { class: 'field__label' }, t('form.category')),
       el('div', { class: 'cat-grid' }, pool.map((cat) =>
         el('button', {
           class: `cat ${model.categoryId === cat.id ? 'is-active' : ''}`,
@@ -186,7 +187,7 @@ function buildBody(model, rerender) {
   nodes.push(
     el('div', { class: 'row' }, [
       el('div', { class: 'field' }, [
-        el('label', { class: 'field__label' }, 'Дата'),
+        el('label', { class: 'field__label' }, t('form.date')),
         el('input', {
           class: 'input',
           type: 'date',
@@ -195,7 +196,7 @@ function buildBody(model, rerender) {
         }),
       ]),
       el('div', { class: 'field' }, [
-        el('label', { class: 'field__label' }, 'Время'),
+        el('label', { class: 'field__label' }, t('form.time')),
         el('input', {
           class: 'input',
           type: 'time',
@@ -209,7 +210,7 @@ function buildBody(model, rerender) {
   // Магазин — во всю ширину: названия бывают длинные
   nodes.push(
     el('div', { class: 'field' }, [
-      el('label', { class: 'field__label' }, 'Магазин'),
+      el('label', { class: 'field__label' }, t('form.merchant')),
       el('input', {
         class: 'input',
         type: 'text',
@@ -223,10 +224,10 @@ function buildBody(model, rerender) {
   // Комментарий
   nodes.push(
     el('div', { class: 'field' }, [
-      el('label', { class: 'field__label' }, 'Комментарий'),
+      el('label', { class: 'field__label' }, t('form.note')),
       el('textarea', {
         class: 'textarea',
-        placeholder: 'Необязательно',
+        placeholder: t('form.notePlaceholder'),
         oninput: (e) => { model.note = e.target.value; },
       }, model.note),
     ]),
@@ -246,23 +247,23 @@ function buildScanRow() {
     el('div', { class: 'scan-row' }, [
       el('button', { class: 'scan-tile', onclick: () => scanFromCamera(toForm) }, [
         el('span', { class: 'scan-tile__ico' }, '📷'),
-        el('span', {}, 'Снять чек'),
+        el('span', {}, t('form.shootReceipt')),
       ]),
       el('button', { class: 'scan-tile', onclick: () => scanFromGallery(toForm) }, [
         el('span', { class: 'scan-tile__ico' }, '🖼'),
-        el('span', {}, 'Из галереи'),
+        el('span', {}, t('scan.gallery')),
       ]),
     ]),
     el('button', {
       class: 'btn btn--ghost btn--wide',
       style: 'margin-top:8px',
       onclick: () => openScanUrlSheet(toForm),
-    }, '🔗  Ссылка из QR-кода'),
+    }, t('scan.urlButton')),
     el('button', {
       class: 'btn btn--ghost btn--wide',
       style: 'margin-top:8px',
       onclick: () => openScanSmsSheet(toForm),
-    }, '💬  SMS от банка'),
+    }, t('scan.smsButton')),
   ]);
 }
 
@@ -282,16 +283,16 @@ function typeButton(value, label, model, rerender) {
 function buildReceiptBlock(model, rerender) {
   if (!model.showItems) {
     return el('div', {}, [
-      el('div', { class: 'divider' }, 'состав покупки'),
+      el('div', { class: 'divider' }, t('form.itemsDivider')),
       el('button', {
         class: 'btn btn--primary btn--wide',
         onclick: () => pickItems(model),
-      }, '⚡  Быстрый выбор товаров'),
+      }, t('form.quickPick')),
       el('button', {
         class: 'btn btn--ghost btn--wide',
         style: 'margin-top:8px',
         onclick: () => { model.showItems = true; model.items.push(emptyItem()); rerender(); },
-      }, '＋  Добавить товары вручную'),
+      }, t('form.addManually')),
     ]);
   }
 
@@ -300,25 +301,25 @@ function buildReceiptBlock(model, rerender) {
 
   return el('div', { style: 'margin-top:18px' }, [
     el('div', { class: 'section__head' }, [
-      el('h2', { class: 'section__title' }, `Товары (${model.items.length})`),
+      el('h2', { class: 'section__title' }, t('form.items', { n: model.items.length })),
       el('div', { style: 'display:flex;gap:6px' }, [
-        el('button', { class: 'chip', onclick: () => pickItems(model) }, '⚡ выбрать'),
+        el('button', { class: 'chip', onclick: () => pickItems(model) }, t('form.pick')),
         el('button', {
           class: 'chip',
           onclick: () => { model.items.push(emptyItem()); rerender(); },
-        }, '＋ строка'),
+        }, t('form.addRow')),
       ]),
     ]),
 
     model.mismatch
       ? el('p', { class: 'hint', style: 'color:var(--yellow)' },
-          'AI не сошёлся: сумма строк отличается от итога на чеке. Проверьте строки.')
+          t('form.mismatch'))
       : null,
 
     el('div', { class: 'items__head' }, [
-      el('span', {}, 'Название'),
-      el('span', {}, 'Кол-во'),
-      el('span', {}, 'Сумма'),
+      el('span', {}, t('form.colName')),
+      el('span', {}, t('form.colQty')),
+      el('span', {}, t('form.colSum')),
       el('span', {}, ''),
     ]),
 
@@ -329,7 +330,7 @@ function buildReceiptBlock(model, rerender) {
     el('div', {
       style: 'display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:13px',
     }, [
-      el('span', { style: 'color:var(--fg-1)' }, 'Сумма строк'),
+      el('span', { style: 'color:var(--fg-1)' }, t('form.itemsSum')),
       el('span', { class: 'num' }, formatAmount(sum, model.currency, { exact: true })),
     ]),
 
@@ -339,7 +340,7 @@ function buildReceiptBlock(model, rerender) {
           style: 'margin-top:10px',
           // Сумму строк переносим как есть: округление здесь стирало копейки чека.
           onclick: () => { model.amount = sum; model.mismatch = false; rerender(); },
-        }, `Подставить ${formatAmount(sum, model.currency, { exact: true })} в итог`)
+        }, t('form.useSum', { sum: formatAmount(sum, model.currency, { exact: true }) }))
       : null,
   ]);
 }
@@ -356,7 +357,7 @@ function itemRow(item, index, model, rerender) {
     class: 'input',
     type: 'text',
     value: item.name,
-    placeholder: 'Название',
+    placeholder: t('form.colName'),
     oninput: (e) => { item.name = e.target.value; },
   });
 
@@ -385,7 +386,7 @@ function itemRow(item, index, model, rerender) {
     totalInput,
     el('button', {
       class: 'item-row__del',
-      'aria-label': 'Удалить строку',
+      'aria-label': t('form.deleteRow'),
       onclick: () => {
         model.items.splice(index, 1);
         if (!model.items.length) model.showItems = false;
@@ -436,16 +437,16 @@ async function persist(model, tx) {
         user: state.user,
         previous: tx,
       });
-      toastOk('Сохранено');
+      toastOk(t('form.saved'));
     } else {
       await createTransaction(payload, { rates: state.rates, user: state.user });
-      toastOk('Добавлено');
+      toastOk(t('form.added'));
     }
     closeSheet();
     return true;
   } catch (error) {
     console.error(error);
-    toastError('Не удалось сохранить');
+    toastError(t('form.saveFailed'));
     return false;
   }
 }
@@ -454,12 +455,12 @@ async function persist(model, tx) {
 function askAboutDuplicate(model, twins, tx = null) {
   const rows = twins.slice(0, 4).map((twin) => el('div', { class: 'list-item' }, [
     el('div', {}, [
-      el('div', {}, twin.merchant || categoryName(twin.categoryId) || 'Без описания'),
+      el('div', {}, twin.merchant || categoryName(twin.categoryId) || t('form.noDescription')),
       el('div', { class: 'list-item__sub' }, [
         `${dayLabel(twin.date)}${twin.time ? ` ${twin.time}` : ''}`,
         twin.note ? ` · ${twin.note}` : '',
         // Та же минута — почти наверняка та же покупка, а не похожая.
-        sameMoment(twin, model) ? el('b', {}, ' · то же время') : null,
+        sameMoment(twin, model) ? el('b', {}, t('dup.sameTime')) : null,
       ]),
     ]),
     el('span', { class: 'num' }, formatAmount(twin.amount, twin.currency, { exact: true })),
@@ -468,17 +469,15 @@ function askAboutDuplicate(model, twins, tx = null) {
   const exact = twins.some((twin) => sameMoment(twin, model));
 
   openSheet({
-    title: exact ? '⚠️ Это уже внесено' : '⚠️ Похоже на повтор',
+    title: t(exact ? 'dup.titleExact' : 'dup.formTitleMaybe'),
     body: [
       el('div', { class: 'alert' },
         exact
-          ? 'Та же сумма в ту же минуту — почти наверняка эта покупка уже записана.'
-          : twins.length === 1
-            ? 'Такая операция уже записана.'
-            : `Таких операций уже ${twins.length}.`),
+          ? t('dup.formExact')
+          : twins.length === 1 ? t('dup.formOne') : t('dup.formMany', { n: twins.length })),
       ...rows,
       el('p', { class: 'hint', style: 'margin-top:12px' },
-        'Если это разные покупки — добавляйте, ничего страшного.'),
+        t('dup.formOk')),
     ],
     // Безопасный выбор — основной: по умолчанию возвращаемся к форме.
     footer: [
@@ -488,11 +487,11 @@ function askAboutDuplicate(model, twins, tx = null) {
           model.duplicateConfirmed = true;
           await persist(model, tx);
         },
-      }, 'Всё равно добавить'),
+      }, t('dup.addAnyway')),
       el('button', {
         class: 'btn btn--primary',
         onclick: () => { closeSheet(); openTxForm({ tx, model }); },
-      }, 'Вернуться'),
+      }, t('dup.back')),
     ],
   });
 }
@@ -500,11 +499,11 @@ function askAboutDuplicate(model, twins, tx = null) {
 const categoryName = (id) => state.categories.find((c) => c.id === id)?.name || '';
 
 function buildFooter(model, tx) {
-  const save = el('button', { class: 'btn btn--primary' }, tx ? 'Сохранить' : 'Добавить');
+  const save = el('button', { class: 'btn btn--primary' }, t(tx ? 'common.save' : 'common.add'));
 
   save.addEventListener('click', async () => {
-    if (!model.amount) { toastError('Введите сумму'); return; }
-    if (!model.categoryId) { toastError('Выберите категорию'); return; }
+    if (!model.amount) { toastError(t('form.amountRequired')); return; }
+    if (!model.categoryId) { toastError(t('form.categoryRequired')); return; }
 
     // Двойной ввод — частая ошибка, поэтому предупреждаем, но не запрещаем.
     const twins = findDuplicates(state, model, { excludeId: tx?.id || null });
@@ -526,19 +525,19 @@ function buildFooter(model, tx) {
       onclick: () => {
         closeSheet();
         confirmSheet({
-          title: 'Удалить операцию?',
-          text: 'Действие необратимо.',
+          title: t('form.deleteTitle'),
+          text: t('form.deleteText'),
           onConfirm: async () => {
             try {
               await deleteTransaction(tx.id, state.user);
-              toastOk('Удалено');
+              toastOk(t('form.deleted'));
             } catch {
-              toastError('Не удалось удалить');
+              toastError(t('form.deleteFailed'));
             }
           },
         });
       },
-    }, 'Удалить'),
+    }, t('common.delete')),
     save,
   ];
 }

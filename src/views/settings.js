@@ -1,18 +1,18 @@
 /** Настройки: профиль, участники, валюта, курсы, категории. */
 
-import { el, render } from '../core/dom.js?v=37';
-import { state, set } from '../core/store.js?v=37';
-import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=37';
-import { formatAmount, convert } from '../core/money.js?v=37';
-import { logout } from '../services/auth.js?v=37';
+import { el, render } from '../core/dom.js?v=38';
+import { state, set } from '../core/store.js?v=38';
+import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=38';
+import { formatAmount, convert } from '../core/money.js?v=38';
+import { logout } from '../services/auth.js?v=38';
 import {
   inviteLink, resetInviteLink, removeMember, leaveFamily, isOwner,
-} from '../services/account.js?v=37';
-import { refreshRates } from '../services/rates.js?v=37';
-import { saveCategory, deleteCategory } from '../services/transactions.js?v=37';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=37';
-import { section } from '../ui/section.js?v=37';
-import { toastOk, toastError } from '../ui/toast.js?v=37';
+} from '../services/account.js?v=38';
+import { refreshRates } from '../services/rates.js?v=38';
+import { saveCategory, deleteCategory } from '../services/transactions.js?v=38';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=38';
+import { section } from '../ui/section.js?v=38';
+import { toastOk, toastError } from '../ui/toast.js?v=38';
 
 const PALETTE = ['#2dd98a', '#ff5b5b', '#5b9fff', '#ffb347', '#ff7eb3', '#3de8d0', '#8a8a94'];
 
@@ -34,25 +34,25 @@ function build(draw) {
         ? el('img', { src: state.user.photoURL, width: 42, height: 42, style: 'border-radius:50%' })
         : el('div', { class: 'tx__ico' }, '👤'),
       el('div', { style: 'flex:1;min-width:0' }, [
-        el('div', {}, state.profile?.name || state.user?.displayName || 'Без имени'),
+        el('div', {}, state.profile?.name || state.user?.displayName || t('settings.noName')),
         el('div', { class: 'list-item__sub' }, state.user?.email || ''),
       ]),
-      el('button', { class: 'chip', onclick: () => logout() }, 'Выйти'),
+      el('button', { class: 'chip', onclick: () => logout() }, t('settings.signOut')),
     ]),
 
-    section('Валюта сводных сумм', [
+    languageSection(draw),
+
+    section(t('settings.baseCurrency'), [
       el('div', { class: 'segmented' }, CURRENCY_CODES.map((code) =>
         el('button', {
           class: state.base === code ? 'is-active' : '',
           onclick: () => { set({ base: code }); draw(); },
         }, code),
       )),
-      el('p', { class: 'hint' },
-        'Операции хранятся в своей валюте. Итоги и графики показываются в выбранной здесь — ' +
-        'по курсу, зафиксированному в момент добавления каждой операции.'),
+      el('p', { class: 'hint' }, t('settings.baseCurrencyHint')),
     ]),
 
-    section('Курсы валют', [
+    section(t('settings.rates'), [
       el('div', { class: 'card' }, [
         ...CURRENCIES.filter((c) => c.code !== state.base).map((c) =>
           el('div', { class: 'legend-row' }, [
@@ -62,8 +62,10 @@ function build(draw) {
           ]),
         ),
         el('p', { class: 'hint' }, state.ratesFetchedAt
-          ? `Обновлено: ${new Date(state.ratesFetchedAt).toLocaleString('ru-RU')}`
-          : 'Используются запасные курсы — источник недоступен'),
+          ? t('settings.ratesUpdated', {
+              when: new Date(state.ratesFetchedAt).toLocaleString(intlLocale()),
+            })
+          : t('settings.ratesFallback')),
       ]),
     ], el('button', {
       class: 'chip',
@@ -72,27 +74,27 @@ function build(draw) {
         try {
           const fresh = await refreshRates();
           set({ rates: fresh.rates, ratesFetchedAt: fresh.fetchedAt });
-          toastOk('Курсы обновлены');
+          toastOk(t('settings.ratesOk'));
         } catch {
-          toastError('Не удалось обновить курсы');
+          toastError(t('settings.ratesFailed'));
         }
         draw();
       },
-    }, 'Обновить')),
+    }, t('common.refresh'))),
 
-    section(`Семья · ${members.length}`, [
+    section(t('family.title', { n: members.length }), [
       ...members.map(([uid, member]) => memberRow(uid, member, owner)),
       el('p', { class: 'hint' }, owner
-        ? 'Пошлите ссылку-приглашение мужу, жене или кому угодно: кто по ней войдёт, '
-          + 'окажется в этом бюджете. Убрать участника может только хозяин бюджета.'
-        : `Бюджет ведёт ${ownerName()}. Состав участников меняет он — вы можете только выйти сами.`),
+        ? t('family.ownerHint')
+        : t('family.guestHint', { name: ownerName() })),
     ], owner
-      ? el('button', { class: 'chip', onclick: () => openInviteSheet() }, '🔗 пригласить')
+      ? el('button', { class: 'chip', onclick: () => openInviteSheet() }, `🔗 ${t('family.invite')}`)
       : null),
 
-    section('Категории', ['expense', 'income'].map((type) =>
+    section(t('settings.categories'), ['expense', 'income'].map((type) =>
       el('div', {}, [
-        el('div', { class: 'tx-group__date' }, type === 'expense' ? 'Расходы' : 'Доходы'),
+        el('div', { class: 'tx-group__date' },
+          t(type === 'expense' ? 'settings.expenses' : 'settings.incomes')),
         ...state.categories.filter((c) => c.type === type).map((cat) =>
           el('button', {
             class: 'list-item',
@@ -106,7 +108,12 @@ function build(draw) {
           ]),
         ),
       ]),
-    ), el('button', { class: 'chip', onclick: () => openCategoryEditor(null, draw) }, '＋ добавить')),
+    ), el('button', {
+      class: 'chip',
+      onclick: () => openCategoryEditor(null, draw),
+    }, `＋ ${t('common.add')}`)),
+
+    legalSection(),
 
     el('p', { class: 'hint', style: 'margin-top:26px;text-align:center' }, t('settings.footer')),
   ];
@@ -198,12 +205,12 @@ function openCategoryEditor(cat, onDone) {
         class: model.type === type ? 'is-active' : '',
         dataset: { value: type },
         onclick: () => { model.type = type; draw(); },
-      }, type === 'expense' ? 'Расход' : 'Доход'),
+      }, t(type === 'expense' ? 'form.expense' : 'form.income')),
     )),
 
     el('div', { class: 'row', style: 'margin-bottom:14px' }, [
       el('div', { style: 'flex:0 0 76px' }, [
-        el('label', { class: 'field__label' }, 'Значок'),
+        el('label', { class: 'field__label' }, t('cat.icon')),
         el('input', {
           class: 'input',
           style: 'text-align:center;font-size:20px',
@@ -213,17 +220,17 @@ function openCategoryEditor(cat, onDone) {
         }),
       ]),
       el('div', {}, [
-        el('label', { class: 'field__label' }, 'Название'),
+        el('label', { class: 'field__label' }, t('cat.name')),
         el('input', {
           class: 'input',
           value: model.name,
-          placeholder: 'Например, Продукты',
+          placeholder: t('cat.namePlaceholder'),
           oninput: (e) => { model.name = e.target.value; },
         }),
       ]),
     ]),
 
-    el('label', { class: 'field__label' }, 'Цвет'),
+    el('label', { class: 'field__label' }, t('cat.color')),
     el('div', { class: 'chip-row' }, PALETTE.map((color) =>
       el('button', {
         class: 'chip',
@@ -241,39 +248,39 @@ function openCategoryEditor(cat, onDone) {
           onclick: () => {
             closeSheet();
             confirmSheet({
-              title: 'Удалить категорию?',
-              text: 'Операции сохранятся, но потеряют привязку к этой категории.',
+              title: t('cat.deleteTitle'),
+              text: t('cat.deleteText'),
               onConfirm: async () => {
                 await deleteCategory(cat.id);
-                toastOk('Категория удалена');
+                toastOk(t('cat.deleted'));
                 onDone();
               },
             });
           },
-        }, 'Удалить')
+        }, t('common.delete'))
       : null,
 
     el('button', {
       class: 'btn btn--primary',
       onclick: async () => {
         const name = model.name.trim();
-        if (!name) { toastError('Введите название'); return; }
+        if (!name) { toastError(t('cat.nameRequired')); return; }
 
         const id = model.id || slug(name);
         const { id: _skip, ...data } = model;
         try {
           await saveCategory(id, { ...data, name });
           closeSheet();
-          toastOk('Сохранено');
+          toastOk(t('bills.saved'));
           onDone();
         } catch {
-          toastError('Не удалось сохранить');
+          toastError(t('bills.saveFailed'));
         }
       },
-    }, 'Сохранить'),
+    }, t('common.save')),
   ].filter(Boolean);
 
-  openSheet({ title: cat ? 'Категория' : 'Новая категория', body, footer });
+  openSheet({ title: t(cat ? 'cat.title' : 'cat.new'), body, footer });
 }
 
 /** Транслитерация в id документа: 'Кафе у дома' → 'kafe-u-doma-482'. */

@@ -3,19 +3,20 @@
  * оплаченные отмечены галочкой, забытые горят красным.
  */
 
-import { el, render } from '../core/dom.js?v=37';
-import { state, set } from '../core/store.js?v=37';
-import { CURRENCY_CODES } from '../config.js?v=37';
-import { formatAmount, parseAmount, currencyInfo, convert } from '../core/money.js?v=37';
-import { monthLabel, monthKey, today } from '../core/dates.js?v=37';
-import { billsForMonth } from '../core/selectors.js?v=37';
-import { createBill, updateBill, deleteBill } from '../services/bills.js?v=37';
-import { createTransaction, deleteTransaction } from '../services/transactions.js?v=37';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=37';
-import { toastOk, toastError } from '../ui/toast.js?v=37';
-import { openTxForm } from './txForm.js?v=37';
-import { tileGradient } from './list.js?v=37';
-import { section } from '../ui/section.js?v=37';
+import { el, render } from '../core/dom.js?v=38';
+import { state, set } from '../core/store.js?v=38';
+import { CURRENCY_CODES } from '../config.js?v=38';
+import { formatAmount, parseAmount, currencyInfo, convert } from '../core/money.js?v=38';
+import { monthLabel, monthKey, today } from '../core/dates.js?v=38';
+import { billsForMonth } from '../core/selectors.js?v=38';
+import { createBill, updateBill, deleteBill } from '../services/bills.js?v=38';
+import { createTransaction, deleteTransaction } from '../services/transactions.js?v=38';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=38';
+import { toastOk, toastError } from '../ui/toast.js?v=38';
+import { openTxForm } from './txForm.js?v=38';
+import { tileGradient } from './list.js?v=38';
+import { section } from '../ui/section.js?v=38';
+import { t } from '../core/i18n.js?v=38';
 
 export function renderBills() {
   const rows = billsForMonth(state);
@@ -25,14 +26,14 @@ export function renderBills() {
     render(container, [
       el('div', { class: 'empty' }, [
         el('span', { class: 'empty__ico' }, '🧾'),
-        el('div', {}, 'Регулярных платежей пока нет'),
+        el('div', {}, t('bills.empty')),
         el('div', { class: 'hint' },
-          'Электричество, интернет, телефон, учёба — заведите один раз, и каждый месяц приложение напомнит.'),
+          t('bills.emptyHint')),
       ]),
       el('button', {
         class: 'btn btn--primary btn--wide',
         onclick: () => openBillForm(),
-      }, '＋  Добавить платёж'),
+      }, t('bills.addFirst')),
     ]);
     return container;
   }
@@ -54,16 +55,14 @@ export function renderBills() {
       // Группировка по категориям: коммунальные отдельно от услуг и учёбы
       ...groupByCategory(rows).map(({ category, list, total }) => el('div', {}, [
         el('div', { class: 'bills__group' }, [
-          el('span', {}, `${category?.icon || '•'} ${category?.name || 'Без категории'}`),
+          el('span', {}, `${category?.icon || '•'} ${category?.name || t('tx.noCategory')}`),
           el('span', { class: 'num' }, formatAmount(total, state.base)),
         ]),
         el('div', { class: 'bills' }, list.map((row) => billRow(row))),
       ])),
 
-      el('p', { class: 'hint' },
-        'Галочка — оплачено в этом месяце. Нажатие на строку открывает оплату, '
-        + 'шестерёнка — настройки счёта.'),
-    ], el('button', { class: 'chip', onclick: () => openBillForm() }, '＋ платёж')),
+      el('p', { class: 'hint' }, t('bills.hint')),
+    ], el('button', { class: 'chip', onclick: () => openBillForm() }, t('bills.add'))),
   ]);
 
   return container;
@@ -118,7 +117,7 @@ function billRow({ bill, tx, paid, expected, tracked }) {
 
     el('button', {
       class: 'bill__edit',
-      'aria-label': 'Настройки платежа',
+      'aria-label': t('bills.settingsLabel'),
       onclick: () => openBillForm(bill),
     }, '⚙'),
   ]);
@@ -126,8 +125,10 @@ function billRow({ bill, tx, paid, expected, tracked }) {
 
 function billMeta(bill, paid, tx, overdue) {
   if (paid) return `оплачено${tx?.date ? ` · ${tx.date.slice(8)}.${tx.date.slice(5, 7)}` : ''}`;
-  if (overdue) return bill.dueDay ? `не оплачено · до ${bill.dueDay} числа` : 'не оплачено';
-  return bill.fixed ? 'постоянная сумма' : 'сумма меняется';
+  if (overdue) {
+    return bill.dueDay ? t('bills.unpaidBy', { day: bill.dueDay }) : t('bills.unpaid');
+  }
+  return t(bill.fixed ? 'bills.fixedSum' : 'bills.varyingSum');
 }
 
 // ---------------------------------------------------------------- оплата
@@ -158,7 +159,7 @@ function payBill(bill, expected) {
     return;
   }
 
-  const write = el('button', { class: 'btn btn--primary' }, 'Записать оплату');
+  const write = el('button', { class: 'btn btn--primary' }, t('bills.pay'));
   write.addEventListener('click', async () => {
     write.disabled = true;
     try {
@@ -167,7 +168,7 @@ function payBill(bill, expected) {
       closeSheet();
     } catch (error) {
       console.error(error);
-      toastError('Не удалось записать оплату');
+      toastError(t('bills.payFailed'));
       write.disabled = false;
     }
   });
@@ -183,11 +184,11 @@ function payBill(bill, expected) {
       el('button', {
         class: 'btn btn--ghost',
         onclick: () => closeSheet(),
-      }, 'Отмена'),
+      }, t('common.cancel')),
       el('button', {
         class: 'btn btn--ghost',
         onclick: () => openTxForm({ model }),
-      }, 'Другая сумма'),
+      }, t('bills.otherSum')),
       write,
     ],
   });
@@ -209,17 +210,17 @@ function openPaidBill(bill, tx) {
         onclick: async () => {
           try {
             await deleteTransaction(tx.id, state.user);
-            toastOk('Оплата отменена');
+            toastOk(t('bills.paymentCancelled'));
             closeSheet();
           } catch {
-            toastError('Не удалось отменить');
+            toastError(t('bills.cancelFailed'));
           }
         },
-      }, 'Отменить оплату'),
+      }, t('bills.cancelPayment')),
       el('button', {
         class: 'btn btn--primary',
         onclick: () => openTxForm({ tx }),
-      }, 'Изменить'),
+      }, t('bills.edit')),
     ],
   });
 }
@@ -254,21 +255,21 @@ export function openBillForm(bill = null) {
   const rerender = () => render(body, buildBillBody(model, rerender));
   rerender();
 
-  const save = el('button', { class: 'btn btn--primary' }, bill ? 'Сохранить' : 'Добавить');
+  const save = el('button', { class: 'btn btn--primary' }, t(bill ? 'common.save' : 'common.add'));
   save.addEventListener('click', async () => {
-    if (!model.name.trim()) { toastError('Введите название'); return; }
-    if (!model.categoryId) { toastError('Выберите категорию'); return; }
-    if (model.fixed && !model.amount) { toastError('Введите постоянную сумму'); return; }
+    if (!model.name.trim()) { toastError(t('bills.nameRequired')); return; }
+    if (!model.categoryId) { toastError(t('bills.categoryRequired')); return; }
+    if (model.fixed && !model.amount) { toastError(t('bills.amountRequired')); return; }
 
     save.disabled = true;
     try {
       if (bill) await updateBill(bill.id, model);
       else await createBill(model);
-      toastOk('Сохранено');
+      toastOk(t('bills.saved'));
       closeSheet();
     } catch (error) {
       console.error(error);
-      toastError('Не удалось сохранить');
+      toastError(t('bills.saveFailed'));
       save.disabled = false;
     }
   });
@@ -280,24 +281,24 @@ export function openBillForm(bill = null) {
           onclick: () => {
             closeSheet();
             confirmSheet({
-              title: 'Удалить платёж?',
-              text: 'Записанные оплаты останутся в операциях.',
+              title: t('bills.deleteTitle'),
+              text: t('bills.deleteText'),
               onConfirm: async () => {
                 try {
                   await deleteBill(bill.id);
-                  toastOk('Удалено');
+                  toastOk(t('bills.deleted'));
                 } catch {
-                  toastError('Не удалось удалить');
+                  toastError(t('bills.deleteFailed'));
                 }
               },
             });
           },
-        }, 'Удалить'),
+        }, t('common.delete')),
         save,
       ]
     : [save];
 
-  openSheet({ title: bill ? 'Платёж' : 'Новый платёж', body, footer });
+  openSheet({ title: t(bill ? 'bills.one' : 'bills.new'), body, footer });
 }
 
 function buildBillBody(model, rerender) {
@@ -305,18 +306,18 @@ function buildBillBody(model, rerender) {
 
   return [
     el('div', { class: 'field' }, [
-      el('label', { class: 'field__label' }, 'Название'),
+      el('label', { class: 'field__label' }, t('bills.name')),
       el('input', {
         class: 'input',
         type: 'text',
         value: model.name,
-        placeholder: 'Электричество',
+        placeholder: t('bills.namePlaceholder'),
         oninput: (e) => { model.name = e.target.value; },
       }),
     ]),
 
     el('div', { class: 'field' }, [
-      el('label', { class: 'field__label' }, 'Категория'),
+      el('label', { class: 'field__label' }, t('bills.category')),
       el('div', { class: 'cat-grid' }, pool.map((cat) =>
         el('button', {
           class: `cat ${model.categoryId === cat.id ? 'is-active' : ''}`,
@@ -331,7 +332,7 @@ function buildBillBody(model, rerender) {
     ]),
 
     el('div', { class: 'field' }, [
-      el('label', { class: 'field__label' }, 'Валюта'),
+      el('label', { class: 'field__label' }, t('bills.currency')),
       el('div', { class: 'segmented' }, CURRENCY_CODES.map((code) =>
         el('button', {
           class: model.currency === code ? 'is-active' : '',
@@ -346,16 +347,16 @@ function buildBillBody(model, rerender) {
       onclick: () => { model.fixed = !model.fixed; rerender(); },
     }, [
       el('span', {}, [
-        el('span', { class: 'toggle__title' }, 'Сумма не меняется'),
+        el('span', { class: 'toggle__title' }, t('bills.fixedTitle')),
         el('span', { class: 'toggle__sub' },
-          'Каждый месяц одинаковая — оплата одним нажатием'),
+          t('bills.fixedSub')),
       ]),
       el('span', { class: 'toggle__knob' }),
     ]),
 
     el('div', { class: 'field', style: 'margin-top:14px' }, [
       el('label', { class: 'field__label' },
-        model.fixed ? 'Постоянная сумма' : 'Примерная сумма (подставится при оплате)'),
+        t(model.fixed ? 'bills.fixedLabel' : 'bills.approxLabel')),
       el('input', {
         class: 'input',
         type: 'text',
@@ -368,7 +369,7 @@ function buildBillBody(model, rerender) {
 
     el('div', { class: 'row' }, [
       el('div', {}, [
-        el('label', { class: 'field__label' }, 'Платить до числа'),
+        el('label', { class: 'field__label' }, t('bills.dueDay')),
         el('input', {
           class: 'input',
           type: 'number',
@@ -380,7 +381,7 @@ function buildBillBody(model, rerender) {
         }),
       ]),
       el('div', {}, [
-        el('label', { class: 'field__label' }, 'Следить с месяца'),
+        el('label', { class: 'field__label' }, t('bills.startMonth')),
         el('input', {
           class: 'input',
           type: 'month',
@@ -396,8 +397,8 @@ function buildBillBody(model, rerender) {
       onclick: () => { model.active = model.active === false; rerender(); },
     }, [
       el('span', {}, [
-        el('span', { class: 'toggle__title' }, 'Напоминать каждый месяц'),
-        el('span', { class: 'toggle__sub' }, 'Выключите, если платёж закончился'),
+        el('span', { class: 'toggle__title' }, t('bills.remindTitle')),
+        el('span', { class: 'toggle__sub' }, t('bills.remindSub')),
       ]),
       el('span', { class: 'toggle__knob' }),
     ]),

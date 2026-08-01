@@ -40,11 +40,11 @@ import {
   writeBatch,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=37';
-import { getFamilyId } from '../core/session.js?v=37';
-import { DEFAULT_CATEGORIES } from '../data/categories.js?v=37';
-import { amountsInAllCurrencies } from '../core/money.js?v=37';
-import { monthOf } from '../core/dates.js?v=37';
+import { db } from '../core/firebase.js?v=38';
+import { getFamilyId } from '../core/session.js?v=38';
+import { defaultCategories } from '../data/categories.js?v=38';
+import { amountsInAllCurrencies } from '../core/money.js?v=38';
+import { monthOf } from '../core/dates.js?v=38';
 
 const txCollection = () => collection(db, 'families', getFamilyId(), 'transactions');
 const catCollection = () => collection(db, 'families', getFamilyId(), 'categories');
@@ -77,7 +77,7 @@ export async function seedCategoriesIfEmpty() {
   if (!snap.empty) return false;
 
   const batch = writeBatch(db);
-  for (const { id, ...data } of DEFAULT_CATEGORIES) {
+  for (const { id, ...data } of defaultCategories()) {
     batch.set(doc(catCollection(), id), data);
   }
   await batch.commit();
@@ -98,17 +98,17 @@ export async function syncNewCategories() {
   const existing = new Set(catSnap.docs.map((d) => d.id));
 
   // Первый запуск на старой базе: считаем уже показанным всё, что там лежит.
-  const fresh = DEFAULT_CATEGORIES.filter((c) => !delivered.has(c.id) && !existing.has(c.id));
+  const fresh = defaultCategories().filter((c) => !delivered.has(c.id) && !existing.has(c.id));
   if (!fresh.length) {
     if (!seedSnap.exists()) {
-      await setDoc(seedRef, { ids: DEFAULT_CATEGORIES.map((c) => c.id) });
+      await setDoc(seedRef, { ids: defaultCategories().map((c) => c.id) });
     }
     return 0;
   }
 
   const batch = writeBatch(db);
   for (const { id, ...data } of fresh) batch.set(doc(catCollection(), id), data);
-  batch.set(seedRef, { ids: DEFAULT_CATEGORIES.map((c) => c.id) });
+  batch.set(seedRef, { ids: defaultCategories().map((c) => c.id) });
   await batch.commit();
 
   return fresh.length;
@@ -198,7 +198,7 @@ export async function createTransaction(input, { rates, user }) {
  */
 async function shareItemPrices(txId, tx, user) {
   try {
-    const { publishPrices } = await import('./prices.js?v=37');
+    const { publishPrices } = await import('./prices.js?v=38');
     await publishPrices(txId, tx, user.uid);
   } catch (error) {
     console.error('Не удалось обновить базу цен', error);
@@ -233,7 +233,7 @@ export async function deleteTransaction(id, user = null) {
 
   if (!user) return;
   try {
-    const { removePrices } = await import('./prices.js?v=37');
+    const { removePrices } = await import('./prices.js?v=38');
     await removePrices(id, user.uid);
   } catch (error) {
     console.error('Не удалось убрать цены удалённой операции', error);

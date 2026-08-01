@@ -10,7 +10,7 @@
  * где сторона задана жёстко (см. [dir="rtl"] в стилях).
  */
 
-import { DICT } from '../data/i18n.js?v=37';
+import { DICT } from '../data/i18n.js?v=38';
 
 export const LOCALES = [
   { code: 'ru', name: 'Русский', dir: 'ltr' },
@@ -65,8 +65,8 @@ export function applyDocumentLocale() {
 /**
  * Перевод по ключу.
  *
- * t('member.leave')
- * t('family.count', { n: 3 })  — подстановки пишутся как {n}
+ * t('family.leave')
+ * t('family.title', { n: 3 })  — подстановки пишутся как {n}
  *
  * Ключа нет в словаре — возвращаем сам ключ: в интерфейсе это заметно сразу,
  * в отличие от пустой строки, и понятно, что именно не переведено.

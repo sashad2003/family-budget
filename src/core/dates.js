@@ -1,14 +1,20 @@
 /** Работа с датами. Дата транзакции хранится строкой 'YYYY-MM-DD' — без часовых поясов. */
 
-const MONTHS_GEN = [
-  'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
-  'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря',
-];
+import { t, intlLocale } from './i18n.js?v=38';
 
-const MONTHS_NOM = [
-  'январь', 'февраль', 'март', 'апрель', 'май', 'июнь',
-  'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь',
-];
+/**
+ * Названия месяцев берём у браузера, а не держим списком.
+ *
+ * Их три набора на три языка, и в русском ещё две формы: «январь» в шапке и
+ * «5 января» в дате. Intl знает всё это сам и всегда согласует форму с тем,
+ * что рядом, — списки пришлось бы держать и править вручную.
+ */
+function monthName(year, month, withDay = null) {
+  const date = new Date(year, month - 1, withDay ?? 1);
+  return new Intl.DateTimeFormat(intlLocale(), withDay
+    ? { day: 'numeric', month: 'long' }
+    : { month: 'long' }).format(date);
+}
 
 const pad = (n) => String(n).padStart(2, '0');
 
@@ -37,25 +43,23 @@ export function shiftMonth(key, delta) {
   return monthKey(date);
 }
 
-/** 'январь 2026' */
+/** 'январь 2026' — год пишем только у прошлых лет, в текущем он лишний. */
 export function monthLabel(key) {
   const [y, m] = key.split('-').map(Number);
-  const now = new Date();
-  const label = MONTHS_NOM[m - 1];
-  return y === now.getFullYear() ? label : `${label} ${y}`;
+  const label = monthName(y, m);
+  return y === new Date().getFullYear() ? label : `${label} ${y}`;
 }
 
 /** '5 февраля', 'сегодня', 'вчера' */
 export function dayLabel(isoStr) {
-  const t = today();
-  if (isoStr === t) return 'сегодня';
+  if (isoStr === today()) return t('date.today');
 
   const yesterday = new Date();
   yesterday.setDate(yesterday.getDate() - 1);
-  if (isoStr === isoDate(yesterday)) return 'вчера';
+  if (isoStr === isoDate(yesterday)) return t('date.yesterday');
 
-  const [, m, d] = isoStr.split('-').map(Number);
-  return `${d} ${MONTHS_GEN[m - 1]}`;
+  const [y, m, d] = isoStr.split('-').map(Number);
+  return monthName(y, m, d);
 }
 
 /** Границы месяца включительно: ['2026-01-01', '2026-01-31'] */

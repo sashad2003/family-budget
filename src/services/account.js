@@ -39,8 +39,9 @@ import {
   limit,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=37';
-import { ADMIN_EMAILS, LEGACY_FAMILY_ID, TRIAL_DAYS } from '../config.js?v=37';
+import { db } from '../core/firebase.js?v=38';
+import { ADMIN_EMAILS, LEGACY_FAMILY_ID, TRIAL_DAYS } from '../config.js?v=38';
+import { t } from '../core/i18n.js?v=38';
 
 const userRef = (uid) => doc(db, 'users', uid);
 const codeRef = (code) => doc(db, 'inviteCodes', String(code));
@@ -113,7 +114,7 @@ async function createProfile(user, { familyId, name, phone, marketing }) {
 /** Своя семья: создатель сразу и владелец, и единственный участник. */
 async function createFamily(user, name) {
   const ref = await addDoc(collection(db, 'families'), {
-    title: `Бюджет ${String(name || '').split(' ')[0] || 'семьи'}`,
+    title: t('account.defaultBudget', { name: String(name || '').split(' ')[0] || '' }).trim(),
     ownerUid: user.uid,
     memberUids: [user.uid],
     members: { [user.uid]: profileOf(user, name) },
@@ -136,7 +137,7 @@ export async function inviteByCode(code) {
  */
 export async function joinByCode(user, profile, code) {
   const invite = await inviteByCode(code);
-  if (!invite) throw new Error('Ссылка-приглашение больше не действует');
+  if (!invite) throw new Error(t('invite.expired'));
 
   const already = (profile.familyIds || [profile.familyId]).includes(invite.familyId);
 
@@ -173,7 +174,7 @@ export async function listFamilies(profile) {
 
 async function loadFamily(familyId) {
   const snap = await getDoc(familyRef(familyId));
-  if (!snap.exists()) throw new Error('Семья не найдена. Напишите в поддержку.');
+  if (!snap.exists()) throw new Error(t('account.familyMissing'));
 
   const family = { id: snap.id, ...snap.data() };
 
@@ -199,7 +200,7 @@ export function isOwner(family, uid) {
 
 function profileOf(user, name) {
   return {
-    name: String(name || '').trim() || user.displayName || user.email || 'Без имени',
+    name: String(name || '').trim() || user.displayName || user.email || t('settings.noName'),
     email: user.email || '',
     photo: user.photoURL || '',
   };
@@ -232,7 +233,7 @@ async function createCode(family) {
   const code = randomCode();
   await setDoc(codeRef(code), {
     familyId: family.id,
-    title: family.name || family.title || 'Семейный бюджет',
+    title: family.name || family.title || t('app.title'),
     createdAt: serverTimestamp(),
   });
   await updateDoc(familyRef(family.id), { joinCode: code });
@@ -269,7 +270,7 @@ export async function removeMember(familyId, uid) {
  */
 export async function leaveFamily(user, profile, familyId) {
   const rest = (profile.familyIds || [profile.familyId]).filter((id) => id !== familyId);
-  if (!rest.length) throw new Error('Это ваш единственный бюджет — выйти из него нельзя');
+  if (!rest.length) throw new Error(t('family.lastBudget'));
 
   await removeMember(familyId, user.uid);
   await updateDoc(userRef(user.uid), {

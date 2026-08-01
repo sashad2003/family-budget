@@ -1,15 +1,15 @@
 /** Обзор: баланс месяца, доходы/расходы, разбивка по категориям, последние операции. */
 
-import { el } from '../core/dom.js?v=37';
-import { state } from '../core/store.js?v=37';
-import { formatAmount } from '../core/money.js?v=37';
-import { monthTransactions, totals, byCategory, unpaidBills } from '../core/selectors.js?v=37';
-import { set } from '../core/store.js?v=37';
-import { txRow, tileGradient } from './list.js?v=37';
-import { openTxForm } from './txForm.js?v=37';
-import { openScanSheet } from './scan.js?v=37';
-import { section } from '../ui/section.js?v=37';
-import { t } from '../core/i18n.js?v=37';
+import { el } from '../core/dom.js?v=38';
+import { state } from '../core/store.js?v=38';
+import { formatAmount } from '../core/money.js?v=38';
+import { monthTransactions, totals, byCategory, unpaidBills } from '../core/selectors.js?v=38';
+import { set } from '../core/store.js?v=38';
+import { txRow, tileGradient } from './list.js?v=38';
+import { openTxForm } from './txForm.js?v=38';
+import { openScanSheet } from './scan.js?v=38';
+import { section } from '../ui/section.js?v=38';
+import { t } from '../core/i18n.js?v=38';
 
 export function renderDashboard() {
   const list = monthTransactions(state);
@@ -21,13 +21,13 @@ export function renderDashboard() {
       billsReminder(),
       el('div', { class: 'empty' }, [
         el('span', { class: 'empty__ico' }, '🧾'),
-        el('div', {}, 'В этом месяце пока пусто'),
-        el('div', { class: 'hint' }, 'Добавьте операцию или отсканируйте чек — данные появятся здесь'),
+        el('div', {}, t('dash.empty')),
+        el('div', { class: 'hint' }, t('dash.emptyHint')),
         el('button', {
           class: 'btn btn--ghost',
           style: 'margin-top:18px',
           onclick: () => openScanSheet((draft) => openTxForm({ draft })),
-        }, '📷  Отсканировать чек'),
+        }, t('dash.scan')),
       ]),
     ];
   }
@@ -67,14 +67,14 @@ function billsReminder() {
       `Не оплачено · ${unpaid.length}`),
     el('div', { style: 'font-size:16px;line-height:1.4' },
       unpaid.map((row) => row.bill.name).join(', ')),
-    el('div', { class: 'hint', style: 'margin-top:6px' }, 'Нажмите, чтобы записать оплату'),
+    el('div', { class: 'hint', style: 'margin-top:6px' }, t('dash.tapToPay')),
   ]);
 }
 
 function balanceBlock(balance, income, expense) {
   return el('div', {}, [
     el('div', { class: 'card balance' }, [
-      el('div', { class: 'balance__label' }, 'Баланс за месяц'),
+      el('div', { class: 'balance__label' }, t('dash.balance')),
       el('div', {
         class: 'balance__value num',
         style: `color:${balance < 0 ? 'var(--expense)' : 'var(--fg-0)'}`,
@@ -84,11 +84,11 @@ function balanceBlock(balance, income, expense) {
 
     el('div', { class: 'stat-row' }, [
       el('div', { class: 'stat stat--in' }, [
-        el('div', { class: 'stat__label' }, [el('span', { class: 'stat__dot' }), 'Доходы']),
+        el('div', { class: 'stat__label' }, [el('span', { class: 'stat__dot' }), t('charts.income')]),
         el('div', { class: 'stat__value num' }, formatAmount(income, state.base)),
       ]),
       el('div', { class: 'stat stat--out' }, [
-        el('div', { class: 'stat__label' }, [el('span', { class: 'stat__dot' }), 'Расходы']),
+        el('div', { class: 'stat__label' }, [el('span', { class: 'stat__dot' }), t('charts.expense')]),
         el('div', { class: 'stat__value num' }, formatAmount(expense, state.base)),
       ]),
     ]),

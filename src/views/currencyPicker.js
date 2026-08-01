@@ -1,15 +1,16 @@
 /** Выбор валюты списком — перебор по кругу неудобен, когда валют больше двух. */
 
-import { el } from '../core/dom.js?v=37';
-import { state, set } from '../core/store.js?v=37';
-import { CURRENCIES } from '../config.js?v=37';
-import { formatAmount, convert } from '../core/money.js?v=37';
-import { openSheet, closeSheet } from '../ui/sheet.js?v=37';
+import { el } from '../core/dom.js?v=38';
+import { state, set } from '../core/store.js?v=38';
+import { CURRENCIES } from '../config.js?v=38';
+import { formatAmount, convert } from '../core/money.js?v=38';
+import { openSheet, closeSheet } from '../ui/sheet.js?v=38';
+import { t } from '../core/i18n.js?v=38';
 
 /** Валюта сводных сумм: в какой считать баланс и итоги месяца. */
 export function openBaseCurrencyPicker() {
   openSheet({
-    title: 'Валюта сводных сумм',
+    title: t('currency.title'),
     body: [
       el('div', { class: 'cur-list' }, CURRENCIES.map((cur) =>
         el('button', {
@@ -25,14 +26,14 @@ export function openBaseCurrencyPicker() {
         ]),
       )),
       el('p', { class: 'hint' },
-        'Операции остаются в своей валюте — меняется только валюта итогов.'),
+        t('currency.hint')),
     ],
   });
 }
 
 /** Сколько это в текущей базовой валюте — чтобы курс был понятен без счёта в уме. */
 function rateHint(code) {
-  if (code === state.base) return 'сейчас';
+  if (code === state.base) return t('currency.current');
   const value = convert(1, code, state.base, state.rates);
   return `1 ${code} ≈ ${formatAmount(value, state.base)}`;
 }

@@ -4,22 +4,23 @@
  * открывается в редактируемой форме.
  */
 
-import { el, render } from '../core/dom.js?v=37';
-import { openSheet, closeSheet } from '../ui/sheet.js?v=37';
-import { toastError } from '../ui/toast.js?v=37';
-import { state } from '../core/store.js?v=37';
-import { findDuplicates, sameMoment } from '../core/selectors.js?v=37';
-import { formatAmount } from '../core/money.js?v=37';
-import { scanReceiptImages, scanReceiptUrl, scanSmsText, MAX_RECEIPT_IMAGES } from '../services/receipts.js?v=37';
+import { el, render } from '../core/dom.js?v=38';
+import { openSheet, closeSheet } from '../ui/sheet.js?v=38';
+import { toastError } from '../ui/toast.js?v=38';
+import { state } from '../core/store.js?v=38';
+import { findDuplicates, sameMoment } from '../core/selectors.js?v=38';
+import { formatAmount } from '../core/money.js?v=38';
+import { scanReceiptImages, scanReceiptUrl, scanSmsText, MAX_RECEIPT_IMAGES } from '../services/receipts.js?v=38';
+import { t } from '../core/i18n.js?v=38';
 
 /** Шторка «распознаём…» — на время запроса заменяет собой форму. */
 function showBusy(text) {
   openSheet({
-    title: 'Сканирование чека',
+    title: t('scan.title'),
     body: el('div', { class: 'empty' }, [
       el('div', { class: 'spinner', style: 'margin:0 auto 14px' }),
       el('div', {}, text),
-      el('div', { class: 'hint', style: 'margin-top:6px' }, 'Обычно занимает 5–15 секунд'),
+      el('div', { class: 'hint', style: 'margin-top:6px' }, t('scan.wait')),
     ]),
   });
 }
@@ -51,7 +52,7 @@ async function run(task, waitText, onDraft) {
   } catch (error) {
     console.error(error);
     closeSheet();
-    toastError(error.message || 'Не удалось распознать');
+    toastError(error.message || t('scan.failed'));
   }
 }
 
@@ -66,31 +67,29 @@ function warnAboutDuplicate(draft, twins, candidate, onDraft) {
   const rows = sorted.slice(0, 5).map((tx) => el('div', { class: 'alert__row' }, [
     el('b', {}, formatAmount(tx.amount, tx.currency, { exact: true })),
     ` · ${tx.date}${tx.time ? ` ${tx.time}` : ''}${tx.merchant ? ` · ${tx.merchant}` : ''}`,
-    sameMoment(tx, candidate) ? el('b', {}, ' · то же время') : null,
+    sameMoment(tx, candidate) ? el('b', {}, t('dup.sameTime')) : null,
   ]));
 
   openSheet({
-    title: exact ? '⚠️ Это уже внесено' : '⚠️ Возможно, уже внесено',
+    title: t(exact ? 'dup.titleExact' : 'dup.titleMaybe'),
     body: [
       el('div', { class: 'alert' }, [
         el('div', { class: 'alert__title' },
           exact
-            ? 'Та же сумма в ту же минуту — почти наверняка эта покупка уже записана'
-            : twins.length === 1
-              ? 'На эту дату уже есть операция на ту же сумму'
-              : `На эту дату уже есть операции на ту же сумму (${twins.length})`),
+            ? t('dup.exact')
+            : twins.length === 1 ? t('dup.one') : t('dup.many', { n: twins.length })),
         ...rows,
       ]),
       el('p', { class: 'hint', style: 'margin-top:12px' },
-        'Если это другая покупка — добавляйте, ничего страшного.'),
+        t('dup.ok')),
     ],
     // Безопасный выбор — основной: по умолчанию повтор не добавляется.
     footer: [
       el('button', {
         class: 'btn btn--danger',
         onclick: () => { closeSheet(); onDraft(draft); },
-      }, 'Всё равно добавить'),
-      el('button', { class: 'btn btn--primary', onclick: () => closeSheet() }, 'Не добавлять'),
+      }, t('dup.addAnyway')),
+      el('button', { class: 'btn btn--primary', onclick: () => closeSheet() }, t('dup.dontAdd')),
     ],
   });
 }
@@ -113,12 +112,12 @@ function pickPhotos({ fromCamera }, onDraft) {
     input.remove();
     if (!files.length) return;
     if (files.length > MAX_RECEIPT_IMAGES) {
-      toastError(`Не больше ${MAX_RECEIPT_IMAGES} фото за раз`);
+      toastError(t('scan.tooMany', { n: MAX_RECEIPT_IMAGES }));
       return;
     }
     run(
       () => scanReceiptImages(files),
-      files.length > 1 ? `Распознаём чек, ${files.length} фото…` : 'Распознаём чек…',
+      files.length > 1 ? t('scan.readingN', { n: files.length }) : t('scan.reading'),
       onDraft,
     );
   });
@@ -142,20 +141,20 @@ export function openScanUrlSheet(onDraft) {
   const submit = () => {
     const url = urlInput.value.trim();
     if (!/^https:\/\//i.test(url)) {
-      toastError('Ссылка должна начинаться с https://');
+      toastError(t('scan.urlHttps'));
       return;
     }
-    run(() => scanReceiptUrl(url), 'Читаем страницу чека…', onDraft);
+    run(() => scanReceiptUrl(url), t('scan.readingPage'), onDraft);
   };
 
   openSheet({
-    title: 'Чек по ссылке',
+    title: t('scan.urlTitle'),
     body: [
       urlInput,
       el('p', { class: 'hint' },
-        'Страница фискального чека по ссылке с инвойса — оттуда берётся точный список товаров и цен.'),
+        t('scan.urlHint')),
     ],
-    footer: [el('button', { class: 'btn btn--primary', onclick: submit }, 'Разобрать')],
+    footer: [el('button', { class: 'btn btn--primary', onclick: submit }, t('scan.parse'))],
   });
 }
 
@@ -168,27 +167,26 @@ export function openScanSmsSheet(onDraft) {
   const textInput = el('textarea', {
     class: 'textarea',
     rows: '5',
-    placeholder: 'Вставьте сюда текст SMS от банка целиком',
+    placeholder: t('scan.smsPlaceholder'),
   });
 
   const submit = () => {
     const text = textInput.value.trim();
     if (!text) {
-      toastError('Вставьте текст SMS');
+      toastError(t('scan.smsEmpty'));
       return;
     }
-    run(() => scanSmsText(text), 'Разбираем SMS…', onDraft);
+    run(() => scanSmsText(text), t('scan.readingSms'), onDraft);
   };
 
   openSheet({
-    title: 'SMS от банка',
+    title: t('scan.smsTitle'),
     body: [
       textInput,
       el('p', { class: 'hint' },
-        'Из SMS берутся сумма, магазин, дата и время. Список товаров банк не присылает — '
-        + 'при желании добавьте его в форме.'),
+        t('scan.smsHint')),
     ],
-    footer: [el('button', { class: 'btn btn--primary', onclick: submit }, 'Разобрать')],
+    footer: [el('button', { class: 'btn btn--primary', onclick: submit }, t('scan.parse'))],
   });
 }
 
@@ -200,26 +198,26 @@ export function openScanSheet(onDraft) {
     el('div', { class: 'scan-row' }, [
       el('button', { class: 'scan-tile', onclick: () => scanFromCamera(onDraft) }, [
         el('span', { class: 'scan-tile__ico' }, '📷'),
-        el('span', {}, 'Снять камерой'),
+        el('span', {}, t('scan.camera')),
       ]),
       el('button', { class: 'scan-tile', onclick: () => scanFromGallery(onDraft) }, [
         el('span', { class: 'scan-tile__ico' }, '🖼'),
-        el('span', {}, 'Из галереи'),
+        el('span', {}, t('scan.gallery')),
       ]),
     ]),
     el('p', { class: 'hint' },
-      `До ${MAX_RECEIPT_IMAGES} фото одного чека — длинную ленту снимайте частями по порядку.`),
-    el('div', { class: 'divider' }, 'или'),
+      t('scan.photoHint', { n: MAX_RECEIPT_IMAGES })),
+    el('div', { class: 'divider' }, t('scan.or')),
     el('button', {
       class: 'btn btn--ghost btn--wide',
       onclick: () => openScanUrlSheet(onDraft),
-    }, '🔗  Ссылка из QR-кода'),
+    }, t('scan.urlButton')),
     el('button', {
       class: 'btn btn--ghost btn--wide',
       style: 'margin-top:8px',
       onclick: () => openScanSmsSheet(onDraft),
-    }, '💬  SMS от банка'),
+    }, t('scan.smsButton')),
   ]);
 
-  openSheet({ title: 'Сканирование чека', body });
+  openSheet({ title: t('scan.title'), body });
 }

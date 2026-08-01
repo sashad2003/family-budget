@@ -1,6 +1,7 @@
 /** Нижняя шторка — единственный тип модального окна в приложении. */
 
-import { el } from '../core/dom.js?v=37';
+import { el } from '../core/dom.js?v=38';
+import { t } from '../core/i18n.js?v=38';
 
 let current = null;
 
@@ -44,7 +45,7 @@ export function openSheet({ title = '', body = [], footer = null, onClose = null
   const sheet = el('div', { class: 'sheet', role: 'dialog', 'aria-modal': 'true' }, [
     el('div', { class: 'sheet__head' }, [
       el('div', { class: 'sheet__title' }, title),
-      el('button', { class: 'icon-btn', onclick: closeSheet, 'aria-label': 'Закрыть' }, '✕'),
+      el('button', { class: 'icon-btn', onclick: closeSheet, 'aria-label': t('common.close') }, '✕'),
     ]),
     el('div', { class: 'sheet__body' }, body),
     footer ? el('div', { class: 'sheet__foot' }, footer) : null,
@@ -110,19 +111,19 @@ function onEscape(event) {
 }
 
 /** Подтверждение опасного действия. */
-export function confirmSheet({ title, text, confirmLabel = 'Удалить', onConfirm }) {
+export function confirmSheet({ title, text, confirmLabel = null, onConfirm }) {
   openSheet({
     title,
     body: el('p', { style: 'color:var(--fg-1);font-size:14px;margin:4px 0 8px' }, text),
     footer: [
-      el('button', { class: 'btn btn--ghost', onclick: closeSheet }, 'Отмена'),
+      el('button', { class: 'btn btn--ghost', onclick: closeSheet }, t('common.cancel')),
       el('button', {
         class: 'btn btn--danger',
         onclick: async () => {
           closeSheet();
           await onConfirm();
         },
-      }, confirmLabel),
+      }, confirmLabel || t('common.delete')),
     ],
   });
 }

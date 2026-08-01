@@ -5,10 +5,11 @@
  * AI ошибается в названиях товаров, поэтому ни одно поле не считается финальным.
  */
 
-import { PROXY_URL, CURRENCY_CODES } from '../config.js?v=37';
-import { idToken } from './auth.js?v=37';
-import { normalizeDate, today } from '../core/dates.js?v=37';
-import { parseBankSms } from '../core/smsParse.js?v=37';
+import { PROXY_URL, CURRENCY_CODES } from '../config.js?v=38';
+import { idToken } from './auth.js?v=38';
+import { normalizeDate, today } from '../core/dates.js?v=38';
+import { parseBankSms } from '../core/smsParse.js?v=38';
+import { t } from '../core/i18n.js?v=38';
 
 /** Сколько пикселей по длинной стороне отправляем. Больше — дороже и медленнее без выигрыша. */
 const MAX_EDGE = 1600;
@@ -23,7 +24,7 @@ const MAX_SMS_CHARS = 2000;
 /** Одно или несколько фото одного чека — модель собирает из них общий список. */
 export async function scanReceiptImages(files) {
   const list = Array.from(files || []).slice(0, MAX_RECEIPT_IMAGES);
-  if (!list.length) throw new Error('Не выбрано ни одного файла');
+  if (!list.length) throw new Error(t('receipt.noFiles'));
 
   const images = [];
   for (const file of list) {
@@ -50,7 +51,7 @@ export async function scanReceiptUrl(url) {
  */
 export async function scanSmsText(text) {
   const raw = String(text || '').trim();
-  if (!raw) throw new Error('Вставьте текст SMS');
+  if (!raw) throw new Error(t('scan.smsEmpty'));
 
   const local = parseBankSms(raw);
   if (local) return normalizeReceipt(local, 'sms');
@@ -61,7 +62,7 @@ export async function scanSmsText(text) {
 
 async function callProxy(payload) {
   const token = await idToken();
-  if (!token) throw new Error('Нужно войти заново');
+  if (!token) throw new Error(t('receipt.signInAgain'));
 
   const response = await fetch(PROXY_URL, {
     method: 'POST',
@@ -90,22 +91,22 @@ async function callProxy(payload) {
 
 function errorText(code, status) {
   const messages = {
-    rate_limited: 'Слишком много запросов, попробуйте через час',
-    not_allowed: 'Нет доступа к распознаванию',
-    url_must_be_https: 'Ссылка должна начинаться с https://',
-    url_private_address: 'Такая ссылка недоступна',
-    page_fetch_failed: 'Не удалось открыть страницу чека',
-    page_empty: 'На странице не нашлось текста',
-    pdf_too_large: 'Квитанция по ссылке слишком тяжёлая',
-    image_size: 'Фото слишком большое',
-    image_count: `Можно отправить от 1 до ${MAX_RECEIPT_IMAGES} фото`,
-    images_too_large: 'Фотографии в сумме слишком тяжёлые, попробуйте меньше кадров',
-    unsupported_media_type: 'Такой формат файла не поддерживается',
-    claude_unparsable: 'Не удалось разобрать ответ AI',
-    refused: 'AI отказался обрабатывать это изображение',
-    config_missing: 'На сервере не настроен config.php',
+    rate_limited: t('receipt.rateLimited'),
+    not_allowed: t('receipt.notAllowed'),
+    url_must_be_https: t('scan.urlHttps'),
+    url_private_address: t('receipt.urlPrivate'),
+    page_fetch_failed: t('receipt.pageFailed'),
+    page_empty: t('receipt.pageEmpty'),
+    pdf_too_large: t('receipt.pdfTooLarge'),
+    image_size: t('receipt.imageSize'),
+    image_count: t('receipt.imageCount', { n: MAX_RECEIPT_IMAGES }),
+    images_too_large: t('receipt.imagesTooLarge'),
+    unsupported_media_type: t('receipt.unsupported'),
+    claude_unparsable: t('receipt.unparsable'),
+    refused: t('receipt.refused'),
+    config_missing: t('receipt.configMissing'),
   };
-  return messages[code] || `Ошибка распознавания (${code || status})`;
+  return messages[code] || t('receipt.genericError', { code: code || status });
 }
 
 /** Сжимает фото в браузере: экономит трафик и укладывается в лимит прокси. */
@@ -115,7 +116,7 @@ async function prepareImage(file) {
     bitmap = await createImageBitmap(file);
   } catch {
     // Браузер не умеет декодировать формат — чаще всего это HEIC из галереи iPhone.
-    throw new Error(`Файл «${file.name || 'без имени'}» не открылся. Снимите чек камерой или сохраните фото в JPEG.`);
+    throw new Error(t('receipt.fileUnreadable', { name: file.name || '—' }));
   }
   const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height));
   const width = Math.round(bitmap.width * scale);

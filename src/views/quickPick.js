@@ -3,12 +3,13 @@
  * Отмечаешь нужное, суммы подставляются из прошлых покупок и правятся в форме.
  */
 
-import { el, render } from '../core/dom.js?v=37';
-import { state } from '../core/store.js?v=37';
-import { quickItemSuggestions } from '../core/selectors.js?v=37';
-import { DEFAULT_QUICK_ITEMS } from '../data/quickItems.js?v=37';
-import { openSheet, closeSheet } from '../ui/sheet.js?v=37';
-import { formatAmount } from '../core/money.js?v=37';
+import { el, render } from '../core/dom.js?v=38';
+import { state } from '../core/store.js?v=38';
+import { quickItemSuggestions } from '../core/selectors.js?v=38';
+import { defaultQuickItems } from '../data/quickItems.js?v=38';
+import { openSheet, closeSheet } from '../ui/sheet.js?v=38';
+import { formatAmount } from '../core/money.js?v=38';
+import { t } from '../core/i18n.js?v=38';
 
 /**
  * openQuickPick(currency, { onDone, onCancel })
@@ -16,7 +17,7 @@ import { formatAmount } from '../core/money.js?v=37';
  *   onCancel — вызывается при закрытии без выбора (чтобы вернуть форму)
  */
 export function openQuickPick(currency, { onDone, onCancel }) {
-  const all = quickItemSuggestions(state, currency, DEFAULT_QUICK_ITEMS);
+  const all = quickItemSuggestions(state, currency, defaultQuickItems());
   const chosen = new Map();
   let needle = '';
   let done = false;
@@ -27,7 +28,7 @@ export function openQuickPick(currency, { onDone, onCancel }) {
   const search = el('input', {
     class: 'input',
     type: 'search',
-    placeholder: 'Найти или добавить свой товар',
+    placeholder: t('quick.search'),
     oninput: (e) => { needle = e.target.value.trim(); drawList(); drawFooter(); },
   });
 
@@ -65,7 +66,7 @@ export function openQuickPick(currency, { onDone, onCancel }) {
       }, [el('span', { class: 'pick__name' }, `＋ ${needle}`)]));
     }
 
-    render(listBox, nodes.length ? nodes : el('p', { class: 'hint' }, 'Ничего не найдено'));
+    render(listBox, nodes.length ? nodes : el('p', { class: 'hint' }, t('common.notFound')));
   }
 
   function drawFooter() {
@@ -74,7 +75,7 @@ export function openQuickPick(currency, { onDone, onCancel }) {
       el('button', {
         class: 'btn btn--ghost',
         onclick: () => closeSheet(),
-      }, 'Отмена'),
+      }, t('common.cancel')),
       el('button', {
         class: 'btn btn--primary',
         disabled: count === 0,
@@ -88,7 +89,7 @@ export function openQuickPick(currency, { onDone, onCancel }) {
             total: item.price,
           })));
         },
-      }, count ? `Добавить ${count}` : 'Ничего не выбрано'),
+      }, count ? t('quick.add', { n: count }) : t('quick.none')),
     ]);
   }
 
@@ -96,10 +97,10 @@ export function openQuickPick(currency, { onDone, onCancel }) {
   drawFooter();
 
   const sheet = openSheet({
-    title: 'Быстрый выбор товаров',
+    title: t('quick.title'),
     body: [
       search,
-      el('p', { class: 'hint' }, 'Цены подставлены из прошлых покупок — поправишь в форме.'),
+      el('p', { class: 'hint' }, t('quick.hint')),
       listBox,
     ],
     footer: [footer],

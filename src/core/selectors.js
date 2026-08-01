@@ -1,7 +1,8 @@
 /** Выборки и агрегаты над транзакциями. Чистые функции — их удобно переиспользовать. */
 
-import { txAmountIn, round } from './money.js?v=37';
-import { monthOf, shiftMonth } from './dates.js?v=37';
+import { txAmountIn, round } from './money.js?v=38';
+import { monthOf, shiftMonth } from './dates.js?v=38';
+import { t } from './i18n.js?v=38';
 
 /** Операции выбранного месяца с учётом фильтров экрана «Операции». */
 export function monthTransactions(state, filters = {}) {
@@ -60,7 +61,7 @@ export function byCategory(list, state) {
       const cat = state.categories.find((c) => c.id === categoryId);
       return {
         id: categoryId,
-        name: cat?.name || 'Без категории',
+        name: cat?.name || t('tx.noCategory'),
         color: cat?.color || '#8a8a94',
         icon: cat?.icon || '•',
         total: value,

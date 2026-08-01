@@ -5,16 +5,18 @@
  * Отсчёт идёт от выбранного в шапке месяца: 3 месяца — это он и два до него.
  */
 
-import { monthRange, monthLabel, shiftMonth, today, monthOf } from './dates.js?v=37';
+import { monthRange, monthLabel, shiftMonth, today, monthOf } from './dates.js?v=38';
+import { t } from './i18n.js?v=38';
 
 export const PERIODS = [
-  { kind: 'month', label: 'Месяц' },
-  { kind: 'm3', label: '3 мес' },
-  { kind: 'm6', label: '6 мес' },
-  { kind: 'm12', label: '12 мес' },
-  { kind: 'ytd', label: 'С января' },
-  { kind: 'all', label: 'Всё время' },
-  { kind: 'custom', label: 'Свой срок' },
+  // Подписи берутся из словаря при отрисовке: набор периодов от языка не зависит.
+  { kind: 'month' },
+  { kind: 'm3' },
+  { kind: 'm6' },
+  { kind: 'm12' },
+  { kind: 'ytd' },
+  { kind: 'all' },
+  { kind: 'custom' },
 ];
 
 const MONTHS_BACK = { m3: 3, m6: 6, m12: 12 };
@@ -45,7 +47,7 @@ export function resolvePeriod(state) {
       from: earliest,
       to: latest,
       months: monthsBetween(monthOf(earliest), monthOf(latest)),
-      label: 'всё время',
+      label: t('period.allLower'),
     };
   }
 
