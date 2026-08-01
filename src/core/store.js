@@ -3,8 +3,8 @@
  * Никакой магии — set() сливает патч и уведомляет слушателей.
  */
 
-import { DEFAULT_BASE_CURRENCY, FALLBACK_RATES } from '../config.js?v=29';
-import { monthKey } from './dates.js?v=29';
+import { DEFAULT_BASE_CURRENCY, FALLBACK_RATES } from '../config.js?v=30';
+import { monthKey } from './dates.js?v=30';
 
 const listeners = new Set();
 
@@ -15,6 +15,8 @@ export const state = {
   family: null,
   /** Профиль из users/{uid}: имя, телефон, подписка */
   profile: null,
+  /** Все бюджеты, где человек состоит — для переключателя */
+  families: [],
   /** Видна ли админ-панель — почта в ADMIN_EMAILS */
   isAdmin: false,
 

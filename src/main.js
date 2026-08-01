@@ -2,36 +2,37 @@
  * Точка входа: авторизация → загрузка семьи → подписки на данные → роутинг.
  */
 
-import { $, render } from './core/dom.js?v=29';
-import { state, set, subscribe } from './core/store.js?v=29';
-import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=29';
-import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=29';
-import { unpaidBills } from './core/selectors.js?v=29';
+import { $, render } from './core/dom.js?v=30';
+import { state, set, subscribe } from './core/store.js?v=30';
+import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=30';
+import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=30';
+import { unpaidBills } from './core/selectors.js?v=30';
 
-import { watchAuth, signIn } from './services/auth.js?v=29';
-import { loadAccount, isAdmin, joinByCode } from './services/account.js?v=29';
-import { setFamilyId } from './core/session.js?v=29';
-import { askProfile } from './views/signup.js?v=29';
+import { watchAuth, signIn } from './services/auth.js?v=30';
+import { loadAccount, isAdmin, joinByCode, listFamilies } from './services/account.js?v=30';
+import { setFamilyId } from './core/session.js?v=30';
+import { askProfile } from './views/signup.js?v=30';
 import {
   watchTransactions,
   watchCategories,
   seedCategoriesIfEmpty,
   syncNewCategories,
-} from './services/transactions.js?v=29';
-import { watchBills } from './services/bills.js?v=29';
-import { loadRates } from './services/rates.js?v=29';
+} from './services/transactions.js?v=30';
+import { watchBills } from './services/bills.js?v=30';
+import { loadRates } from './services/rates.js?v=30';
 
-import { renderDashboard } from './views/dashboard.js?v=29';
-import { renderList } from './views/list.js?v=29';
-import { renderBills } from './views/bills.js?v=29';
-import { renderPrices } from './views/prices.js?v=29';
-import { renderAdmin } from './views/admin.js?v=29';
-import { renderCharts, destroyCharts } from './views/charts.js?v=29';
-import { renderSettings } from './views/settings.js?v=29';
-import { openTxForm } from './views/txForm.js?v=29';
-import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=29';
-import { closeSheet } from './ui/sheet.js?v=29';
-import { toastError, toastOk } from './ui/toast.js?v=29';
+import { renderDashboard } from './views/dashboard.js?v=30';
+import { renderList } from './views/list.js?v=30';
+import { renderBills } from './views/bills.js?v=30';
+import { renderPrices } from './views/prices.js?v=30';
+import { renderAdmin } from './views/admin.js?v=30';
+import { openBudgetMenu, budgetName } from './views/budgetMenu.js?v=30';
+import { renderCharts, destroyCharts } from './views/charts.js?v=30';
+import { renderSettings } from './views/settings.js?v=30';
+import { openTxForm } from './views/txForm.js?v=30';
+import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=30';
+import { closeSheet } from './ui/sheet.js?v=30';
+import { toastError, toastOk } from './ui/toast.js?v=30';
 
 const ROUTES = {
   dashboard: renderDashboard,
@@ -52,7 +53,10 @@ watchAuth(async (user) => {
 
   if (!user) {
     setFamilyId(null);
-    set({ user: null, family: null, profile: null, isAdmin: false, transactions: [], loading: false });
+    set({
+      user: null, family: null, profile: null, families: [],
+      isAdmin: false, transactions: [], loading: false,
+    });
     showScreen('auth');
     return;
   }
@@ -74,6 +78,11 @@ watchAuth(async (user) => {
 
     setFamilyId(account.family.id);
     set({ family: account.family, profile: account.profile });
+
+    // Список бюджетов нужен только переключателю — грузим, не задерживая экран.
+    listFamilies(account.profile)
+      .then((families) => set({ families }))
+      .catch(() => {});
 
     await startData();
     showScreen('app');
@@ -150,7 +159,7 @@ function shareOldPrices(transactions) {
   if (backfillStarted || !state.user || !transactions.length) return;
   backfillStarted = true;
 
-  import('./services/prices.js?v=29')
+  import('./services/prices.js?v=30')
     .then(({ backfillPrices }) => backfillPrices(transactions, state.user.uid))
     .catch((error) => console.error('Не удалось перенести историю цен', error));
 }
@@ -210,11 +219,30 @@ function drawChrome() {
   // Админ-панель существует только для меня.
   $('.tab[data-route="admin"]').hidden = !state.isAdmin;
 
+  drawBudgetPick();
+
   // Профиль в боковой колонке (на телефоне скрыт стилями).
   const photo = $('#user-photo');
   photo.hidden = !state.user?.photoURL;
   if (state.user?.photoURL) photo.src = state.user.photoURL;
   $('#user-name').textContent = state.user?.displayName || state.user?.email || '';
+}
+
+/**
+ * Кнопка выбора бюджета в двух местах сразу.
+ *
+ * Пока бюджет один, переключать не из чего — обе кнопки прячем, чтобы не
+ * занимать место ради выбора из одного варианта.
+ */
+function drawBudgetPick() {
+  const many = (state.families || []).length > 1;
+  const label = budgetName(state.family);
+
+  for (const id of ['#btn-budget-rail', '#btn-budget-bar']) {
+    const node = $(id);
+    node.hidden = !many;
+    node.querySelector('.budget-pick__name').textContent = label;
+  }
 }
 
 let drawnRoute = null;
@@ -268,6 +296,9 @@ document.querySelectorAll('.tab[data-route]').forEach((tab) => {
 });
 
 $('#btn-more').addEventListener('click', openMoreMenu);
+
+$('#btn-budget-rail').addEventListener('click', openBudgetMenu);
+$('#btn-budget-bar').addEventListener('click', openBudgetMenu);
 
 // Кнопка «все» на обзоре ведёт в список операций.
 window.addEventListener('goto-list', () => set({ route: 'list' }));

@@ -9,12 +9,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <!-- ?v меняется при правках: заставляет браузер взять новый файл, а не старый из кеша -->
-<link rel="stylesheet" href="assets/css/app.css?v=29">
+<link rel="stylesheet" href="assets/css/app.css?v=30">
 
 <!-- Установка на телефон: значок на рабочем столе и запуск без адресной строки -->
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="assets/icons/icon-192.png?v=29" sizes="192x192">
-<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=29">
+<link rel="icon" href="assets/icons/icon-192.png?v=30" sizes="192x192">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=30">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Бюджет">
@@ -58,6 +58,13 @@
       <span class="rail__mark"><svg class="logo-mark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.6"/><path d="M8.7 8.7 6.1 6.1M15.3 8.7 17.9 6.1M8.7 15.3 6.1 17.9M15.3 15.3 17.9 17.9"/></svg></span>
       <span class="rail__name">Бюджет</span>
     </div>
+
+    <!-- Переключатель бюджетов под логотипом. На телефоне логотипа нет,
+         поэтому там для него отдельное место под шапкой. -->
+    <button id="btn-budget-rail" class="budget-pick budget-pick--rail" hidden>
+      <span class="budget-pick__name"></span>
+      <span class="budget-pick__caret">⌄</span>
+    </button>
 
     <!--
       На телефоне в доке помещаются три кнопки: «Обзор», «Платежи» и «Ещё».
@@ -126,6 +133,11 @@
       </div>
     </header>
 
+    <button id="btn-budget-bar" class="budget-pick budget-pick--bar" hidden>
+      <span class="budget-pick__name"></span>
+      <span class="budget-pick__caret">⌄</span>
+    </button>
+
     <main id="view" class="view"></main>
   </div>
 
@@ -135,6 +147,6 @@
 <div id="sheet-root"></div>
 <div id="toast-root" class="toast-root"></div>
 
-<script type="module" src="src/main.js?v=29"></script>
+<script type="module" src="src/main.js?v=30"></script>
 </body>
 </html>
