@@ -1,16 +1,18 @@
 /** Настройки: профиль, участники, валюта, курсы, категории. */
 
-import { el, render } from '../core/dom.js?v=34';
-import { state, set } from '../core/store.js?v=34';
-import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=34';
-import { formatAmount, convert } from '../core/money.js?v=34';
-import { logout } from '../services/auth.js?v=34';
-import { inviteLink, resetInviteLink, removeMember } from '../services/account.js?v=34';
-import { refreshRates } from '../services/rates.js?v=34';
-import { saveCategory, deleteCategory } from '../services/transactions.js?v=34';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=34';
-import { section } from '../ui/section.js?v=34';
-import { toastOk, toastError } from '../ui/toast.js?v=34';
+import { el, render } from '../core/dom.js?v=35';
+import { state, set } from '../core/store.js?v=35';
+import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=35';
+import { formatAmount, convert } from '../core/money.js?v=35';
+import { logout } from '../services/auth.js?v=35';
+import {
+  inviteLink, resetInviteLink, removeMember, leaveFamily, isOwner,
+} from '../services/account.js?v=35';
+import { refreshRates } from '../services/rates.js?v=35';
+import { saveCategory, deleteCategory } from '../services/transactions.js?v=35';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=35';
+import { section } from '../ui/section.js?v=35';
+import { toastOk, toastError } from '../ui/toast.js?v=35';
 
 const PALETTE = ['#2dd98a', '#ff5b5b', '#5b9fff', '#ffb347', '#ff7eb3', '#3de8d0', '#8a8a94'];
 
@@ -23,6 +25,7 @@ export function renderSettings() {
 
 function build(draw) {
   const members = Object.entries(state.family?.members || {});
+  const owner = isOwner(state.family, state.user?.uid);
 
   return [
     // Профиль
@@ -78,19 +81,14 @@ function build(draw) {
     }, 'Обновить')),
 
     section(`Семья · ${members.length}`, [
-      ...members.map(([uid, member]) => el('div', { class: 'list-item' }, [
-        el('div', { style: 'min-width:0' }, [
-          el('div', {}, member.name || uid),
-          el('div', { class: 'list-item__sub' }, member.email || ''),
-        ]),
-        uid === state.user?.uid
-          ? el('span', { class: 'chip' }, 'вы')
-          : el('button', { class: 'chip', onclick: () => askRemove(member, uid) }, 'убрать'),
-      ])),
-      el('p', { class: 'hint' },
-        'Пошлите ссылку-приглашение мужу, жене или кому угодно: кто по ней войдёт, '
-        + 'окажется в этом бюджете.'),
-    ], el('button', { class: 'chip', onclick: () => openInviteSheet() }, '🔗 пригласить')),
+      ...members.map(([uid, member]) => memberRow(uid, member, owner)),
+      el('p', { class: 'hint' }, owner
+        ? 'Пошлите ссылку-приглашение мужу, жене или кому угодно: кто по ней войдёт, '
+          + 'окажется в этом бюджете. Убрать участника может только хозяин бюджета.'
+        : `Бюджет ведёт ${ownerName()}. Состав участников меняет он — вы можете только выйти сами.`),
+    ], owner
+      ? el('button', { class: 'chip', onclick: () => openInviteSheet() }, '🔗 пригласить')
+      : null),
 
     section('Категории', ['expense', 'income'].map((type) =>
       el('div', {}, [
@@ -115,6 +113,39 @@ function build(draw) {
   ];
 }
 
+/**
+ * Строка участника.
+ *
+ * Выкинуть другого может только хозяин бюджета. Всем остальным на своей же
+ * строке предлагаем выйти — это отказ от доступа, а не власть над людьми.
+ */
+function memberRow(uid, member, owner) {
+  const me = uid === state.user?.uid;
+  const isTheOwner = uid === state.family?.ownerUid;
+
+  let action = null;
+  if (me && !isTheOwner) {
+    action = el('button', { class: 'chip', onclick: () => askLeave() }, 'выйти');
+  } else if (me) {
+    action = el('span', { class: 'chip' }, 'вы');
+  } else if (owner) {
+    action = el('button', { class: 'chip', onclick: () => askRemove(member, uid) }, 'убрать');
+  }
+
+  return el('div', { class: 'list-item' }, [
+    el('div', { style: 'min-width:0' }, [
+      el('div', {}, `${member.name || uid}${isTheOwner ? ' · хозяин' : ''}`),
+      el('div', { class: 'list-item__sub' }, member.email || ''),
+    ]),
+    action,
+  ]);
+}
+
+function ownerName() {
+  const owner = state.family?.members?.[state.family?.ownerUid];
+  return owner?.name || owner?.email || 'другой человек';
+}
+
 /** Подтверждение перед тем, как выкинуть человека из бюджета. */
 function askRemove(member, uid) {
   confirmSheet({
@@ -127,6 +158,25 @@ function askRemove(member, uid) {
         toastOk('Убрали');
       } catch {
         toastError('Не удалось убрать');
+      }
+    },
+  });
+}
+
+function askLeave() {
+  confirmSheet({
+    title: 'Выйти из бюджета?',
+    text: 'Вы перестанете его видеть. Записи, которые вы вносили, останутся у семьи.',
+    confirmLabel: 'Выйти',
+    onConfirm: async () => {
+      try {
+        const next = await leaveFamily(state.user, state.profile, state.family.id);
+        // Список бюджетов и открытый бюджет поменялись — начинаем заново.
+        set({ families: (state.families || []).filter((f) => f.id !== state.family.id) });
+        window.dispatchEvent(new CustomEvent('switch-budget', { detail: next }));
+        toastOk('Вышли из бюджета');
+      } catch (error) {
+        toastError(error.message || 'Не удалось выйти');
       }
     },
   });

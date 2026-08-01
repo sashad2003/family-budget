@@ -25,6 +25,25 @@ service cloud.firestore {
         && request.auth.uid in familyDoc(familyId).memberUids;
     }
 
+    // Хозяин бюджета — тот, кто его завёл. Только он меняет состав участников.
+    function isOwner(familyId) {
+      return request.auth != null
+        && familyDoc(familyId).ownerUid == request.auth.uid;
+    }
+
+    /**
+     * Из состава никто не пропал, кроме, может быть, самого пишущего.
+     *
+     * Выйти из бюджета вправе каждый — это отказ от доступа. А вот выкинуть
+     * другого может только хозяин, иначе приглашённый выставил бы из бюджета
+     * того, кто его туда позвал.
+     */
+    function keepsEveryoneElse(familyId) {
+      return request.resource.data.memberUids.hasAll(
+        resource.data.memberUids.removeAll([request.auth.uid])
+      );
+    }
+
     function myEmail() {
       return request.auth != null ? request.auth.token.email : '';
     }
@@ -96,9 +115,9 @@ service cloud.firestore {
         && request.resource.data.ownerUid == request.auth.uid
         && request.resource.data.memberUids == [request.auth.uid];
 
-      // Участник правит настройки семьи и состав.
+      // Настройки бюджета правит любой участник, состав — только хозяин.
       // Пришедший по ссылке может добавить в состав только себя.
-      allow update: if isMember(familyId)
+      allow update: if (isMember(familyId) && (isOwner(familyId) || keepsEveryoneElse(familyId)))
         || (
           joinsWithCode(familyId)
           && request.resource.data.memberUids.hasAll(resource.data.memberUids)

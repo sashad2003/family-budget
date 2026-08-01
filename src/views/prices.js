@@ -5,16 +5,16 @@
  * Данные берутся из общей базы: свои чеки и чеки других пользователей.
  */
 
-import { el, render } from '../core/dom.js?v=34';
-import { state } from '../core/store.js?v=34';
-import { formatAmount, convert } from '../core/money.js?v=34';
-import { dayLabel } from '../core/dates.js?v=34';
-import { searchPrices, groupByShop } from '../services/prices.js?v=34';
-import { quickItemSuggestions } from '../core/selectors.js?v=34';
-import { toastError } from '../ui/toast.js?v=34';
-import { tileGradient } from './list.js?v=34';
-import { openTxForm } from './txForm.js?v=34';
-import { section } from '../ui/section.js?v=34';
+import { el, render } from '../core/dom.js?v=35';
+import { state } from '../core/store.js?v=35';
+import { formatAmount, convert } from '../core/money.js?v=35';
+import { dayLabel } from '../core/dates.js?v=35';
+import { searchPrices, groupByShop } from '../services/prices.js?v=35';
+import { quickItemSuggestions } from '../core/selectors.js?v=35';
+import { toastError } from '../ui/toast.js?v=35';
+import { tileGradient } from './list.js?v=35';
+import { openTxForm } from './txForm.js?v=35';
+import { section } from '../ui/section.js?v=35';
 
 /** Запрос живёт вне state: он локален для экрана. */
 const search = { query: '', rows: null, busy: false };

@@ -39,8 +39,8 @@ import {
   limit,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=34';
-import { ADMIN_EMAILS, LEGACY_FAMILY_ID, TRIAL_DAYS } from '../config.js?v=34';
+import { db } from '../core/firebase.js?v=35';
+import { ADMIN_EMAILS, LEGACY_FAMILY_ID, TRIAL_DAYS } from '../config.js?v=35';
 
 const userRef = (uid) => doc(db, 'users', uid);
 const codeRef = (code) => doc(db, 'inviteCodes', String(code));
@@ -174,7 +174,27 @@ export async function listFamilies(profile) {
 async function loadFamily(familyId) {
   const snap = await getDoc(familyRef(familyId));
   if (!snap.exists()) throw new Error('Семья не найдена. Напишите в поддержку.');
-  return { id: snap.id, ...snap.data() };
+
+  const family = { id: snap.id, ...snap.data() };
+
+  /**
+   * У бюджетов, заведённых до появления регистрации, хозяин не записан.
+   * Считаем им того, кто вошёл первым: он и создавал бюджет, а остальные
+   * пришли позже по приглашению. Без этого хозяин не смог бы никого убрать —
+   * правила разрешают это только ему.
+   */
+  if (!family.ownerUid && family.memberUids?.length) {
+    const ownerUid = family.memberUids[0];
+    await updateDoc(familyRef(familyId), { ownerUid }).catch(() => {});
+    family.ownerUid = ownerUid;
+  }
+
+  return family;
+}
+
+/** Хозяин бюджета — тот, кто его завёл. Только он правит состав. */
+export function isOwner(family, uid) {
+  return Boolean(family?.ownerUid) && family.ownerUid === uid;
 }
 
 function profileOf(user, name) {
@@ -226,12 +246,37 @@ function randomCode() {
   return [...bytes].map((b) => alphabet[b % alphabet.length]).join('');
 }
 
-/** Убрать участника из семьи. Его записи остаются — это общий бюджет. */
+/**
+ * Убрать участника из семьи. Записи остаются — бюджет общий, и вычищать за
+ * ушедшим чужие покупки было бы хуже, чем оставить их на месте.
+ *
+ * Право на это есть только у хозяина; правила Firestore проверяют то же
+ * самое, поэтому кнопкой в чужом браузере ничего не добиться.
+ */
 export async function removeMember(familyId, uid) {
   await updateDoc(familyRef(familyId), {
     memberUids: arrayRemove(uid),
     [`members.${uid}`]: deleteField(),
   });
+}
+
+/**
+ * Выйти из чужого бюджета.
+ *
+ * Убрать себя может любой — это не власть над другими, а отказ от доступа.
+ * Открытым делаем какой-нибудь из оставшихся: без бюджета приложению нечего
+ * показывать.
+ */
+export async function leaveFamily(user, profile, familyId) {
+  const rest = (profile.familyIds || [profile.familyId]).filter((id) => id !== familyId);
+  if (!rest.length) throw new Error('Это ваш единственный бюджет — выйти из него нельзя');
+
+  await removeMember(familyId, user.uid);
+  await updateDoc(userRef(user.uid), {
+    familyIds: arrayRemove(familyId),
+    familyId: rest[0],
+  });
+  return rest[0];
 }
 
 // ---------------------------------------------------------------- админ

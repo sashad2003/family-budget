@@ -1,14 +1,14 @@
 /** Обзор: баланс месяца, доходы/расходы, разбивка по категориям, последние операции. */
 
-import { el } from '../core/dom.js?v=34';
-import { state } from '../core/store.js?v=34';
-import { formatAmount } from '../core/money.js?v=34';
-import { monthTransactions, totals, byCategory, unpaidBills } from '../core/selectors.js?v=34';
-import { set } from '../core/store.js?v=34';
-import { txRow, tileGradient } from './list.js?v=34';
-import { openTxForm } from './txForm.js?v=34';
-import { openScanSheet } from './scan.js?v=34';
-import { section } from '../ui/section.js?v=34';
+import { el } from '../core/dom.js?v=35';
+import { state } from '../core/store.js?v=35';
+import { formatAmount } from '../core/money.js?v=35';
+import { monthTransactions, totals, byCategory, unpaidBills } from '../core/selectors.js?v=35';
+import { set } from '../core/store.js?v=35';
+import { txRow, tileGradient } from './list.js?v=35';
+import { openTxForm } from './txForm.js?v=35';
+import { openScanSheet } from './scan.js?v=35';
+import { section } from '../ui/section.js?v=35';
 
 export function renderDashboard() {
   const list = monthTransactions(state);
