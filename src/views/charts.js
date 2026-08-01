@@ -7,12 +7,12 @@
  * Chart.js грузится с CDN по требованию — на других экранах он не нужен.
  */
 
-import { el, render } from '../core/dom.js?v=27';
-import { state, set } from '../core/store.js?v=27';
-import { formatAmount } from '../core/money.js?v=27';
-import { monthLabel } from '../core/dates.js?v=27';
-import { PERIODS, resolvePeriod } from '../core/period.js?v=27';
-import { rangeTransactions, byCategory, totals, seriesForMonths } from '../core/selectors.js?v=27';
+import { el, render } from '../core/dom.js?v=28';
+import { state, set } from '../core/store.js?v=28';
+import { formatAmount } from '../core/money.js?v=28';
+import { monthLabel } from '../core/dates.js?v=28';
+import { PERIODS, resolvePeriod } from '../core/period.js?v=28';
+import { rangeTransactions, byCategory, totals, seriesForMonths } from '../core/selectors.js?v=28';
 
 const CHART_JS = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.7/+esm';
 

@@ -5,15 +5,15 @@
  * Данные берутся из общей базы: свои чеки и чеки других пользователей.
  */
 
-import { el, render } from '../core/dom.js?v=27';
-import { state } from '../core/store.js?v=27';
-import { formatAmount, convert } from '../core/money.js?v=27';
-import { dayLabel } from '../core/dates.js?v=27';
-import { searchPrices, groupByShop } from '../services/prices.js?v=27';
-import { quickItemSuggestions } from '../core/selectors.js?v=27';
-import { toastError } from '../ui/toast.js?v=27';
-import { tileGradient } from './list.js?v=27';
-import { openTxForm } from './txForm.js?v=27';
+import { el, render } from '../core/dom.js?v=28';
+import { state } from '../core/store.js?v=28';
+import { formatAmount, convert } from '../core/money.js?v=28';
+import { dayLabel } from '../core/dates.js?v=28';
+import { searchPrices, groupByShop } from '../services/prices.js?v=28';
+import { quickItemSuggestions } from '../core/selectors.js?v=28';
+import { toastError } from '../ui/toast.js?v=28';
+import { tileGradient } from './list.js?v=28';
+import { openTxForm } from './txForm.js?v=28';
 
 /** Запрос живёт вне state: он локален для экрана. */
 const search = { query: '', rows: null, busy: false };
