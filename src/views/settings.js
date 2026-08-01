@@ -1,15 +1,15 @@
 /** Настройки: профиль, участники, валюта, курсы, категории. */
 
-import { el, render } from '../core/dom.js?v=31';
-import { state, set } from '../core/store.js?v=31';
-import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=31';
-import { formatAmount, convert } from '../core/money.js?v=31';
-import { logout } from '../services/auth.js?v=31';
-import { inviteLink, resetInviteLink, removeMember } from '../services/account.js?v=31';
-import { refreshRates } from '../services/rates.js?v=31';
-import { saveCategory, deleteCategory } from '../services/transactions.js?v=31';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=31';
-import { toastOk, toastError } from '../ui/toast.js?v=31';
+import { el, render } from '../core/dom.js?v=32';
+import { state, set } from '../core/store.js?v=32';
+import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=32';
+import { formatAmount, convert } from '../core/money.js?v=32';
+import { logout } from '../services/auth.js?v=32';
+import { inviteLink, resetInviteLink, removeMember } from '../services/account.js?v=32';
+import { refreshRates } from '../services/rates.js?v=32';
+import { saveCategory, deleteCategory } from '../services/transactions.js?v=32';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=32';
+import { toastOk, toastError } from '../ui/toast.js?v=32';
 
 const PALETTE = ['#2dd98a', '#ff5b5b', '#5b9fff', '#ffb347', '#ff7eb3', '#3de8d0', '#8a8a94'];
 
@@ -26,12 +26,12 @@ function build(draw) {
   return [
     // Профиль
     el('div', { class: 'card', style: 'display:flex;align-items:center;gap:12px' }, [
-      state.user.photoURL
+      state.user?.photoURL
         ? el('img', { src: state.user.photoURL, width: 42, height: 42, style: 'border-radius:50%' })
         : el('div', { class: 'tx__ico' }, '👤'),
       el('div', { style: 'flex:1;min-width:0' }, [
-        el('div', {}, state.user.displayName || 'Без имени'),
-        el('div', { class: 'list-item__sub' }, state.user.email),
+        el('div', {}, state.profile?.name || state.user?.displayName || 'Без имени'),
+        el('div', { class: 'list-item__sub' }, state.user?.email || ''),
       ]),
       el('button', { class: 'chip', onclick: () => logout() }, 'Выйти'),
     ]),
@@ -90,7 +90,7 @@ function build(draw) {
           el('div', {}, member.name || uid),
           el('div', { class: 'list-item__sub' }, member.email || ''),
         ]),
-        uid === state.user.uid
+        uid === state.user?.uid
           ? el('span', { class: 'chip' }, 'вы')
           : el('button', {
               class: 'chip',

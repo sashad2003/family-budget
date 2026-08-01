@@ -2,37 +2,37 @@
  * Точка входа: авторизация → загрузка семьи → подписки на данные → роутинг.
  */
 
-import { $, render } from './core/dom.js?v=31';
-import { state, set, subscribe } from './core/store.js?v=31';
-import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=31';
-import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=31';
-import { unpaidBills } from './core/selectors.js?v=31';
+import { $, render } from './core/dom.js?v=32';
+import { state, set, subscribe } from './core/store.js?v=32';
+import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=32';
+import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=32';
+import { unpaidBills } from './core/selectors.js?v=32';
 
-import { watchAuth, signIn } from './services/auth.js?v=31';
-import { loadAccount, isAdmin, joinByCode, listFamilies } from './services/account.js?v=31';
-import { setFamilyId } from './core/session.js?v=31';
-import { askProfile } from './views/signup.js?v=31';
+import { watchAuth, signIn } from './services/auth.js?v=32';
+import { loadAccount, isAdmin, joinByCode, listFamilies } from './services/account.js?v=32';
+import { setFamilyId } from './core/session.js?v=32';
+import { askProfile } from './views/signup.js?v=32';
 import {
   watchTransactions,
   watchCategories,
   seedCategoriesIfEmpty,
   syncNewCategories,
-} from './services/transactions.js?v=31';
-import { watchBills } from './services/bills.js?v=31';
-import { loadRates } from './services/rates.js?v=31';
+} from './services/transactions.js?v=32';
+import { watchBills } from './services/bills.js?v=32';
+import { loadRates } from './services/rates.js?v=32';
 
-import { renderDashboard } from './views/dashboard.js?v=31';
-import { renderList } from './views/list.js?v=31';
-import { renderBills } from './views/bills.js?v=31';
-import { renderPrices } from './views/prices.js?v=31';
-import { renderAdmin } from './views/admin.js?v=31';
-import { openBudgetMenu, budgetName } from './views/budgetMenu.js?v=31';
-import { renderCharts, destroyCharts } from './views/charts.js?v=31';
-import { renderSettings } from './views/settings.js?v=31';
-import { openTxForm } from './views/txForm.js?v=31';
-import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=31';
-import { closeSheet } from './ui/sheet.js?v=31';
-import { toastError, toastOk } from './ui/toast.js?v=31';
+import { renderDashboard } from './views/dashboard.js?v=32';
+import { renderList } from './views/list.js?v=32';
+import { renderBills } from './views/bills.js?v=32';
+import { renderPrices } from './views/prices.js?v=32';
+import { renderAdmin } from './views/admin.js?v=32';
+import { openBudgetMenu, budgetName } from './views/budgetMenu.js?v=32';
+import { renderCharts, destroyCharts } from './views/charts.js?v=32';
+import { renderSettings } from './views/settings.js?v=32';
+import { openTxForm } from './views/txForm.js?v=32';
+import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=32';
+import { closeSheet } from './ui/sheet.js?v=32';
+import { toastError, toastOk } from './ui/toast.js?v=32';
 
 const ROUTES = {
   dashboard: renderDashboard,
@@ -53,11 +53,13 @@ watchAuth(async (user) => {
 
   if (!user) {
     setFamilyId(null);
+    // Экран меняем до set(): иначе перерисовка успеет полезть в data вышедшего
+    // пользователя, и до переключения экрана дело не дойдёт.
+    showScreen('auth');
     set({
       user: null, family: null, profile: null, families: [],
-      isAdmin: false, transactions: [], loading: false,
+      isAdmin: false, transactions: [], categories: [], bills: [], loading: false,
     });
-    showScreen('auth');
     return;
   }
 
@@ -211,7 +213,7 @@ function shareOldPrices(transactions) {
   if (backfillStarted || !state.user || !transactions.length) return;
   backfillStarted = true;
 
-  import('./services/prices.js?v=31')
+  import('./services/prices.js?v=32')
     .then(({ backfillPrices }) => backfillPrices(transactions, state.user.uid))
     .catch((error) => console.error('Не удалось перенести историю цен', error));
 }
@@ -242,7 +244,9 @@ function showAuthError(text) {
 // ---------------------------------------------------------------- отрисовка
 
 subscribe(() => {
-  if ($('#app').hidden) return;
+  // Без пользователя рисовать нечего: половина экранов лезет в его профиль,
+  // и на выходе из аккаунта это валило перерисовку.
+  if (!state.user || $('#app').hidden) return;
   drawChrome();
   drawView();
 });
