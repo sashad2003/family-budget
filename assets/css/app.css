@@ -435,32 +435,40 @@ button { cursor: pointer; border: none; background: none; }
 .stat--out .stat__dot { background: var(--expense); box-shadow: 0 0 10px var(--expense); }
 
 /**
- * Заголовок раздела.
+ * Раздел экрана: заголовок и содержимое одним блоком (см. ui/section.js).
  *
- * Часто держит справа кнопку («пригласить», «обновить»), и та выше самой
- * строки. При тесных отступах кнопка почти касалась карточек сверху и снизу,
- * поэтому воздуха здесь заметно больше, чем нужно одному тексту.
- *
- * Цвет — не самый тусклый из палитры: подписи набраны капителью мелким
- * кеглем, и на чёрном фоне серый на грани читаемости просто теряется.
+ * Отступ задаёт сам раздел, а не заголовок, — поэтому расстояние между
+ * разделами одинаковое везде и не зависит от того, что стоит внутри.
  */
-.section-title {
-  margin: 34px 0 14px;
-  min-height: 38px;
-  font-size: 12.5px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #c2c2d6;
+.section { margin-top: 30px; }
+.section:first-child { margin-top: 4px; }
+
+.section__head {
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 10px;
+  /* Справа часто стоит кнопка, а она выше строки текста. Высоту держим по
+     ней, иначе кнопка вылезает из заголовка и упирается в карточки. */
+  min-height: 38px;
+  margin-bottom: 10px;
 }
-.section-title > span:first-child { white-space: nowrap; }
 
-/* Верхнему заголовку экрана лишний отступ не нужен — над ним шапка. */
-.section-title:first-child { margin-top: 8px; }
+.section__title {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  /* Капитель мелким кеглем на чёрном теряется быстрее обычного текста —
+     самый тусклый серый из палитры здесь не годится. */
+  color: #c2c2d6;
+  white-space: nowrap;
+}
+
+.section__body > * + * { margin-top: 8px; }
+.section__body > .hint { margin-top: 10px; }
+
 
 /* ------------------------------------------------ операции */
 
@@ -1273,7 +1281,8 @@ button { cursor: pointer; border: none; background: none; }
   .stat-row { gap: 16px; }
   .balance { padding: 32px 28px; }
   .balance__value { font-size: 52px; }
-  .section-title { margin-top: 4px; }
+  /* В правой колонке обзора раздел стоит первым — сверху ему воздух не нужен. */
+  .dash__side .section { margin-top: 0; }
 
   /* Список операций шире, категории в шесть плиток */
   .cat-grid { grid-template-columns: repeat(6, 1fr); }

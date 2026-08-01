@@ -1,13 +1,14 @@
 /** Обзор: баланс месяца, доходы/расходы, разбивка по категориям, последние операции. */
 
-import { el } from '../core/dom.js?v=33';
-import { state } from '../core/store.js?v=33';
-import { formatAmount } from '../core/money.js?v=33';
-import { monthTransactions, totals, byCategory, unpaidBills } from '../core/selectors.js?v=33';
-import { set } from '../core/store.js?v=33';
-import { txRow, tileGradient } from './list.js?v=33';
-import { openTxForm } from './txForm.js?v=33';
-import { openScanSheet } from './scan.js?v=33';
+import { el } from '../core/dom.js?v=34';
+import { state } from '../core/store.js?v=34';
+import { formatAmount } from '../core/money.js?v=34';
+import { monthTransactions, totals, byCategory, unpaidBills } from '../core/selectors.js?v=34';
+import { set } from '../core/store.js?v=34';
+import { txRow, tileGradient } from './list.js?v=34';
+import { openTxForm } from './txForm.js?v=34';
+import { openScanSheet } from './scan.js?v=34';
+import { section } from '../ui/section.js?v=34';
 
 export function renderDashboard() {
   const list = monthTransactions(state);
@@ -42,11 +43,12 @@ export function renderDashboard() {
     ]),
 
     el('div', { class: 'dash__side' }, [
-      el('div', { class: 'section-title' }, [
-        el('span', {}, 'Последние операции'),
-        el('button', { class: 'chip', onclick: () => window.dispatchEvent(new CustomEvent('goto-list')) }, 'все'),
-      ]),
-      ...recent.map((tx) => txRow(tx, () => openTxForm({ tx }))),
+      section('Последние операции',
+        recent.map((tx) => txRow(tx, () => openTxForm({ tx }))),
+        el('button', {
+          class: 'chip',
+          onclick: () => window.dispatchEvent(new CustomEvent('goto-list')),
+        }, 'все')),
     ]),
   ]);
 }
@@ -93,8 +95,7 @@ function balanceBlock(balance, income, expense) {
 }
 
 function categoriesCard(categories) {
-  return el('div', {}, [
-    el('div', { class: 'section-title' }, [el('span', {}, 'Куда уходят деньги')]),
+  return section('Куда уходят деньги', [
     el('div', { class: 'card' }, [
       el('div', { class: 'bar-legend' }, categories.slice(0, 7).map((row) =>
         el('div', {}, [

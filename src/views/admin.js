@@ -5,9 +5,10 @@
  * Firestore — спрятанной кнопки мало, чужие профили закрывает база.
  */
 
-import { el, render } from '../core/dom.js?v=33';
-import { listUsers } from '../services/account.js?v=33';
-import { toastError, toastOk } from '../ui/toast.js?v=33';
+import { el, render } from '../core/dom.js?v=34';
+import { listUsers } from '../services/account.js?v=34';
+import { toastError, toastOk } from '../ui/toast.js?v=34';
+import { section } from '../ui/section.js?v=34';
 
 const cache = { users: null, query: '' };
 
@@ -23,17 +24,10 @@ export function renderAdmin() {
     oninput: (e) => { cache.query = e.target.value; draw(body); },
   });
 
-  render(container, [
-    el('div', { class: 'section-title' }, [
-      el('span', {}, 'Подписчики'),
-      el('button', {
-        class: 'chip',
-        onclick: () => load(body, true),
-      }, 'Обновить'),
-    ]),
+  render(container, section('Подписчики', [
     search,
-    el('div', { style: 'margin-top:12px' }, body),
-  ]);
+    body,
+  ], el('button', { class: 'chip', onclick: () => load(body, true) }, 'Обновить')));
 
   load(body);
   return container;
@@ -67,16 +61,11 @@ function draw(body) {
     return;
   }
 
-  render(body, [
-    el('div', { class: 'section-title' }, [
-      el('span', {}, `${list.length} из ${cache.users.length}`),
-      el('button', {
-        class: 'chip',
-        onclick: () => copyEmails(list),
-      }, 'Скопировать почты'),
-    ]),
-    ...list.map(userRow),
-  ]);
+  render(body, section(
+    `${list.length} из ${cache.users.length}`,
+    list.map(userRow),
+    el('button', { class: 'chip', onclick: () => copyEmails(list) }, 'Скопировать почты'),
+  ));
 }
 
 function userRow(user) {

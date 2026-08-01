@@ -3,18 +3,19 @@
  * оплаченные отмечены галочкой, забытые горят красным.
  */
 
-import { el, render } from '../core/dom.js?v=33';
-import { state, set } from '../core/store.js?v=33';
-import { CURRENCY_CODES } from '../config.js?v=33';
-import { formatAmount, parseAmount, currencyInfo, convert } from '../core/money.js?v=33';
-import { monthLabel, monthKey, today } from '../core/dates.js?v=33';
-import { billsForMonth } from '../core/selectors.js?v=33';
-import { createBill, updateBill, deleteBill } from '../services/bills.js?v=33';
-import { createTransaction, deleteTransaction } from '../services/transactions.js?v=33';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=33';
-import { toastOk, toastError } from '../ui/toast.js?v=33';
-import { openTxForm } from './txForm.js?v=33';
-import { tileGradient } from './list.js?v=33';
+import { el, render } from '../core/dom.js?v=34';
+import { state, set } from '../core/store.js?v=34';
+import { CURRENCY_CODES } from '../config.js?v=34';
+import { formatAmount, parseAmount, currencyInfo, convert } from '../core/money.js?v=34';
+import { monthLabel, monthKey, today } from '../core/dates.js?v=34';
+import { billsForMonth } from '../core/selectors.js?v=34';
+import { createBill, updateBill, deleteBill } from '../services/bills.js?v=34';
+import { createTransaction, deleteTransaction } from '../services/transactions.js?v=34';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=34';
+import { toastOk, toastError } from '../ui/toast.js?v=34';
+import { openTxForm } from './txForm.js?v=34';
+import { tileGradient } from './list.js?v=34';
+import { section } from '../ui/section.js?v=34';
 
 export function renderBills() {
   const rows = billsForMonth(state);
@@ -49,22 +50,20 @@ export function renderBills() {
         ])
       : null,
 
-    el('div', { class: 'section-title' }, [
-      el('span', {}, `Платежи · ${monthLabel(state.month)}`),
-      el('button', { class: 'chip', onclick: () => openBillForm() }, '＋ платёж'),
-    ]),
+    section(`Платежи · ${monthLabel(state.month)}`, [
+      // Группировка по категориям: коммунальные отдельно от услуг и учёбы
+      ...groupByCategory(rows).map(({ category, list, total }) => el('div', {}, [
+        el('div', { class: 'bills__group' }, [
+          el('span', {}, `${category?.icon || '•'} ${category?.name || 'Без категории'}`),
+          el('span', { class: 'num' }, formatAmount(total, state.base)),
+        ]),
+        el('div', { class: 'bills' }, list.map((row) => billRow(row))),
+      ])),
 
-    // Группировка по категориям: коммунальные отдельно от услуг и учёбы
-    ...groupByCategory(rows).map(({ category, list, total }) => el('div', {}, [
-      el('div', { class: 'bills__group' }, [
-        el('span', {}, `${category?.icon || '•'} ${category?.name || 'Без категории'}`),
-        el('span', { class: 'num' }, formatAmount(total, state.base)),
-      ]),
-      el('div', { class: 'bills' }, list.map((row) => billRow(row))),
-    ])),
-
-    el('p', { class: 'hint', style: 'margin-top:14px' },
-      'Галочка — оплачено в этом месяце. Нажатие на строку открывает оплату, шестерёнка — настройки счёта.'),
+      el('p', { class: 'hint' },
+        'Галочка — оплачено в этом месяце. Нажатие на строку открывает оплату, '
+        + 'шестерёнка — настройки счёта.'),
+    ], el('button', { class: 'chip', onclick: () => openBillForm() }, '＋ платёж')),
   ]);
 
   return container;

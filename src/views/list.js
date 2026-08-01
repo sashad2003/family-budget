@@ -1,11 +1,12 @@
 /** Список операций с фильтрами по типу, категории и тексту. */
 
-import { el, render } from '../core/dom.js?v=33';
-import { state } from '../core/store.js?v=33';
-import { formatAmount, txAmountIn } from '../core/money.js?v=33';
-import { dayLabel } from '../core/dates.js?v=33';
-import { monthTransactions, groupByDate, totals } from '../core/selectors.js?v=33';
-import { openTxForm } from './txForm.js?v=33';
+import { el, render } from '../core/dom.js?v=34';
+import { state } from '../core/store.js?v=34';
+import { formatAmount, txAmountIn } from '../core/money.js?v=34';
+import { dayLabel } from '../core/dates.js?v=34';
+import { monthTransactions, groupByDate, totals } from '../core/selectors.js?v=34';
+import { openTxForm } from './txForm.js?v=34';
+import { section } from '../ui/section.js?v=34';
 
 /** Фильтры живут вне state: они локальны для экрана и не влияют на другие. */
 const filters = { type: 'all', categoryId: null, query: '' };
@@ -21,21 +22,17 @@ export function renderList() {
       filterBar(draw),
 
       list.length
-        ? el('div', {}, [
-            el('div', {
-              class: 'section-title',
-            }, [
-              el('span', {}, `${list.length} операц${plural(list.length)}`),
-              el('span', { class: 'num', style: 'font-size:12px' },
-                `+${formatAmount(income, state.base)} · −${formatAmount(expense, state.base)}`),
-            ]),
-            ...groupByDate(list).map(([date, items]) =>
+        ? section(
+            `${list.length} операц${plural(list.length)}`,
+            groupByDate(list).map(([date, items]) =>
               el('div', {}, [
                 el('div', { class: 'tx-group__date' }, dayLabel(date)),
                 ...items.map((tx) => txRow(tx, () => openTxForm({ tx }))),
               ]),
             ),
-          ])
+            el('span', { class: 'num', style: 'font-size:12px;color:var(--fg-1)' },
+              `+${formatAmount(income, state.base)} · −${formatAmount(expense, state.base)}`),
+          )
         : el('div', { class: 'empty' }, [
             el('span', { class: 'empty__ico' }, '🔍'),
             el('div', {}, 'Ничего не найдено'),

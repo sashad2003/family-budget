@@ -1,15 +1,16 @@
 /** Настройки: профиль, участники, валюта, курсы, категории. */
 
-import { el, render } from '../core/dom.js?v=33';
-import { state, set } from '../core/store.js?v=33';
-import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=33';
-import { formatAmount, convert } from '../core/money.js?v=33';
-import { logout } from '../services/auth.js?v=33';
-import { inviteLink, resetInviteLink, removeMember } from '../services/account.js?v=33';
-import { refreshRates } from '../services/rates.js?v=33';
-import { saveCategory, deleteCategory } from '../services/transactions.js?v=33';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=33';
-import { toastOk, toastError } from '../ui/toast.js?v=33';
+import { el, render } from '../core/dom.js?v=34';
+import { state, set } from '../core/store.js?v=34';
+import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=34';
+import { formatAmount, convert } from '../core/money.js?v=34';
+import { logout } from '../services/auth.js?v=34';
+import { inviteLink, resetInviteLink, removeMember } from '../services/account.js?v=34';
+import { refreshRates } from '../services/rates.js?v=34';
+import { saveCategory, deleteCategory } from '../services/transactions.js?v=34';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=34';
+import { section } from '../ui/section.js?v=34';
+import { toastOk, toastError } from '../ui/toast.js?v=34';
 
 const PALETTE = ['#2dd98a', '#ff5b5b', '#5b9fff', '#ffb347', '#ff7eb3', '#3de8d0', '#8a8a94'];
 
@@ -36,90 +37,62 @@ function build(draw) {
       el('button', { class: 'chip', onclick: () => logout() }, 'Выйти'),
     ]),
 
-    // Валюта сводных сумм
-    el('div', { class: 'section-title' }, [el('span', {}, 'Валюта сводных сумм')]),
-    el('div', { class: 'segmented' }, CURRENCY_CODES.map((code) =>
-      el('button', {
-        class: state.base === code ? 'is-active' : '',
-        onclick: () => { set({ base: code }); draw(); },
-      }, code),
-    )),
-    el('p', { class: 'hint' },
-      'Операции хранятся в своей валюте. Итоги и графики показываются в выбранной здесь — ' +
-      'по курсу, зафиксированному в момент добавления каждой операции.'),
-
-    // Курсы
-    el('div', { class: 'section-title' }, [
-      el('span', {}, 'Курсы валют'),
-      el('button', {
-        class: 'chip',
-        onclick: async (e) => {
-          e.target.textContent = '…';
-          try {
-            const fresh = await refreshRates();
-            set({ rates: fresh.rates, ratesFetchedAt: fresh.fetchedAt });
-            toastOk('Курсы обновлены');
-          } catch {
-            toastError('Не удалось обновить курсы');
-          }
-          draw();
-        },
-      }, 'Обновить'),
-    ]),
-    el('div', { class: 'card' }, [
-      ...CURRENCIES.filter((c) => c.code !== state.base).map((c) =>
-        el('div', { class: 'legend-row' }, [
-          el('span', { class: 'legend-name' }, `1 ${c.code}`),
-          el('span', { class: 'legend-val' },
-            formatAmount(convert(1, c.code, state.base, state.rates), state.base)),
-        ]),
-      ),
-      el('p', { class: 'hint' }, state.ratesFetchedAt
-        ? `Обновлено: ${new Date(state.ratesFetchedAt).toLocaleString('ru-RU')}`
-        : 'Используются запасные курсы — источник недоступен'),
+    section('Валюта сводных сумм', [
+      el('div', { class: 'segmented' }, CURRENCY_CODES.map((code) =>
+        el('button', {
+          class: state.base === code ? 'is-active' : '',
+          onclick: () => { set({ base: code }); draw(); },
+        }, code),
+      )),
+      el('p', { class: 'hint' },
+        'Операции хранятся в своей валюте. Итоги и графики показываются в выбранной здесь — ' +
+        'по курсу, зафиксированному в момент добавления каждой операции.'),
     ]),
 
-    // Участники
-    el('div', { class: 'section-title' }, [
-      el('span', {}, `Семья · ${members.length}`),
-      el('button', { class: 'chip', onclick: () => openInviteSheet() }, '🔗 пригласить'),
-    ]),
-    ...members.map(([uid, member]) =>
-      el('div', { class: 'list-item' }, [
+    section('Курсы валют', [
+      el('div', { class: 'card' }, [
+        ...CURRENCIES.filter((c) => c.code !== state.base).map((c) =>
+          el('div', { class: 'legend-row' }, [
+            el('span', { class: 'legend-name' }, `1 ${c.code}`),
+            el('span', { class: 'legend-val' },
+              formatAmount(convert(1, c.code, state.base, state.rates), state.base)),
+          ]),
+        ),
+        el('p', { class: 'hint' }, state.ratesFetchedAt
+          ? `Обновлено: ${new Date(state.ratesFetchedAt).toLocaleString('ru-RU')}`
+          : 'Используются запасные курсы — источник недоступен'),
+      ]),
+    ], el('button', {
+      class: 'chip',
+      onclick: async (e) => {
+        e.target.textContent = '…';
+        try {
+          const fresh = await refreshRates();
+          set({ rates: fresh.rates, ratesFetchedAt: fresh.fetchedAt });
+          toastOk('Курсы обновлены');
+        } catch {
+          toastError('Не удалось обновить курсы');
+        }
+        draw();
+      },
+    }, 'Обновить')),
+
+    section(`Семья · ${members.length}`, [
+      ...members.map(([uid, member]) => el('div', { class: 'list-item' }, [
         el('div', { style: 'min-width:0' }, [
           el('div', {}, member.name || uid),
           el('div', { class: 'list-item__sub' }, member.email || ''),
         ]),
         uid === state.user?.uid
           ? el('span', { class: 'chip' }, 'вы')
-          : el('button', {
-              class: 'chip',
-              onclick: () => confirmSheet({
-                title: 'Убрать из бюджета?',
-                text: `${member.name || member.email} потеряет доступ. Записи останутся на месте.`,
-                confirmLabel: 'Убрать',
-                onConfirm: async () => {
-                  try {
-                    await removeMember(state.family.id, uid);
-                    toastOk('Убрали');
-                  } catch {
-                    toastError('Не удалось убрать');
-                  }
-                },
-              }),
-            }, 'убрать'),
-      ]),
-    ),
-    el('p', { class: 'hint' },
-      'Пошлите ссылку-приглашение мужу, жене или кому угодно: кто по ней войдёт, '
-      + 'окажется в этом бюджете.'),
+          : el('button', { class: 'chip', onclick: () => askRemove(member, uid) }, 'убрать'),
+      ])),
+      el('p', { class: 'hint' },
+        'Пошлите ссылку-приглашение мужу, жене или кому угодно: кто по ней войдёт, '
+        + 'окажется в этом бюджете.'),
+    ], el('button', { class: 'chip', onclick: () => openInviteSheet() }, '🔗 пригласить')),
 
-    // Категории
-    el('div', { class: 'section-title' }, [
-      el('span', {}, 'Категории'),
-      el('button', { class: 'chip', onclick: () => openCategoryEditor(null, draw) }, '＋ добавить'),
-    ]),
-    ...['expense', 'income'].map((type) =>
+    section('Категории', ['expense', 'income'].map((type) =>
       el('div', {}, [
         el('div', { class: 'tx-group__date' }, type === 'expense' ? 'Расходы' : 'Доходы'),
         ...state.categories.filter((c) => c.type === type).map((cat) =>
@@ -135,11 +108,28 @@ function build(draw) {
           ]),
         ),
       ]),
-    ),
+    ), el('button', { class: 'chip', onclick: () => openCategoryEditor(null, draw) }, '＋ добавить')),
 
     el('p', { class: 'hint', style: 'margin-top:26px;text-align:center' },
       'Семейный бюджет · данные в Firestore, распознавание чеков через Claude'),
   ];
+}
+
+/** Подтверждение перед тем, как выкинуть человека из бюджета. */
+function askRemove(member, uid) {
+  confirmSheet({
+    title: 'Убрать из бюджета?',
+    text: `${member.name || member.email} потеряет доступ. Записи останутся на месте.`,
+    confirmLabel: 'Убрать',
+    onConfirm: async () => {
+      try {
+        await removeMember(state.family.id, uid);
+        toastOk('Убрали');
+      } catch {
+        toastError('Не удалось убрать');
+      }
+    },
+  });
 }
 
 function openCategoryEditor(cat, onDone) {
