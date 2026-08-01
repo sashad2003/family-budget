@@ -7,6 +7,7 @@ export const DEFAULT_CATEGORIES = [
   // Расходы
   { id: 'groceries',  name: 'Продукты',    type: 'expense', icon: '🛒', color: '#2dd98a', order: 10 },
   { id: 'cafe',       name: 'Кафе',        type: 'expense', icon: '☕', color: '#ffb347', order: 20 },
+  { id: 'tips',       name: 'Чаевые',      type: 'expense', icon: '🪙', color: '#ffd166', order: 25 },
   { id: 'transport',  name: 'Транспорт',   type: 'expense', icon: '🚗', color: '#5b9fff', order: 30 },
   { id: 'home',       name: 'Дом',         type: 'expense', icon: '🏠', color: '#ff7eb3', order: 40 },
   // Регулярные платежи разнесены по смыслу: так видно, на что именно уходит месяц
@@ -33,6 +34,10 @@ export const DEFAULT_CATEGORIES = [
 const HINTS = {
   groceries: ['продукт', 'магазин', 'супермаркет', 'еда', 'бакал', 'maxi', 'lidl', 'idea', 'shufersal', 'rami'],
   cafe: ['кафе', 'ресторан', 'кофе', 'бар', 'пекарн', 'фастфуд'],
+  // napojnica — сербское «чаевые», tip/gratuity встречаются в счетах на английском.
+  // napojnica — сербское «чаевые». Голое «tip» не берём: в сербском это «тип»
+  // в смысле «вид», и оно давало бы ложные срабатывания.
+  tips: ['чаев', 'напойниц', 'napojnic', 'tips', 'gratuity', 'service charge'],
   transport: ['транспорт', 'такси', 'бензин', 'топлив', 'парков', 'автобус', 'nis', 'omv'],
   home: ['дом', 'мебел', 'ремонт', 'хозтовар', 'быт'],
   utilities: ['коммунал', 'электр', 'вода', 'газ', 'отоплен', 'мусор', 'infostan', 'eps'],
