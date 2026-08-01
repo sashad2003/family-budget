@@ -33,7 +33,7 @@ export const ADMIN_EMAILS = ['sashad2003@gmail.com'];
  * Номер WhatsApp для связи — в международном виде, только цифры.
  * Пусто — кнопки «написать» в приложении не будет.
  */
-export const SUPPORT_WHATSAPP = '';
+export const SUPPORT_WHATSAPP = '972527586117';
 
 /** Сколько дней бесплатно до подписки. */
 export const TRIAL_DAYS = 60;
