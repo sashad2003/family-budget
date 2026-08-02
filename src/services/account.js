@@ -24,6 +24,7 @@
 import {
   doc,
   collection,
+  onSnapshot,
   getDoc,
   getDocs,
   setDoc,
@@ -39,9 +40,9 @@ import {
   limit,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=42';
-import { ADMIN_EMAILS, LEGACY_FAMILY_ID, TRIAL_DAYS } from '../config.js?v=42';
-import { t } from '../core/i18n.js?v=42';
+import { db } from '../core/firebase.js?v=43';
+import { ADMIN_EMAILS, LEGACY_FAMILY_ID, TRIAL_DAYS } from '../config.js?v=43';
+import { t } from '../core/i18n.js?v=43';
 
 const userRef = (uid) => doc(db, 'users', uid);
 const codeRef = (code) => doc(db, 'inviteCodes', String(code));
@@ -191,6 +192,21 @@ async function loadFamily(familyId) {
   }
 
   return family;
+}
+
+/**
+ * Живая подписка на документ бюджета.
+ *
+ * Состав участников меняется не только на этом устройстве: кого-то убрали,
+ * кто-то вошёл по ссылке. Без подписки экран показывал бы снимок, сделанный
+ * при входе, и убранный человек продолжал бы висеть в списке до перезагрузки.
+ */
+export function watchFamily(familyId, onChange, onError) {
+  return onSnapshot(
+    familyRef(familyId),
+    (snap) => { if (snap.exists()) onChange({ id: snap.id, ...snap.data() }); },
+    onError,
+  );
 }
 
 /** Хозяин бюджета — тот, кто его завёл. Только он правит состав. */

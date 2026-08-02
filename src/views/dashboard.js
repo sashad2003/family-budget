@@ -1,15 +1,15 @@
 /** Обзор: баланс месяца, доходы/расходы, разбивка по категориям, последние операции. */
 
-import { el } from '../core/dom.js?v=42';
-import { state } from '../core/store.js?v=42';
-import { formatAmount } from '../core/money.js?v=42';
-import { monthTransactions, totals, byCategory, unpaidBills } from '../core/selectors.js?v=42';
-import { set } from '../core/store.js?v=42';
-import { txRow, tileGradient } from './list.js?v=42';
-import { openTxForm } from './txForm.js?v=42';
-import { openScanSheet } from './scan.js?v=42';
-import { section } from '../ui/section.js?v=42';
-import { t } from '../core/i18n.js?v=42';
+import { el } from '../core/dom.js?v=43';
+import { state } from '../core/store.js?v=43';
+import { formatAmount } from '../core/money.js?v=43';
+import { monthTransactions, totals, byCategory, unpaidBills } from '../core/selectors.js?v=43';
+import { set } from '../core/store.js?v=43';
+import { txRow, tileGradient } from './list.js?v=43';
+import { openTxForm } from './txForm.js?v=43';
+import { openScanSheet } from './scan.js?v=43';
+import { section } from '../ui/section.js?v=43';
+import { t } from '../core/i18n.js?v=43';
 
 export function renderDashboard() {
   const list = monthTransactions(state);

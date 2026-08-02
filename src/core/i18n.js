@@ -10,7 +10,7 @@
  * где сторона задана жёстко (см. [dir="rtl"] в стилях).
  */
 
-import { DICT } from '../data/i18n.js?v=42';
+import { DICT } from '../data/i18n.js?v=43';
 
 export const LOCALES = [
   { code: 'ru', name: 'Русский', dir: 'ltr' },
