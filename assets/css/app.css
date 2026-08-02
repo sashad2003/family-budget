@@ -387,6 +387,48 @@ button { cursor: pointer; border: none; background: none; }
 }
 .fab:active { transform: scale(0.92); }
 
+/*
+ * Кнопка WhatsApp.
+ *
+ * Стоит у противоположного края от «＋»: обе плавают над содержимым, и рядом
+ * они мешали бы друг другу. Зелёный — фирменный цвет мессенджера, по нему
+ * кнопку узнают, не читая подписи.
+ */
+.wa {
+  position: fixed;
+  inset-inline-start: 18px;
+  bottom: calc(var(--dock-h) + 24px + env(safe-area-inset-bottom));
+  z-index: 41;
+  width: 52px; height: 52px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #25d366;
+  box-shadow: 0 12px 26px -10px rgba(37, 211, 102, 0.8);
+  transition: transform 0.16s var(--ease);
+}
+.wa:hover { transform: scale(1.06); }
+.wa:active { transform: scale(0.92); }
+.wa svg { width: 30px; height: 30px; display: block; }
+
+/* ------------------------------------------------ подвал */
+
+/*
+ * Документы внизу страницы, как в любом сервисе: там их и ищут.
+ * Раньше они лежали в настройках, куда за ними никто не пойдёт.
+ */
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+  padding: 26px 16px 8px;
+  border-top: 1px solid var(--edge);
+  margin-top: 34px;
+  font-size: 12.5px;
+}
+.footer a { color: var(--fg-2); text-decoration: none; }
+.footer a:hover { color: var(--fg-0); }
+
 /* ------------------------------------------------ карточки */
 
 .card {
@@ -1289,6 +1331,10 @@ button { cursor: pointer; border: none; background: none; }
   .fab { display: none; }
 
   .toast-root { bottom: 28px; left: calc(50% + var(--rail-w) / 2); }
+
+  /* Дока внизу нет, а «＋» уехала в шапку — место у нижнего края свободно. */
+  .wa { bottom: 28px; inset-inline-start: auto; inset-inline-end: 28px; }
+  .footer { padding-inline: 4px; }
 
   /* Обзор в две колонки */
   .dash { display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); gap: 20px; align-items: start; }

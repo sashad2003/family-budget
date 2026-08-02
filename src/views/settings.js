@@ -1,22 +1,21 @@
 /** Настройки: профиль, участники, валюта, курсы, категории. */
 
-import { el, render } from '../core/dom.js?v=40';
-import { state, set } from '../core/store.js?v=40';
-import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=40';
-import { formatAmount, convert } from '../core/money.js?v=40';
-import { logout } from '../services/auth.js?v=40';
+import { el, render } from '../core/dom.js?v=41';
+import { state, set } from '../core/store.js?v=41';
+import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=41';
+import { formatAmount, convert } from '../core/money.js?v=41';
+import { logout } from '../services/auth.js?v=41';
 import {
   inviteLink, resetInviteLink, removeMember, leaveFamily, isOwner,
-} from '../services/account.js?v=40';
-import { refreshRates } from '../services/rates.js?v=40';
-import { saveCategory, deleteCategory } from '../services/transactions.js?v=40';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=40';
-import { section } from '../ui/section.js?v=40';
+} from '../services/account.js?v=41';
+import { refreshRates } from '../services/rates.js?v=41';
+import { saveCategory, deleteCategory } from '../services/transactions.js?v=41';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=41';
+import { section } from '../ui/section.js?v=41';
 import {
   t, LOCALES, getLocale, setLocale, intlLocale, translateDocument,
-} from '../core/i18n.js?v=40';
-import { SUPPORT_WHATSAPP } from '../config.js?v=40';
-import { toastOk, toastError } from '../ui/toast.js?v=40';
+} from '../core/i18n.js?v=41';
+import { toastOk, toastError } from '../ui/toast.js?v=41';
 
 const PALETTE = ['#2dd98a', '#ff5b5b', '#5b9fff', '#ffb347', '#ff7eb3', '#3de8d0', '#8a8a94'];
 
@@ -116,8 +115,6 @@ function build(draw) {
       class: 'chip',
       onclick: () => openCategoryEditor(null, draw),
     }, `＋ ${t('common.add')}`)),
-
-    legalSection(),
 
     el('p', { class: 'hint', style: 'margin-top:26px;text-align:center' }, t('settings.footer')),
   ];
@@ -379,40 +376,4 @@ function languageSection(draw) {
       }, lang.name),
     )),
   );
-}
-
-/**
- * Документы и связь.
- *
- * Страницы открываются в новой вкладке и живут отдельными файлами: их читают
- * до входа в приложение — например, когда Google проверяет, что мы за сервис.
- */
-function legalSection() {
-  const links = [
-    ['privacy.html', t('legal.privacy')],
-    ['terms.html', t('legal.terms')],
-    ['accessibility.html', t('legal.accessibility')],
-    ['cookies.html', t('legal.cookies')],
-  ];
-
-  return section(t('legal.title'), [
-    ...links.map(([href, title]) => el('a', {
-      class: 'list-item',
-      href: `${href}?lang=${getLocale()}`,
-      target: '_blank',
-      rel: 'noopener',
-      style: 'color:inherit;text-decoration:none',
-    }, [el('span', {}, title), el('span', { class: 'list-item__sub' }, '↗')])),
-
-    SUPPORT_WHATSAPP
-      ? el('a', {
-          class: 'btn btn--ghost btn--wide',
-          style: 'margin-top:10px',
-          href: `https://wa.me/${SUPPORT_WHATSAPP}`,
-          target: '_blank',
-          rel: 'noopener',
-        }, `💬 ${t('support.whatsapp')}`)
-      : null,
-    SUPPORT_WHATSAPP ? el('p', { class: 'hint' }, t('support.hint')) : null,
-  ]);
 }

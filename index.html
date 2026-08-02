@@ -12,12 +12,12 @@
      бы что попало. Файлы шрифта скачиваются только если им что-то набрано. -->
 <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;500;600;700&family=Heebo:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <!-- ?v меняется при правках: заставляет браузер взять новый файл, а не старый из кеша -->
-<link rel="stylesheet" href="assets/css/app.css?v=40">
+<link rel="stylesheet" href="assets/css/app.css?v=41">
 
 <!-- Установка на телефон: значок на рабочем столе и запуск без адресной строки -->
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="assets/icons/icon-192.png?v=40" sizes="192x192">
-<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=40">
+<link rel="icon" href="assets/icons/icon-192.png?v=41" sizes="192x192">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=41">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Бюджет">
@@ -151,14 +151,33 @@
     </button>
 
     <main id="view" class="view"></main>
+
+    <!-- Документы должны попадаться на глаза, а не лежать в настройках:
+         их ищут внизу страницы, как в любом сервисе. -->
+    <footer class="footer">
+      <a href="privacy.html" data-i18n="legal.privacy"></a>
+      <a href="terms.html" data-i18n="legal.terms"></a>
+      <a href="cookies.html" data-i18n="legal.cookies"></a>
+      <a href="accessibility.html" data-i18n="legal.accessibility"></a>
+    </footer>
   </div>
 
   <button id="btn-add" class="fab" data-i18n-label="nav.addTxLabel">＋</button>
+
+  <!-- Связь с автором: висит всегда, потому что писать обычно хотят тогда,
+       когда что-то не получилось, — идти за этим в настройки никто не станет. -->
+  <a id="btn-whatsapp" class="wa" href="#" target="_blank" rel="noopener"
+     data-i18n-label="support.whatsapp" hidden>
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Z" fill="#fff"/>
+      <path d="M9.5 7.3c-.2-.45-.4-.46-.6-.47h-.5c-.17 0-.45.07-.69.32-.24.25-.9.88-.9 2.15s.92 2.5 1.05 2.66c.13.17 1.78 2.85 4.4 3.88 2.18.86 2.62.69 3.1.64.47-.04 1.52-.62 1.73-1.22.21-.6.21-1.11.15-1.22-.06-.1-.23-.17-.48-.29-.25-.13-1.52-.75-1.75-.83-.24-.09-.41-.13-.58.12-.17.25-.67.83-.82 1-.15.17-.3.2-.55.07-.25-.13-1.08-.4-2.05-1.27-.76-.68-1.27-1.51-1.42-1.76-.15-.25-.02-.39.11-.51.11-.11.25-.3.38-.44.12-.15.16-.25.25-.42.08-.17.04-.32-.02-.44-.06-.13-.55-1.4-.78-1.92Z" fill="#25d366"/>
+    </svg>
+  </a>
 </div>
 
 <div id="sheet-root"></div>
 <div id="toast-root" class="toast-root"></div>
 
-<script type="module" src="src/main.js?v=40"></script>
+<script type="module" src="src/main.js?v=41"></script>
 </body>
 </html>
