@@ -2,43 +2,43 @@
  * Точка входа: авторизация → загрузка семьи → подписки на данные → роутинг.
  */
 
-import { $, render } from './core/dom.js?v=46';
+import { $, render } from './core/dom.js?v=47';
 import {
-  t, localeInfo, applyDocumentLocale, translateDocument,
-} from './core/i18n.js?v=46';
-import { state, set, subscribe } from './core/store.js?v=46';
-import { SUPPORT_WHATSAPP } from './config.js?v=46';
-import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=46';
-import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=46';
-import { unpaidBills } from './core/selectors.js?v=46';
+  t, localeInfo, isRTL, applyDocumentLocale, translateDocument,
+} from './core/i18n.js?v=47';
+import { state, set, subscribe } from './core/store.js?v=47';
+import { SUPPORT_WHATSAPP } from './config.js?v=47';
+import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=47';
+import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=47';
+import { unpaidBills } from './core/selectors.js?v=47';
 
-import { watchAuth, signIn } from './services/auth.js?v=46';
+import { watchAuth, signIn } from './services/auth.js?v=47';
 import {
   loadAccount, isAdmin, joinByCode, listFamilies, watchFamily,
-} from './services/account.js?v=46';
-import { setFamilyId } from './core/session.js?v=46';
-import { askProfile } from './views/signup.js?v=46';
+} from './services/account.js?v=47';
+import { setFamilyId } from './core/session.js?v=47';
+import { askProfile } from './views/signup.js?v=47';
 import {
   watchTransactions,
   watchCategories,
   seedCategoriesIfEmpty,
   syncNewCategories,
-} from './services/transactions.js?v=46';
-import { watchBills } from './services/bills.js?v=46';
-import { loadRates } from './services/rates.js?v=46';
+} from './services/transactions.js?v=47';
+import { watchBills } from './services/bills.js?v=47';
+import { loadRates } from './services/rates.js?v=47';
 
-import { renderDashboard } from './views/dashboard.js?v=46';
-import { renderList } from './views/list.js?v=46';
-import { renderBills } from './views/bills.js?v=46';
-import { renderPrices } from './views/prices.js?v=46';
-import { renderAdmin } from './views/admin.js?v=46';
-import { openBudgetMenu, budgetName } from './views/budgetMenu.js?v=46';
-import { renderCharts, destroyCharts } from './views/charts.js?v=46';
-import { renderSettings } from './views/settings.js?v=46';
-import { openTxForm } from './views/txForm.js?v=46';
-import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=46';
-import { closeSheet } from './ui/sheet.js?v=46';
-import { toastError, toastOk } from './ui/toast.js?v=46';
+import { renderDashboard } from './views/dashboard.js?v=47';
+import { renderList } from './views/list.js?v=47';
+import { renderBills } from './views/bills.js?v=47';
+import { renderPrices } from './views/prices.js?v=47';
+import { renderAdmin } from './views/admin.js?v=47';
+import { openBudgetMenu, budgetName } from './views/budgetMenu.js?v=47';
+import { renderCharts, destroyCharts } from './views/charts.js?v=47';
+import { renderSettings } from './views/settings.js?v=47';
+import { openTxForm } from './views/txForm.js?v=47';
+import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=47';
+import { closeSheet } from './ui/sheet.js?v=47';
+import { toastError, toastOk } from './ui/toast.js?v=47';
 
 // Язык ставим до первой отрисовки: иначе видно, как надписи меняются на ходу.
 applyDocumentLocale();
@@ -236,7 +236,7 @@ function shareOldPrices(transactions) {
   if (backfillStarted || !state.user || !transactions.length) return;
   backfillStarted = true;
 
-  import('./services/prices.js?v=46')
+  import('./services/prices.js?v=47')
     .then(({ backfillPrices }) => backfillPrices(transactions, state.user.uid))
     .catch((error) => console.error('Не удалось перенести историю цен', error));
 }
@@ -276,6 +276,8 @@ subscribe(() => {
 
 function drawChrome() {
   $('#btn-month').textContent = monthLabel(state.month);
+  orderMonthArrows();
+
   // Одна кнопка на язык и валюту: RU/RSD, EN/USD, IL/ILS.
   $('#btn-base-currency').textContent = `${localeInfo().short}/${state.base}`;
 
@@ -323,6 +325,25 @@ function drawBudgetPick() {
     node.hidden = !many;
     node.querySelector('.budget-pick__name').textContent = label;
   }
+}
+
+/**
+ * Порядок стрелок листания месяца.
+ *
+ * В иврите пара зеркальна: «назад» справа, «вперёд» слева — и по виду, и по
+ * действию. Переставляем сами узлы, а не полагаемся на разворот строки
+ * браузером: он делает это по-разному в зависимости от содержимого, и кнопки
+ * оказывались то так, то этак.
+ */
+function orderMonthArrows() {
+  const box = $('.topbar__period');
+  const prev = $('#btn-prev-month');
+  const month = $('#btn-month');
+  const next = $('#btn-next-month');
+
+  const order = isRTL() ? [next, month, prev] : [prev, month, next];
+  if (box.firstElementChild === order[0]) return;
+  box.append(...order);
 }
 
 let drawnRoute = null;
