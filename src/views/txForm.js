@@ -3,36 +3,46 @@
  * после сканирования каждое поле и каждая строка товара остаются редактируемыми.
  */
 
-import { el, render } from '../core/dom.js?v=47';
-import { state } from '../core/store.js?v=47';
-import { CURRENCY_CODES } from '../config.js?v=47';
-import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=47';
-import { today, dayLabel } from '../core/dates.js?v=47';
-import { guessCategory } from '../data/categories.js?v=47';
-import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=47';
-import { tileGradient } from './list.js?v=47';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=47';
-import { toastOk, toastError } from '../ui/toast.js?v=47';
-import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=47';
-import { openQuickPick } from './quickPick.js?v=47';
-import { findDuplicates, sameMoment } from '../core/selectors.js?v=47';
-import { t } from '../core/i18n.js?v=47';
+import { el, render } from '../core/dom.js?v=48';
+import { state } from '../core/store.js?v=48';
+import { CURRENCY_CODES } from '../config.js?v=48';
+import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=48';
+import { today, dayLabel } from '../core/dates.js?v=48';
+import { guessCategory } from '../data/categories.js?v=48';
+import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=48';
+import { tileGradient } from './list.js?v=48';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=48';
+import { toastOk, toastError } from '../ui/toast.js?v=48';
+import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=48';
+import { openQuickPick } from './quickPick.js?v=48';
+import { findDuplicates, sameMoment } from '../core/selectors.js?v=48';
+import { t } from '../core/i18n.js?v=48';
 
 /**
- * openTxForm({ tx })      — правка существующей операции
- * openTxForm({ draft })   — новая операция, предзаполненная из чека
- * openTxForm({ model })   — возврат к уже набранной форме (после выбора товаров)
- * openTxForm()            — пустая новая операция
+ * openTxForm({ tx })          — правка существующей операции
+ * openTxForm({ draft })       — новая операция, предзаполненная из чека
+ * openTxForm({ tx, draft })   — правка, куда подставили заново распознанный чек
+ * openTxForm({ tx, model })   — возврат к набранной форме (после выбора товаров)
+ * openTxForm()                — пустая новая операция
+ *
+ * tx нельзя терять при возврате в форму: без него сохранение заводит вторую
+ * запись вместо правки первой, а проверка повторов находит саму правящуюся
+ * операцию и ругается на неё.
  */
 export function openTxForm({ tx = null, draft = null, model: restored = null } = {}) {
-  const model = restored || (tx ? fromTx(tx) : fromDraft(draft));
+  /**
+   * Черновик с чека главнее записи: если чек распознали, правя старую
+   * операцию, показать надо распознанное, а tx остаётся лишь указанием,
+   * какую запись обновить при сохранении.
+   */
+  const model = restored || (draft ? fromDraft(draft) : tx ? fromTx(tx) : fromDraft(null));
 
   const body = el('div');
   // Перенос — как в подвале шторки: длинные подписи не должны уезжать за край.
   const footer = el('div', { style: 'display:flex;flex-wrap:wrap;gap:10px;flex:1' });
 
   const rerender = () => {
-    render(body, buildBody(model, rerender));
+    render(body, buildBody(model, rerender, tx));
     render(footer, buildFooter(model, tx));
   };
   rerender();
@@ -115,11 +125,17 @@ const itemsSum = (model) => model.items.reduce((sum, item) => sum + (Number(item
 
 // ---------------------------------------------------------------- разметка
 
-function buildBody(model, rerender) {
+/**
+ * tx передаётся везде, где форма открывается заново — после выбора товаров,
+ * после распознавания чека. Без него правка превращалась бы в создание новой
+ * записи: сохранение уходило бы в addDoc, а проверка повторов находила бы
+ * саму же правящуюся операцию и ругалась на неё.
+ */
+function buildBody(model, rerender, tx) {
   const nodes = [];
 
   // Чек — самое частое действие, поэтому стоит первым.
-  if (!model.showItems) nodes.push(buildScanRow());
+  if (!model.showItems) nodes.push(buildScanRow(tx));
 
   // Тип операции
   nodes.push(
@@ -234,14 +250,15 @@ function buildBody(model, rerender) {
   );
 
   // Чек
-  nodes.push(buildReceiptBlock(model, rerender));
+  nodes.push(buildReceiptBlock(model, rerender, tx));
 
   return nodes;
 }
 
 /** Две кнопки съёмки и ссылка из QR — вверху формы. */
-function buildScanRow() {
-  const toForm = (draft) => openTxForm({ draft });
+function buildScanRow(tx) {
+  // Распознали чек, правя старую запись, — обновляем её, а не заводим вторую.
+  const toForm = (draft) => openTxForm({ tx, draft });
 
   return el('div', { style: 'margin-bottom:16px' }, [
     el('div', { class: 'scan-row' }, [
@@ -280,13 +297,13 @@ function typeButton(value, label, model, rerender) {
   }, label);
 }
 
-function buildReceiptBlock(model, rerender) {
+function buildReceiptBlock(model, rerender, tx) {
   if (!model.showItems) {
     return el('div', {}, [
       el('div', { class: 'divider' }, t('form.itemsDivider')),
       el('button', {
         class: 'btn btn--primary btn--wide',
-        onclick: () => pickItems(model),
+        onclick: () => pickItems(model, tx),
       }, t('form.quickPick')),
       el('button', {
         class: 'btn btn--ghost btn--wide',
@@ -303,7 +320,7 @@ function buildReceiptBlock(model, rerender) {
     el('div', { class: 'section__head' }, [
       el('h2', { class: 'section__title' }, t('form.items', { n: model.items.length })),
       el('div', { style: 'display:flex;gap:6px' }, [
-        el('button', { class: 'chip', onclick: () => pickItems(model) }, t('form.pick')),
+        el('button', { class: 'chip', onclick: () => pickItems(model, tx) }, t('form.pick')),
         el('button', {
           class: 'chip',
           onclick: () => { model.items.push(emptyItem()); rerender(); },
@@ -402,7 +419,7 @@ const emptyItem = () => ({ name: '', qty: 1, price: 0, total: 0 });
  * Быстрый выбор товаров. Шторка одна на всё приложение, поэтому форма
  * закрывается и открывается заново с тем же черновиком — набранное не теряется.
  */
-function pickItems(model) {
+function pickItems(model, tx) {
   openQuickPick(model.currency, {
     onDone: (picked) => {
       // Уже добавленное не дублируем, пустую заготовку выкидываем.
@@ -419,9 +436,9 @@ function pickItems(model) {
       const sum = itemsSum(model);
       if (!model.amount && sum) model.amount = sum;
 
-      openTxForm({ model });
+      openTxForm({ tx, model });
     },
-    onCancel: () => openTxForm({ model }),
+    onCancel: () => openTxForm({ tx, model }),
   });
 }
 

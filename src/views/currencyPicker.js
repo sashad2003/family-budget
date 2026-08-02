@@ -7,14 +7,14 @@
  * надписи вокруг. Названия языков поэтому написаны каждое на себе самом.
  */
 
-import { el } from '../core/dom.js?v=47';
-import { state, set } from '../core/store.js?v=47';
-import { CURRENCIES } from '../config.js?v=47';
-import { formatAmount, convert } from '../core/money.js?v=47';
-import { openSheet, closeSheet } from '../ui/sheet.js?v=47';
+import { el } from '../core/dom.js?v=48';
+import { state, set } from '../core/store.js?v=48';
+import { CURRENCIES } from '../config.js?v=48';
+import { formatAmount, convert } from '../core/money.js?v=48';
+import { openSheet, closeSheet } from '../ui/sheet.js?v=48';
 import {
   t, LOCALES, getLocale, setLocale, translateDocument,
-} from '../core/i18n.js?v=47';
+} from '../core/i18n.js?v=48';
 
 export function openBaseCurrencyPicker() {
   openSheet({
