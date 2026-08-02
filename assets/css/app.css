@@ -421,7 +421,9 @@ button { cursor: pointer; border: none; background: none; }
   display: flex;
   flex-wrap: wrap;
   gap: 6px 18px;
-  padding: 26px 16px 8px;
+  /* Снизу оставлено место под плавающие кнопки: они висят над доком в той же
+     полосе, где иначе оказалась бы последняя строка ссылок, и перекрывали её. */
+  padding: 26px 16px 92px;
   border-top: 1px solid var(--edge);
   margin-top: 34px;
   font-size: 12.5px;
