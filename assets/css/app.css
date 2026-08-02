@@ -247,6 +247,15 @@ button { cursor: pointer; border: none; background: none; }
  */
 .arrow--prev::before { content: '‹'; }
 .arrow--next::before { content: '›'; }
+
+/*
+ * В иврите пара зеркалится целиком: «назад» встаёт справа и показывает
+ * вправо. Порядок задаём сами, а не оставляем браузеру: он разворачивает
+ * строку по-разному в зависимости от того, что внутри, и кнопки оказывались
+ * то так, то этак. Пара из двух кнопок и подписи — случай, где надёжнее
+ * прописать раскладку явно.
+ */
+[dir="rtl"] .topbar__period { direction: ltr; flex-direction: row-reverse; }
 [dir="rtl"] .arrow--prev::before { content: '›'; }
 [dir="rtl"] .arrow--next::before { content: '‹'; }
 
