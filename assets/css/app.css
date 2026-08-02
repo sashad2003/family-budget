@@ -237,6 +237,19 @@ button { cursor: pointer; border: none; background: none; }
 
 .topbar__period { display: flex; align-items: center; gap: 2px; }
 
+/*
+ * Стрелки листания месяцев.
+ *
+ * Значок задан стилями, а не буквой в разметке: «назад» показывает туда,
+ * откуда идёт письмо, — влево в русском и английском, вправо в иврите.
+ * Порядок кнопок разворачивает сам браузер, разворачивать надо только сами
+ * стрелки, иначе они смотрят в обратную сторону от движения.
+ */
+.arrow--prev::before { content: '‹'; }
+.arrow--next::before { content: '›'; }
+[dir="rtl"] .arrow--prev::before { content: '›'; }
+[dir="rtl"] .arrow--next::before { content: '‹'; }
+
 .topbar__month {
   font-size: 18.5px;
   font-weight: 500;
@@ -1384,10 +1397,6 @@ button { cursor: pointer; border: none; background: none; }
  * раскладку, отступы и порядок колонок. Отдельно правим только то, где
  * сторона задана жёстко и логического аналога нет.
  */
-
-/* Стрелки листания месяцев показывают направление во времени, а не на экране:
-   «назад» в иврите — это стрелка вправо. */
-[dir="rtl"] .topbar__period { flex-direction: row-reverse; }
 
 /* Раскрывающая галочка у выбора бюджета смотрит вниз в любом языке. */
 [dir="rtl"] .budget-pick__caret { transform: none; }
