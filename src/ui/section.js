@@ -11,7 +11,7 @@
  * action — то, что стоит справа от заголовка: кнопка или подпись. Может не быть.
  */
 
-import { el } from '../core/dom.js?v=43';
+import { el } from '../core/dom.js?v=44';
 
 export function section(title, content, action = null) {
   return el('section', { class: 'section' }, [

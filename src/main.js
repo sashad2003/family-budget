@@ -2,41 +2,43 @@
  * Точка входа: авторизация → загрузка семьи → подписки на данные → роутинг.
  */
 
-import { $, render } from './core/dom.js?v=43';
-import { t, applyDocumentLocale, translateDocument } from './core/i18n.js?v=43';
-import { state, set, subscribe } from './core/store.js?v=43';
-import { SUPPORT_WHATSAPP } from './config.js?v=43';
-import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=43';
-import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=43';
-import { unpaidBills } from './core/selectors.js?v=43';
+import { $, render } from './core/dom.js?v=44';
+import {
+  t, localeInfo, applyDocumentLocale, translateDocument,
+} from './core/i18n.js?v=44';
+import { state, set, subscribe } from './core/store.js?v=44';
+import { SUPPORT_WHATSAPP } from './config.js?v=44';
+import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=44';
+import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=44';
+import { unpaidBills } from './core/selectors.js?v=44';
 
-import { watchAuth, signIn } from './services/auth.js?v=43';
+import { watchAuth, signIn } from './services/auth.js?v=44';
 import {
   loadAccount, isAdmin, joinByCode, listFamilies, watchFamily,
-} from './services/account.js?v=43';
-import { setFamilyId } from './core/session.js?v=43';
-import { askProfile } from './views/signup.js?v=43';
+} from './services/account.js?v=44';
+import { setFamilyId } from './core/session.js?v=44';
+import { askProfile } from './views/signup.js?v=44';
 import {
   watchTransactions,
   watchCategories,
   seedCategoriesIfEmpty,
   syncNewCategories,
-} from './services/transactions.js?v=43';
-import { watchBills } from './services/bills.js?v=43';
-import { loadRates } from './services/rates.js?v=43';
+} from './services/transactions.js?v=44';
+import { watchBills } from './services/bills.js?v=44';
+import { loadRates } from './services/rates.js?v=44';
 
-import { renderDashboard } from './views/dashboard.js?v=43';
-import { renderList } from './views/list.js?v=43';
-import { renderBills } from './views/bills.js?v=43';
-import { renderPrices } from './views/prices.js?v=43';
-import { renderAdmin } from './views/admin.js?v=43';
-import { openBudgetMenu, budgetName } from './views/budgetMenu.js?v=43';
-import { renderCharts, destroyCharts } from './views/charts.js?v=43';
-import { renderSettings } from './views/settings.js?v=43';
-import { openTxForm } from './views/txForm.js?v=43';
-import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=43';
-import { closeSheet } from './ui/sheet.js?v=43';
-import { toastError, toastOk } from './ui/toast.js?v=43';
+import { renderDashboard } from './views/dashboard.js?v=44';
+import { renderList } from './views/list.js?v=44';
+import { renderBills } from './views/bills.js?v=44';
+import { renderPrices } from './views/prices.js?v=44';
+import { renderAdmin } from './views/admin.js?v=44';
+import { openBudgetMenu, budgetName } from './views/budgetMenu.js?v=44';
+import { renderCharts, destroyCharts } from './views/charts.js?v=44';
+import { renderSettings } from './views/settings.js?v=44';
+import { openTxForm } from './views/txForm.js?v=44';
+import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=44';
+import { closeSheet } from './ui/sheet.js?v=44';
+import { toastError, toastOk } from './ui/toast.js?v=44';
 
 // Язык ставим до первой отрисовки: иначе видно, как надписи меняются на ходу.
 applyDocumentLocale();
@@ -234,7 +236,7 @@ function shareOldPrices(transactions) {
   if (backfillStarted || !state.user || !transactions.length) return;
   backfillStarted = true;
 
-  import('./services/prices.js?v=43')
+  import('./services/prices.js?v=44')
     .then(({ backfillPrices }) => backfillPrices(transactions, state.user.uid))
     .catch((error) => console.error('Не удалось перенести историю цен', error));
 }
@@ -274,7 +276,8 @@ subscribe(() => {
 
 function drawChrome() {
   $('#btn-month').textContent = monthLabel(state.month);
-  $('#btn-base-currency').textContent = state.base;
+  // Одна кнопка на язык и валюту: RU/RSD, EN/USD, IL/ILS.
+  $('#btn-base-currency').textContent = `${localeInfo().short}/${state.base}`;
 
   // Вперёд дальше текущего месяца не пускаем.
   $('#btn-next-month').disabled = state.month >= monthKey(new Date());

@@ -83,7 +83,7 @@ export const DICT = {
   'nav.addTxLabel': { ru: 'Добавить операцию', en: 'Add transaction', he: 'הוספת תנועה' },
   'nav.prevMonth': { ru: 'Предыдущий месяц', en: 'Previous month', he: 'חודש קודם' },
   'nav.nextMonth': { ru: 'Следующий месяц', en: 'Next month', he: 'חודש הבא' },
-  'nav.baseCurrency': { ru: 'Валюта сводных сумм', en: 'Currency for totals', he: 'מטבע הסיכומים' },
+  'nav.langCurrency': { ru: 'Язык и валюта', en: 'Language and currency', he: 'שפה ומטבע' },
 
   'more.list': {
     ru: 'Полный список за месяц с поиском и фильтрами',
@@ -276,6 +276,7 @@ export const DICT = {
 
   // ---------------------------------------------------------------- валюта
   'currency.title': { ru: 'Валюта сводных сумм', en: 'Currency for totals', he: 'מטבע הסיכומים' },
+  'currency.langTitle': { ru: 'Язык и валюта', en: 'Language and currency', he: 'שפה ומטבע' },
   'currency.hint': {
     ru: 'Операции остаются в своей валюте — меняется только валюта итогов.',
     en: 'Transactions keep their own currency — only the totals change.',

@@ -1,17 +1,39 @@
-/** Выбор валюты списком — перебор по кругу неудобен, когда валют больше двух. */
+/**
+ * Язык и валюта — в одной шторке.
+ *
+ * Обе настройки меняют вид всего приложения и нужны сразу при первом
+ * знакомстве, поэтому вынесены в шапку, а не спрятаны в настройки: человеку,
+ * который не читает по-русски, надо переключить язык, не понимая ни одной
+ * надписи вокруг. Названия языков поэтому написаны каждое на себе самом.
+ */
 
-import { el } from '../core/dom.js?v=43';
-import { state, set } from '../core/store.js?v=43';
-import { CURRENCIES } from '../config.js?v=43';
-import { formatAmount, convert } from '../core/money.js?v=43';
-import { openSheet, closeSheet } from '../ui/sheet.js?v=43';
-import { t } from '../core/i18n.js?v=43';
+import { el } from '../core/dom.js?v=44';
+import { state, set } from '../core/store.js?v=44';
+import { CURRENCIES } from '../config.js?v=44';
+import { formatAmount, convert } from '../core/money.js?v=44';
+import { openSheet, closeSheet } from '../ui/sheet.js?v=44';
+import {
+  t, LOCALES, getLocale, setLocale, translateDocument,
+} from '../core/i18n.js?v=44';
 
-/** Валюта сводных сумм: в какой считать баланс и итоги месяца. */
 export function openBaseCurrencyPicker() {
   openSheet({
-    title: t('currency.title'),
+    title: t('currency.langTitle'),
     body: [
+      el('div', { class: 'segmented', style: 'margin-bottom:18px' }, LOCALES.map((lang) =>
+        el('button', {
+          class: getLocale() === lang.code ? 'is-active' : '',
+          lang: lang.code,
+          onclick: () => {
+            setLocale(lang.code);
+            // Язык меняет и статическую разметку, и содержимое самой шторки.
+            translateDocument();
+            set({});
+            openBaseCurrencyPicker();
+          },
+        }, lang.name),
+      )),
+
       el('div', { class: 'cur-list' }, CURRENCIES.map((cur) =>
         el('button', {
           class: `cur ${state.base === cur.code ? 'is-active' : ''}`,

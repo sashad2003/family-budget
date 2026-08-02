@@ -1,21 +1,19 @@
 /** Настройки: профиль, участники, валюта, курсы, категории. */
 
-import { el, render } from '../core/dom.js?v=43';
-import { state, set } from '../core/store.js?v=43';
-import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=43';
-import { formatAmount, convert } from '../core/money.js?v=43';
-import { logout } from '../services/auth.js?v=43';
+import { el, render } from '../core/dom.js?v=44';
+import { state, set } from '../core/store.js?v=44';
+import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=44';
+import { formatAmount, convert } from '../core/money.js?v=44';
+import { logout } from '../services/auth.js?v=44';
 import {
   inviteLink, resetInviteLink, removeMember, leaveFamily, isOwner,
-} from '../services/account.js?v=43';
-import { refreshRates } from '../services/rates.js?v=43';
-import { saveCategory, deleteCategory } from '../services/transactions.js?v=43';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=43';
-import { section } from '../ui/section.js?v=43';
-import {
-  t, LOCALES, getLocale, setLocale, intlLocale, translateDocument,
-} from '../core/i18n.js?v=43';
-import { toastOk, toastError } from '../ui/toast.js?v=43';
+} from '../services/account.js?v=44';
+import { refreshRates } from '../services/rates.js?v=44';
+import { saveCategory, deleteCategory } from '../services/transactions.js?v=44';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=44';
+import { section } from '../ui/section.js?v=44';
+import { t, intlLocale } from '../core/i18n.js?v=44';
+import { toastOk, toastError } from '../ui/toast.js?v=44';
 
 const PALETTE = ['#2dd98a', '#ff5b5b', '#5b9fff', '#ffb347', '#ff7eb3', '#3de8d0', '#8a8a94'];
 
@@ -42,8 +40,6 @@ function build(draw) {
       ]),
       el('button', { class: 'chip', onclick: () => logout() }, t('settings.signOut')),
     ]),
-
-    languageSection(draw),
 
     section(t('settings.baseCurrency'), [
       el('div', { class: 'segmented' }, CURRENCY_CODES.map((code) =>
@@ -351,29 +347,4 @@ function openInviteSheet() {
   inviteLink(state.family)
     .then((url) => { link.value = url; })
     .catch(() => { link.value = ''; toastError(t('invite.createFailed')); });
-}
-
-/**
- * Выбор языка.
- *
- * Отдельным разделом наверху: человеку, который не читает по-русски, надо
- * добраться до него, не понимая ни одной другой надписи на экране, — поэтому
- * названия языков написаны каждое на себе самом.
- */
-function languageSection(draw) {
-  return section(t('settings.language'),
-    el('div', { class: 'segmented' }, LOCALES.map((lang) =>
-      el('button', {
-        class: getLocale() === lang.code ? 'is-active' : '',
-        lang: lang.code,
-        onclick: () => {
-          setLocale(lang.code);
-          // Перерисовываем всё: язык меняет и статическую разметку, и экраны.
-          translateDocument();
-          set({});
-          draw();
-        },
-      }, lang.name),
-    )),
-  );
 }

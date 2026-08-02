@@ -10,12 +10,13 @@
  * где сторона задана жёстко (см. [dir="rtl"] в стилях).
  */
 
-import { DICT } from '../data/i18n.js?v=43';
+import { DICT } from '../data/i18n.js?v=44';
 
+/** short — метка на кнопке в шапке; для иврита привычнее IL, а не HE. */
 export const LOCALES = [
-  { code: 'ru', name: 'Русский', dir: 'ltr' },
-  { code: 'en', name: 'English', dir: 'ltr' },
-  { code: 'he', name: 'עברית', dir: 'rtl' },
+  { code: 'ru', short: 'RU', name: 'Русский', dir: 'ltr' },
+  { code: 'en', short: 'EN', name: 'English', dir: 'ltr' },
+  { code: 'he', short: 'IL', name: 'עברית', dir: 'rtl' },
 ];
 
 const DEFAULT = 'ru';
