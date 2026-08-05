@@ -4,14 +4,15 @@
  * открывается в редактируемой форме.
  */
 
-import { el, render } from '../core/dom.js?v=48';
-import { openSheet, closeSheet } from '../ui/sheet.js?v=48';
-import { toastError } from '../ui/toast.js?v=48';
-import { state } from '../core/store.js?v=48';
-import { findDuplicates, sameMoment } from '../core/selectors.js?v=48';
-import { formatAmount } from '../core/money.js?v=48';
-import { scanReceiptImages, scanReceiptUrl, scanSmsText, MAX_RECEIPT_IMAGES } from '../services/receipts.js?v=48';
-import { t } from '../core/i18n.js?v=48';
+import { el, render } from '../core/dom.js?v=49';
+import { openSheet, closeSheet } from '../ui/sheet.js?v=49';
+import { toastError } from '../ui/toast.js?v=49';
+import { state } from '../core/store.js?v=49';
+import { findDuplicates } from '../core/selectors.js?v=49';
+import { guessCategory } from '../data/categories.js?v=49';
+import { openDupCompare } from './dupCompare.js?v=49';
+import { scanReceiptImages, scanReceiptUrl, scanSmsText, MAX_RECEIPT_IMAGES } from '../services/receipts.js?v=49';
+import { t } from '../core/i18n.js?v=49';
 
 /** Шторка «распознаём…» — на время запроса заменяет собой форму. */
 function showBusy(text) {
@@ -33,12 +34,25 @@ async function run(task, waitText, onDraft) {
 
     // Одну и ту же покупку легко внести дважды: сначала чек, потом SMS о списании.
     // Ровное совпадение суммы, валюты и дня — повод спросить, пока форма не открыта.
+    //
+    // Кладём в кандидата всё распознанное, а не только сумму с датой: по этим
+    // полям идёт сверка с уже записанным, и ими же можно дополнить найденную
+    // операцию, если это она и есть.
     const candidate = {
       type: 'expense',
       amount: draft.total,
       currency: draft.currency,
       date: draft.date,
       time: draft.time,
+      merchant: draft.merchant || '',
+      address: draft.address || '',
+      note: '',
+      items: draft.items || [],
+      categoryId: guessCategory(
+        `${draft.categoryHint} ${draft.merchant}`,
+        state.categories,
+        'expense',
+      ),
       receiptUrl: draft.receiptUrl,
     };
     const twins = findDuplicates(state, candidate, { dayWindow: 0 });
@@ -56,41 +70,15 @@ async function run(task, waitText, onDraft) {
   }
 }
 
-/** «Уже вносили?» — показываем найденные операции и оставляем выбор за человеком. */
+/** «Уже вносили?» — сверка распознанного с записанным, выбор за человеком. */
 function warnAboutDuplicate(draft, twins, candidate, onDraft) {
-  // Совпавшее до минуты время — почти наверняка та же покупка, показываем первой.
-  const sorted = [...twins].sort(
-    (a, b) => Number(sameMoment(b, candidate)) - Number(sameMoment(a, candidate)),
-  );
-  const exact = sorted.some((tx) => sameMoment(tx, candidate));
-
-  const rows = sorted.slice(0, 5).map((tx) => el('div', { class: 'alert__row' }, [
-    el('b', {}, formatAmount(tx.amount, tx.currency, { exact: true })),
-    ` · ${tx.date}${tx.time ? ` ${tx.time}` : ''}${tx.merchant ? ` · ${tx.merchant}` : ''}`,
-    sameMoment(tx, candidate) ? el('b', {}, t('dup.sameTime')) : null,
-  ]));
-
-  openSheet({
-    title: t(exact ? 'dup.titleExact' : 'dup.titleMaybe'),
-    body: [
-      el('div', { class: 'alert' }, [
-        el('div', { class: 'alert__title' },
-          exact
-            ? t('dup.exact')
-            : twins.length === 1 ? t('dup.one') : t('dup.many', { n: twins.length })),
-        ...rows,
-      ]),
-      el('p', { class: 'hint', style: 'margin-top:12px' },
-        t('dup.ok')),
-    ],
-    // Безопасный выбор — основной: по умолчанию повтор не добавляется.
-    footer: [
-      el('button', {
-        class: 'btn btn--danger',
-        onclick: () => { closeSheet(); onDraft(draft); },
-      }, t('dup.addAnyway')),
-      el('button', { class: 'btn btn--primary', onclick: () => closeSheet() }, t('dup.dontAdd')),
-    ],
+  openDupCompare({
+    candidate,
+    twins,
+    onAddAnyway: () => { closeSheet(); onDraft(draft); },
+    onBack: () => closeSheet(),
+    // Ушли смотреть найденную операцию — распознанное не пропадает.
+    backToNew: () => onDraft(draft),
   });
 }
 

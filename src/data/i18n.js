@@ -500,7 +500,8 @@ export const DICT = {
   'scan.smsEmpty': { ru: 'Вставьте текст SMS', en: 'Paste the SMS text', he: 'הדביקו את טקסט ה-SMS' },
   'scan.parse': { ru: 'Разобрать', en: 'Read it', he: 'פענוח' },
 
-  'dup.sameTime': { ru: ' · то же время', en: ' · same time', he: ' · אותה שעה' },
+  // Сверка с уже записанным. Задача этих строк — не напугать, а объяснить:
+  // что совпало, где найденная операция лежит и чем она отличается от вводимой.
   'dup.titleExact': { ru: '⚠️ Это уже внесено', en: '⚠️ Already recorded', he: '⚠️ כבר נרשם' },
   'dup.titleMaybe': { ru: '⚠️ Возможно, уже внесено', en: '⚠️ Possibly already recorded', he: '⚠️ ייתכן שכבר נרשם' },
   'dup.exact': {
@@ -509,14 +510,19 @@ export const DICT = {
     he: 'אותו סכום באותה דקה — סביר מאוד שהרכישה כבר נרשמה',
   },
   'dup.one': {
-    ru: 'На эту дату уже есть операция на ту же сумму',
-    en: 'There is already a transaction for the same amount on that date',
-    he: 'קיימת כבר תנועה באותו סכום בתאריך הזה',
+    ru: 'Уже есть записанная операция на ту же сумму',
+    en: 'There is already a recorded transaction for the same amount',
+    he: 'קיימת כבר תנועה רשומה באותו סכום',
   },
   'dup.many': {
-    ru: 'На эту дату уже есть операции на ту же сумму ({n})',
-    en: 'There are already transactions for the same amount on that date ({n})',
-    he: 'קיימות כבר תנועות באותו סכום בתאריך הזה ({n})',
+    ru: 'Уже есть записанные операции на ту же сумму ({n})',
+    en: 'There are already recorded transactions for the same amount ({n})',
+    he: 'קיימות כבר תנועות רשומות באותו סכום ({n})',
+  },
+  'dup.compareHint': {
+    ru: 'Ниже — что вы вводите и что уже записано. Отличия подсвечены.',
+    en: 'Below: what you are entering versus what is already recorded. Differences are highlighted.',
+    he: 'למטה: מה שאתם מזינים מול מה שכבר רשום. ההבדלים מודגשים.',
   },
   'dup.ok': {
     ru: 'Если это другая покупка — добавляйте, ничего страшного.',
@@ -525,6 +531,45 @@ export const DICT = {
   },
   'dup.addAnyway': { ru: 'Всё равно добавить', en: 'Add anyway', he: 'להוסיף בכל זאת' },
   'dup.dontAdd': { ru: 'Не добавлять', en: 'Do not add', he: 'לא להוסיף' },
+  'dup.back': { ru: 'Вернуться', en: 'Go back', he: 'חזרה' },
+  'dup.keepTyping': { ru: 'Это другая покупка', en: 'This is a different purchase', he: 'זו רכישה אחרת' },
+  'dup.backToNew': {
+    ru: '← Вернуться к тому, что вводили',
+    en: '← Back to what you were entering',
+    he: '← חזרה למה שהזנתם',
+  },
+  'dup.peek': {
+    ru: '⚠️ Похоже на уже записанное ({n}) — сверить',
+    en: '⚠️ Looks like something already recorded ({n}) — compare',
+    he: '⚠️ נראה כמו משהו שכבר נרשם ({n}) — להשוות',
+  },
+
+  'dup.mine': { ru: 'Вы вводите', en: 'You are entering', he: 'אתם מזינים' },
+  'dup.theirs': { ru: 'Уже записано', en: 'Already recorded', he: 'כבר רשום' },
+  'dup.where': { ru: 'Где искать: {place}', en: 'Where to find it: {place}', he: 'איפה למצוא: {place}' },
+  'dup.open': { ru: 'Открыть операцию', en: 'Open transaction', he: 'פתיחת התנועה' },
+  'dup.merge': { ru: 'Это она — дополнить', en: 'Same one — fill it in', he: 'זו אותה תנועה — להשלים' },
+  'dup.mergeAdds': {
+    ru: 'Допишет в неё: {list}. Уже заполненное не меняется.',
+    en: 'Adds to it: {list}. Nothing already filled in is changed.',
+    he: 'יוסיף לה: {list}. מה שכבר מולא לא ישתנה.',
+  },
+  'dup.merged': { ru: 'Операция дополнена', en: 'Transaction filled in', he: 'התנועה הושלמה' },
+  'dup.mergeFailed': { ru: 'Не удалось дополнить', en: 'Could not fill it in', he: 'ההשלמה נכשלה' },
+
+  'dup.why': { ru: 'Совпало: {list}', en: 'Matched: {list}', he: 'התאמה: {list}' },
+  'dup.whyAmount': { ru: 'сумма {sum}', en: 'amount {sum}', he: 'סכום {sum}' },
+  'dup.whyTime': { ru: 'то же время', en: 'same time', he: 'אותה שעה' },
+  'dup.whySameDay': { ru: 'тот же день', en: 'same day', he: 'אותו יום' },
+  'dup.whyDayDiff': { ru: 'разница в дате: {n} дн.', en: 'date differs by {n} d.', he: 'הפרש בתאריך: {n} י׳' },
+  'dup.whyMerchant': { ru: 'магазин', en: 'merchant', he: 'החנות' },
+  'dup.whyCategory': { ru: 'категория', en: 'category', he: 'הקטגוריה' },
+  'dup.whyReceipt': { ru: 'та же ссылка на чек', en: 'same receipt link', he: 'אותו קישור לקבלה' },
+
+  'dup.fItems': { ru: 'Товары', en: 'Items', he: 'מוצרים' },
+  'dup.fReceipt': { ru: 'Чек', en: 'Receipt', he: 'קבלה' },
+  'dup.fAddress': { ru: 'Адрес', en: 'Address', he: 'כתובת' },
+  'dup.yes': { ru: 'есть', en: 'yes', he: 'יש' },
 
   // ---------------------------------------------------------------- ошибки распознавания
   'receipt.noFiles': { ru: 'Не выбрано ни одного файла', en: 'No file selected', he: 'לא נבחר קובץ' },
@@ -597,21 +642,6 @@ export const DICT = {
   'form.deleteText': { ru: 'Действие необратимо.', en: 'This cannot be undone.', he: 'לא ניתן לבטל פעולה זו.' },
   'form.deleted': { ru: 'Удалено', en: 'Deleted', he: 'נמחק' },
   'form.deleteFailed': { ru: 'Не удалось удалить', en: 'Could not delete', he: 'המחיקה נכשלה' },
-
-  'dup.formTitleMaybe': { ru: '⚠️ Похоже на повтор', en: '⚠️ Looks like a duplicate', he: '⚠️ נראה כמו כפילות' },
-  'dup.formExact': {
-    ru: 'Та же сумма в ту же минуту — почти наверняка эта покупка уже записана.',
-    en: 'Same amount at the same minute — this purchase is almost certainly already recorded.',
-    he: 'אותו סכום באותה דקה — סביר מאוד שהרכישה כבר נרשמה.',
-  },
-  'dup.formOne': { ru: 'Такая операция уже записана.', en: 'Such a transaction is already recorded.', he: 'תנועה כזו כבר רשומה.' },
-  'dup.formMany': { ru: 'Таких операций уже {n}.', en: 'There are already {n} such transactions.', he: 'קיימות כבר {n} תנועות כאלה.' },
-  'dup.formOk': {
-    ru: 'Если это разные покупки — добавляйте, ничего страшного.',
-    en: 'If these are different purchases, go ahead and add it.',
-    he: 'אם מדובר ברכישות שונות — הוסיפו, אין בעיה.',
-  },
-  'dup.back': { ru: 'Вернуться', en: 'Go back', he: 'חזרה' },
 
   // ---------------------------------------------------------------- категории
   // Подставляются только при создании бюджета — дальше это обычные записи в базе.

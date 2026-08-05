@@ -5,11 +5,11 @@
  * AI ошибается в названиях товаров, поэтому ни одно поле не считается финальным.
  */
 
-import { PROXY_URL, CURRENCY_CODES } from '../config.js?v=48';
-import { idToken } from './auth.js?v=48';
-import { normalizeDate, today } from '../core/dates.js?v=48';
-import { parseBankSms } from '../core/smsParse.js?v=48';
-import { t } from '../core/i18n.js?v=48';
+import { PROXY_URL, CURRENCY_CODES } from '../config.js?v=49';
+import { idToken } from './auth.js?v=49';
+import { normalizeDate, today } from '../core/dates.js?v=49';
+import { parseBankSms } from '../core/smsParse.js?v=49';
+import { t } from '../core/i18n.js?v=49';
 
 /** Сколько пикселей по длинной стороне отправляем. Больше — дороже и медленнее без выигрыша. */
 const MAX_EDGE = 1600;

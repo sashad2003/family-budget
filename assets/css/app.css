@@ -676,6 +676,54 @@ button { cursor: pointer; border: none; background: none; }
 .alert__title { color: #ff8080; font-weight: 600; margin-bottom: 8px; }
 .alert__row { color: var(--fg-0); font-size: 13px; margin-top: 6px; }
 .alert__row b { color: #ff8080; }
+
+/*
+ * Сверка с уже записанным: карточка на каждую найденную операцию.
+ * Значения идут двумя колонками — набранное против записанного, — поэтому
+ * разметка сетки, а не список: колонки должны стоять друг под другом.
+ */
+.dup-card {
+  margin-top: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--edge);
+  border-radius: var(--r-sm);
+  background: var(--glass-2);
+}
+.dup-card__head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.dup-card__title { font-weight: 500; }
+.dup-card__where { color: var(--fg-1); font-size: 12px; margin-top: 3px; }
+.dup-card__why { color: var(--fg-1); font-size: 12px; line-height: 1.45; margin-top: 8px; }
+.dup-card__acts { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+
+.dup-cmp {
+  display: grid;
+  grid-template-columns: minmax(58px, auto) 1fr 1fr;
+  gap: 3px 10px;
+  margin-top: 10px;
+  font-size: 13px;
+}
+.dup-cmp__head { color: var(--fg-1); font-size: 11px; letter-spacing: 0.03em; padding-bottom: 3px; }
+.dup-cmp__label { color: var(--fg-1); }
+.dup-cmp__val { color: var(--fg-0); overflow-wrap: anywhere; }
+/* Совпавшее приглушено, разошедшееся подсвечено — сверка сводится к одному взгляду. */
+.dup-cmp__val--same { color: var(--fg-1); }
+.dup-cmp__val--diff { color: var(--yellow); }
+
+/* Плашка «похоже на уже записанное» прямо в форме: предупреждает, но не мешает. */
+.dup-hint {
+  display: block;
+  width: 100%;
+  text-align: start;
+  margin-top: 10px;
+  padding: 11px 13px;
+  border-radius: var(--r-sm);
+  background: rgba(255, 179, 71, 0.1);
+  border: 1px solid rgba(255, 179, 71, 0.35);
+  color: var(--yellow);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.dup-hint:hover { background: rgba(255, 179, 71, 0.16); }
 .btn--ghost { background: rgba(255, 255, 255, 0.045); }
 .btn[disabled] { opacity: 0.4; pointer-events: none; }
 

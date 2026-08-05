@@ -3,33 +3,36 @@
  * после сканирования каждое поле и каждая строка товара остаются редактируемыми.
  */
 
-import { el, render } from '../core/dom.js?v=48';
-import { state } from '../core/store.js?v=48';
-import { CURRENCY_CODES } from '../config.js?v=48';
-import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=48';
-import { today, dayLabel } from '../core/dates.js?v=48';
-import { guessCategory } from '../data/categories.js?v=48';
-import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=48';
-import { tileGradient } from './list.js?v=48';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=48';
-import { toastOk, toastError } from '../ui/toast.js?v=48';
-import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=48';
-import { openQuickPick } from './quickPick.js?v=48';
-import { findDuplicates, sameMoment } from '../core/selectors.js?v=48';
-import { t } from '../core/i18n.js?v=48';
+import { el, render } from '../core/dom.js?v=49';
+import { state } from '../core/store.js?v=49';
+import { CURRENCY_CODES } from '../config.js?v=49';
+import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=49';
+import { today } from '../core/dates.js?v=49';
+import { guessCategory } from '../data/categories.js?v=49';
+import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=49';
+import { tileGradient } from './list.js?v=49';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=49';
+import { toastOk, toastError } from '../ui/toast.js?v=49';
+import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=49';
+import { openQuickPick } from './quickPick.js?v=49';
+import { findDuplicates } from '../core/selectors.js?v=49';
+import { openDupCompare } from './dupCompare.js?v=49';
+import { t } from '../core/i18n.js?v=49';
 
 /**
  * openTxForm({ tx })          — правка существующей операции
  * openTxForm({ draft })       — новая операция, предзаполненная из чека
  * openTxForm({ tx, draft })   — правка, куда подставили заново распознанный чек
  * openTxForm({ tx, model })   — возврат к набранной форме (после выбора товаров)
+ * openTxForm({ tx, backTo })  — операция открыта из сверки повторов; backTo
+ *                               возвращает к тому, что человек вводил
  * openTxForm()                — пустая новая операция
  *
  * tx нельзя терять при возврате в форму: без него сохранение заводит вторую
  * запись вместо правки первой, а проверка повторов находит саму правящуюся
  * операцию и ругается на неё.
  */
-export function openTxForm({ tx = null, draft = null, model: restored = null } = {}) {
+export function openTxForm({ tx = null, draft = null, model: restored = null, backTo = null } = {}) {
   /**
    * Черновик с чека главнее записи: если чек распознали, правя старую
    * операцию, показать надо распознанное, а tx остаётся лишь указанием,
@@ -42,7 +45,7 @@ export function openTxForm({ tx = null, draft = null, model: restored = null } =
   const footer = el('div', { style: 'display:flex;flex-wrap:wrap;gap:10px;flex:1' });
 
   const rerender = () => {
-    render(body, buildBody(model, rerender, tx));
+    render(body, buildBody(model, rerender, tx, backTo));
     render(footer, buildFooter(model, tx));
   };
   rerender();
@@ -131,8 +134,18 @@ const itemsSum = (model) => model.items.reduce((sum, item) => sum + (Number(item
  * записи: сохранение уходило бы в addDoc, а проверка повторов находила бы
  * саму же правящуюся операцию и ругалась на неё.
  */
-function buildBody(model, rerender, tx) {
+function buildBody(model, rerender, tx, backTo = null) {
   const nodes = [];
+
+  // Сюда попадают из сверки повторов, уйдя посмотреть уже записанную операцию.
+  // Без этой кнопки набранное пришлось бы вводить заново.
+  if (backTo) {
+    nodes.push(el('button', {
+      class: 'btn btn--ghost btn--wide',
+      style: 'margin-bottom:14px',
+      onclick: () => backTo(),
+    }, t('dup.backToNew')));
+  }
 
   // Чек — самое частое действие, поэтому стоит первым.
   if (!model.showItems) nodes.push(buildScanRow(tx));
@@ -145,6 +158,19 @@ function buildBody(model, rerender, tx) {
     ]),
   );
 
+  /**
+   * Похожее ищем прямо во время набора, а не только по кнопке «Сохранить»:
+   * узнать о повторе, когда форма уже заполнена целиком, — обидно и поздно.
+   * Плашка ничего не запрещает, а лишь предлагает сверку.
+   */
+  const dupSlot = el('div');
+  const refreshDup = () => {
+    const twins = model.amount
+      ? findDuplicates(state, model, { excludeId: tx?.id || null })
+      : [];
+    render(dupSlot, twins.length ? [dupPeekButton(model, twins, tx)] : []);
+  };
+
   // Сумма + валюта
   const amountInput = el('input', {
     class: 'input input--amount',
@@ -152,7 +178,11 @@ function buildBody(model, rerender, tx) {
     inputmode: 'decimal',
     value: model.amount ? String(model.amount) : '',
     placeholder: '0',
-    oninput: (e) => { model.amount = parseAmount(e.target.value); updateHint(); },
+    oninput: (e) => {
+      model.amount = parseAmount(e.target.value);
+      updateHint();
+      refreshDup();
+    },
   });
 
   const hint = el('div', { class: 'hint', style: 'text-align:center' });
@@ -163,7 +193,9 @@ function buildBody(model, rerender, tx) {
   };
 
   nodes.push(el('div', { class: 'field' }, [amountInput, hint]));
+  nodes.push(dupSlot);
   updateHint();
+  refreshDup();
 
   nodes.push(
     el('div', { class: 'field' }, [
@@ -208,7 +240,7 @@ function buildBody(model, rerender, tx) {
           class: 'input',
           type: 'date',
           value: model.date,
-          oninput: (e) => { model.date = e.target.value || today(); },
+          oninput: (e) => { model.date = e.target.value || today(); refreshDup(); },
         }),
       ]),
       el('div', { class: 'field' }, [
@@ -468,52 +500,44 @@ async function persist(model, tx) {
   }
 }
 
-/** Предупреждение о похожей операции. Решение всегда за человеком. */
-function askAboutDuplicate(model, twins, tx = null) {
-  const rows = twins.slice(0, 4).map((twin) => el('div', { class: 'list-item' }, [
-    el('div', {}, [
-      el('div', {}, twin.merchant || categoryName(twin.categoryId) || t('form.noDescription')),
-      el('div', { class: 'list-item__sub' }, [
-        `${dayLabel(twin.date)}${twin.time ? ` ${twin.time}` : ''}`,
-        twin.note ? ` · ${twin.note}` : '',
-        // Та же минута — почти наверняка та же покупка, а не похожая.
-        sameMoment(twin, model) ? el('b', {}, t('dup.sameTime')) : null,
-      ]),
-    ]),
-    el('span', { class: 'num' }, formatAmount(twin.amount, twin.currency, { exact: true })),
-  ]));
-
-  const exact = twins.some((twin) => sameMoment(twin, model));
-
-  openSheet({
-    title: t(exact ? 'dup.titleExact' : 'dup.formTitleMaybe'),
-    body: [
-      el('div', { class: 'alert' },
-        exact
-          ? t('dup.formExact')
-          : twins.length === 1 ? t('dup.formOne') : t('dup.formMany', { n: twins.length })),
-      ...rows,
-      el('p', { class: 'hint', style: 'margin-top:12px' },
-        t('dup.formOk')),
-    ],
-    // Безопасный выбор — основной: по умолчанию возвращаемся к форме.
-    footer: [
-      el('button', {
-        class: 'btn btn--danger',
-        onclick: async () => {
-          model.duplicateConfirmed = true;
-          await persist(model, tx);
-        },
-      }, t('dup.addAnyway')),
-      el('button', {
-        class: 'btn btn--primary',
-        onclick: () => { closeSheet(); openTxForm({ tx, model }); },
-      }, t('dup.back')),
-    ],
-  });
+/**
+ * Плашка «похоже на уже записанное» прямо в форме. Не запрещает ничего:
+ * по нажатию открывается сверка, откуда можно вернуться к набранному.
+ */
+function dupPeekButton(model, twins, tx) {
+  return el('button', {
+    class: 'dup-hint',
+    onclick: () => openDupCompare({
+      candidate: model,
+      twins,
+      // Из формы это ещё не сохранение, поэтому «добавить» здесь означает
+      // «я посмотрел, это другая покупка» — и предупреждение больше не всплывёт.
+      addLabel: t('dup.keepTyping'),
+      backLabel: t('dup.back'),
+      onAddAnyway: () => {
+        model.duplicateConfirmed = true;
+        openTxForm({ tx, model });
+      },
+      onBack: () => openTxForm({ tx, model }),
+      backToNew: () => openTxForm({ tx, model }),
+    }),
+  }, t('dup.peek', { n: twins.length }));
 }
 
-const categoryName = (id) => state.categories.find((c) => c.id === id)?.name || '';
+/** Предупреждение при сохранении. Решение всегда за человеком. */
+function askAboutDuplicate(model, twins, tx = null) {
+  openDupCompare({
+    candidate: model,
+    twins,
+    backLabel: t('dup.back'),
+    onAddAnyway: async () => {
+      model.duplicateConfirmed = true;
+      await persist(model, tx);
+    },
+    onBack: () => openTxForm({ tx, model }),
+    backToNew: () => openTxForm({ tx, model }),
+  });
+}
 
 function buildFooter(model, tx) {
   const save = el('button', { class: 'btn btn--primary' }, t(tx ? 'common.save' : 'common.add'));

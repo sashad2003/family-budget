@@ -1,8 +1,8 @@
 /** Выборки и агрегаты над транзакциями. Чистые функции — их удобно переиспользовать. */
 
-import { txAmountIn, round } from './money.js?v=48';
-import { monthOf, shiftMonth } from './dates.js?v=48';
-import { t } from './i18n.js?v=48';
+import { txAmountIn, round } from './money.js?v=49';
+import { monthOf, shiftMonth } from './dates.js?v=49';
+import { t } from './i18n.js?v=49';
 
 /** Операции выбранного месяца с учётом фильтров экрана «Операции». */
 export function monthTransactions(state, filters = {}) {
@@ -130,6 +130,34 @@ export function sameMoment(tx, candidate) {
     && tx.date === candidate.date
     && tx.time === candidate.time;
 }
+
+/**
+ * Чем именно похожа найденная операция.
+ *
+ * Правило поиска повторов живёт в коде, а человеку показывают только итог
+ * «похоже на повтор» — и непонятно, что именно сработало. Разбор совпадения
+ * позволяет предупреждению объяснить себя словами: совпала сумма, разошлись
+ * даты на день, магазин другой.
+ */
+export function duplicateMatch(tx, candidate) {
+  const url = String(candidate.receiptUrl || '').trim();
+  const day = 24 * 60 * 60 * 1000;
+  const gap = Math.abs(Date.parse(tx.date) - Date.parse(candidate.date));
+
+  return {
+    byReceipt: Boolean(url) && String(tx.receiptUrl || '').trim() === url,
+    sameTime: sameMoment(tx, candidate),
+    sameDay: tx.date === candidate.date,
+    dayDiff: Number.isFinite(gap) ? Math.round(gap / day) : null,
+    sameAmount: sameAmount(Number(tx.amount), Number(candidate.amount) || 0, tx.currency)
+      && tx.currency === candidate.currency,
+    sameMerchant: Boolean(normText(tx.merchant))
+      && normText(tx.merchant) === normText(candidate.merchant),
+    sameCategory: Boolean(tx.categoryId) && tx.categoryId === candidate.categoryId,
+  };
+}
+
+const normText = (value) => String(value || '').trim().toLowerCase();
 
 /**
  * Товары для быстрого выбора: сначала то, что покупали раньше (частое выше),
