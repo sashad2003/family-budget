@@ -37,7 +37,7 @@ import { renderCharts, destroyCharts } from './views/charts.js?v=50';
 import { renderSettings } from './views/settings.js?v=50';
 import { openTxForm } from './views/txForm.js?v=50';
 import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=50';
-import { initRoseFab, drawRoseFab, resetRose } from './views/roseGlasses.js?v=50';
+import { initRoseButton, drawRoseButton, resetRose } from './views/roseGlasses.js?v=50';
 import { closeSheet } from './ui/sheet.js?v=50';
 import { toastError, toastOk } from './ui/toast.js?v=50';
 
@@ -52,7 +52,7 @@ if (SUPPORT_WHATSAPP) {
   wa.hidden = false;
 }
 
-initRoseFab();
+initRoseButton();
 
 const ROUTES = {
   dashboard: renderDashboard,
@@ -306,7 +306,7 @@ function drawChrome() {
   $('.tab[data-route="admin"]').hidden = !state.isAdmin;
 
   // Подпись очков зависит от языка — обновляем её здесь же, где и остальную шапку.
-  drawRoseFab();
+  drawRoseButton();
 
   drawBudgetPick();
 

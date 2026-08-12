@@ -3,9 +3,10 @@
  *
  * Данных он не трогает: подменяется только то, что нарисовано на обзоре.
  *
- * Надеваются и снимаются очки одной и той же плавающей кнопкой над WhatsApp.
- * Пока они надеты, у кнопки сверху горит красная полоска — иначе непонятно,
- * что нажатие не добавит ещё миллиард, а вернёт настоящие цифры.
+ * Надеваются и снимаются очки одной и той же кнопкой в шапке. Пока они
+ * надеты, у кнопки сверху горит красная полоска — иначе непонятно, что
+ * нажатие не добавит ещё миллиард, а вернёт настоящие цифры. Второй выход
+ * стоит под самим миллиардом: шапку в этот момент могли и не пролистать.
  *
  * Режим живёт только до перезагрузки страницы. Так и задумано: очки — шутка
  * на минуту, а не настройка, о которой потом забудут и испугаются баланса.
@@ -28,7 +29,7 @@ export function setRose(on) {
   if (on === isRose()) return;
   set({ rose: on });
   if (on) startSky(); else stopSky();
-  drawRoseFab();
+  drawRoseButton();
 }
 
 /**
@@ -40,15 +41,15 @@ export function setRose(on) {
 export function resetRose() {
   state.rose = false;
   stopSky();
-  drawRoseFab();
+  drawRoseButton();
 }
 
 // ---------------------------------------------------------------- кнопка
 
-/** Плавающая кнопка с очками: одна на оба действия. */
-export function initRoseFab() {
+/** Кнопка с очками в шапке: одна на оба действия. */
+export function initRoseButton() {
   $('#btn-rose').addEventListener('click', () => setRose(!isRose()));
-  drawRoseFab();
+  drawRoseButton();
 }
 
 /**
@@ -57,7 +58,7 @@ export function initRoseFab() {
  * aria-pressed говорит то же самое, что красная полоска, — экранному диктору
  * полоску не видно, а знать, надеты очки или нет, нужно и ему.
  */
-export function drawRoseFab() {
+export function drawRoseButton() {
   const button = $('#btn-rose');
   if (!button) return;
 
@@ -74,20 +75,29 @@ export function roseBalance() {
   return el('div', {}, [
     el('div', { class: 'card balance balance--rose' }, [
       el('div', { class: 'balance__label' }, t('rose.balance')),
-      el('div', { class: 'balance__value num' }, formatAmount(DREAM, 'EUR')),
+      el('div', { class: 'balance__value num' }, formatAmount(DREAM, 'EUR', { whole: true })),
       el('div', { class: 'balance__sub' }, t('rose.sub')),
     ]),
 
     el('div', { class: 'stat-row' }, [
       el('div', { class: 'stat stat--in' }, [
         el('div', { class: 'stat__label' }, [el('span', { class: 'stat__dot' }), t('charts.income')]),
-        el('div', { class: 'stat__value num' }, formatAmount(DREAM, 'EUR')),
+        el('div', { class: 'stat__value num' }, formatAmount(DREAM, 'EUR', { whole: true })),
       ]),
       el('div', { class: 'stat stat--out' }, [
         el('div', { class: 'stat__label' }, [el('span', { class: 'stat__dot' }), t('charts.expense')]),
-        el('div', { class: 'stat__value num' }, formatAmount(0, 'EUR')),
+        el('div', { class: 'stat__value num' }, formatAmount(0, 'EUR', { whole: true })),
       ]),
     ]),
+
+    // Второй выход, кроме очков в шапке: миллиард видно раньше, чем шапку,
+    // и искать глазами, чем его убрать, человеку не приходится.
+    el('button', {
+      class: 'btn rose-back',
+      onclick: () => setRose(false),
+      // Без стрелки в подписи: на иврите строка идёт справа налево, и
+      // «назад» показывало бы в противоположную сторону.
+    }, t('rose.back')),
   ]);
 }
 
@@ -134,7 +144,7 @@ function spawn() {
     class: 'rose-sky__item',
     style: [
       `left:${Math.random() * 100}%`,
-      `font-size:${16 + Math.random() * 26}px`,
+      `font-size:${24 + Math.random() * 39}px`,
       `animation-duration:${5.5 + Math.random() * 4.5}s`,
       `--drift:${(Math.random() * 2 - 1) * 90}px`,
       `--spin:${(Math.random() * 2 - 1) * 40}deg`,

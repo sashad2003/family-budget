@@ -74,13 +74,17 @@ export function round(value, code) {
  * копейками, и по ним человек узнаёт свою покупку. Поэтому там, где сумма
  * важна сама по себе (строка операции, сверка повторов), показываем её
  * целиком, а в сводках и на графиках оставляем округление.
+ *
+ * whole — наоборот, убрать копейки даже у валюты, где они есть. Нужно очень
+ * длинным круглым суммам: три лишних знака решают, влезет строка на экран
+ * телефона или уедет за край.
  */
-export function formatAmount(value, code, { sign = false, exact = false } = {}) {
+export function formatAmount(value, code, { sign = false, exact = false, whole = false } = {}) {
   const info = currencyInfo(code);
   const num = Number(value) || 0;
 
   const hasFraction = Math.abs(num % 1) > 0.0001;
-  const decimals = exact && hasFraction ? Math.max(info.decimals, 2) : info.decimals;
+  const decimals = whole ? 0 : exact && hasFraction ? Math.max(info.decimals, 2) : info.decimals;
 
   const body = new Intl.NumberFormat('ru-RU', {
     minimumFractionDigits: decimals,
