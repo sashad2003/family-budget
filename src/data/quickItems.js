@@ -7,7 +7,7 @@
  * продуктов у разных народов разный, и дословный перевод здесь ни к чему.
  */
 
-import { getLocale } from '../core/i18n.js?v=54';
+import { getLocale } from '../core/i18n.js?v=55';
 
 const BY_LOCALE = {
   ru: [

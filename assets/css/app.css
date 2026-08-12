@@ -20,7 +20,14 @@
 
   --fg-0: #f4f4f8;
   --fg-1: #9a9ab0;
-  --fg-2: #5f5f78;
+  /*
+   * Третий уровень серого раньше был #5f5f78 — на здешнем фоне это контраст
+   * 3.1:1 при норме 4.5:1 для обычного текста. Выглядело аккуратно и не
+   * читалось: подпись под поиском и ссылки в подвале приходилось угадывать.
+   * Сейчас 5.2:1 — норма выполняется, а разница с --fg-1 (6.9:1) сохранена,
+   * иначе уровни серого слились бы в один.
+   */
+  --fg-2: #83839b;
 
   --income: #2dd98a;
   --expense: #ff5b5b;
@@ -207,7 +214,7 @@ button { cursor: pointer; border: none; background: none; }
 .auth__sub { margin: 0 0 30px; color: var(--fg-1); font-size: 15px; }
 .auth__error { margin-top: 18px; color: #ffb0b0; font-size: 14px; line-height: 1.55; }
 
-.auth__legal { margin: 24px 0 0; font-size: 12.5px; line-height: 1.9; color: var(--fg-2); }
+.auth__legal { margin: 24px 0 0; font-size: 13.5px; line-height: 1.9; color: var(--fg-2); }
 .auth__legal a { color: var(--fg-2); text-decoration: none; }
 .auth__legal a:hover { color: var(--fg-0); }
 
@@ -450,7 +457,7 @@ button { cursor: pointer; border: none; background: none; }
   padding: 26px 16px 92px;
   border-top: 1px solid var(--edge);
   margin-top: 34px;
-  font-size: 12.5px;
+  font-size: 13.5px;
 }
 .footer a { color: var(--fg-2); text-decoration: none; }
 .footer a:hover { color: var(--fg-0); }
@@ -469,7 +476,7 @@ button { cursor: pointer; border: none; background: none; }
 .card + .card { margin-top: 12px; }
 
 .card__label {
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 400;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -988,7 +995,7 @@ button { cursor: pointer; border: none; background: none; }
 }
 
 .item-card__field { display: flex; flex-direction: column; gap: 4px; }
-.item-card__label { font-size: 11px; color: var(--fg-2); padding-inline-start: 2px; }
+.item-card__label { font-size: 12px; color: var(--fg-2); padding-inline-start: 2px; }
 
 .item-card .input { padding: 11px; font-size: 14.5px; }
 .item-card .input--num { width: 88px; font-family: var(--mono); text-align: end; }
@@ -1512,7 +1519,7 @@ button { cursor: pointer; border: none; background: none; }
 .divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; color: var(--fg-2); font-size: 12.5px; }
 .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--edge); }
 
-.hint { margin-top: 8px; font-size: 13px; color: var(--fg-2); line-height: 1.55; }
+.hint { margin-top: 8px; font-size: 14px; color: var(--fg-2); line-height: 1.55; }
 
 /* Согласие на письма: галочка и подпись в одну строку, обе кликабельны */
 .check {

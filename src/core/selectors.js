@@ -1,8 +1,8 @@
 /** Выборки и агрегаты над транзакциями. Чистые функции — их удобно переиспользовать. */
 
-import { txAmountIn, round } from './money.js?v=54';
-import { monthOf, shiftMonth } from './dates.js?v=54';
-import { t } from './i18n.js?v=54';
+import { txAmountIn, round } from './money.js?v=55';
+import { monthOf, shiftMonth } from './dates.js?v=55';
+import { t } from './i18n.js?v=55';
 
 /** Операции выбранного месяца с учётом фильтров экрана «Операции». */
 export function monthTransactions(state, filters = {}) {
