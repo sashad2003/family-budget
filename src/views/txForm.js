@@ -3,21 +3,21 @@
  * после сканирования каждое поле и каждая строка товара остаются редактируемыми.
  */
 
-import { el, render } from '../core/dom.js?v=49';
-import { state } from '../core/store.js?v=49';
-import { CURRENCY_CODES } from '../config.js?v=49';
-import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=49';
-import { today } from '../core/dates.js?v=49';
-import { guessCategory } from '../data/categories.js?v=49';
-import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=49';
-import { tileGradient } from './list.js?v=49';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=49';
-import { toastOk, toastError } from '../ui/toast.js?v=49';
-import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=49';
-import { openQuickPick } from './quickPick.js?v=49';
-import { findDuplicates } from '../core/selectors.js?v=49';
-import { openDupCompare } from './dupCompare.js?v=49';
-import { t } from '../core/i18n.js?v=49';
+import { el, render } from '../core/dom.js?v=50';
+import { state } from '../core/store.js?v=50';
+import { CURRENCY_CODES } from '../config.js?v=50';
+import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=50';
+import { today } from '../core/dates.js?v=50';
+import { guessCategory } from '../data/categories.js?v=50';
+import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=50';
+import { tileGradient } from './list.js?v=50';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=50';
+import { toastOk, toastError } from '../ui/toast.js?v=50';
+import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=50';
+import { openQuickPick } from './quickPick.js?v=50';
+import { findDuplicates } from '../core/selectors.js?v=50';
+import { openDupCompare } from './dupCompare.js?v=50';
+import { t } from '../core/i18n.js?v=50';
 
 /**
  * openTxForm({ tx })          — правка существующей операции

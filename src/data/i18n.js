@@ -677,6 +677,16 @@ export const DICT = {
   'dash.tapToPay': { ru: 'Нажмите, чтобы записать оплату', en: 'Tap to record a payment', he: 'הקישו כדי לרשום תשלום' },
   'dash.balance': { ru: 'Баланс за месяц', en: 'Balance this month', he: 'מאזן החודש' },
 
+  // ---------------------------------------------------------------- розовые очки
+  'rose.on': { ru: 'Розовые очки', en: 'Rose-tinted glasses', he: 'משקפיים ורודים' },
+  'rose.off': { ru: '↩  Вернуться в реальность', en: '↩  Back to reality', he: '↩  חזרה למציאות' },
+  'rose.balance': { ru: 'На счету', en: 'In your account', he: 'ביתרה' },
+  'rose.sub': {
+    ru: 'всё хорошо, беспокоиться не о чем — настоящие цифры вернутся по кнопке',
+    en: 'all is well, nothing to worry about — the real numbers are one tap away',
+    he: 'הכול טוב, אין על מה לדאוג — המספרים האמיתיים במרחק הקשה',
+  },
+
   // ---------------------------------------------------------------- редактор категории
   'cat.title': { ru: 'Категория', en: 'Category', he: 'קטגוריה' },
   'cat.new': { ru: 'Новая категория', en: 'New category', he: 'קטגוריה חדשה' },

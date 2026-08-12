@@ -1,0 +1,139 @@
+/**
+ * Розовые очки — режим, в котором на счету миллиард евро.
+ *
+ * Данных он не трогает: подменяется только то, что нарисовано на обзоре.
+ * Поэтому выход из режима — обычная кнопка рядом с суммой, а не что-то,
+ * что надо искать: увидев миллиард, человек должен тут же понимать, откуда
+ * он взялся и как вернуть настоящие цифры.
+ *
+ * Режим живёт только до перезагрузки страницы. Так и задумано: очки — шутка
+ * на минуту, а не настройка, о которой потом забудут и испугаются баланса.
+ */
+
+import { el } from '../core/dom.js?v=50';
+import { state, set } from '../core/store.js?v=50';
+import { formatAmount } from '../core/money.js?v=50';
+import { t } from '../core/i18n.js?v=50';
+
+/** Мечта считается в евро независимо от валюты сводок: миллиард так миллиард. */
+const DREAM = 1_000_000_000;
+
+export function isRose() {
+  return state.rose === true;
+}
+
+/** Включение и выключение: перерисовку делает подписка на состояние. */
+export function setRose(on) {
+  if (on === isRose()) return;
+  set({ rose: on });
+  if (on) startSky(); else stopSky();
+}
+
+/**
+ * Снять очки при выходе и смене бюджета.
+ *
+ * Флаг гасим напрямую, без set(): к этому моменту старые данные уже
+ * отписаны, а лишняя перерисовка полезла бы в них и упала.
+ */
+export function resetRose() {
+  state.rose = false;
+  stopSky();
+}
+
+// ---------------------------------------------------------------- кнопки
+
+/** Кнопка входа — стоит под сводкой обзора. */
+export function roseToggle() {
+  return el('button', {
+    class: 'btn btn--ghost rose-open',
+    onclick: () => setRose(true),
+  }, `🕶  ${t('rose.on')}`);
+}
+
+/** Кнопка выхода — внутри розовой сводки, сразу под суммами. */
+export function roseBack() {
+  return el('button', {
+    class: 'btn rose-back',
+    onclick: () => setRose(false),
+  }, t('rose.off'));
+}
+
+// ---------------------------------------------------------------- сводка
+
+/** Розовая замена блока баланса: миллиард пришёл, тратить его не на что. */
+export function roseBalance() {
+  return el('div', {}, [
+    el('div', { class: 'card balance balance--rose' }, [
+      el('div', { class: 'balance__label' }, t('rose.balance')),
+      el('div', { class: 'balance__value num' }, formatAmount(DREAM, 'EUR')),
+      el('div', { class: 'balance__sub' }, t('rose.sub')),
+    ]),
+
+    el('div', { class: 'stat-row' }, [
+      el('div', { class: 'stat stat--in' }, [
+        el('div', { class: 'stat__label' }, [el('span', { class: 'stat__dot' }), t('charts.income')]),
+        el('div', { class: 'stat__value num' }, formatAmount(DREAM, 'EUR')),
+      ]),
+      el('div', { class: 'stat stat--out' }, [
+        el('div', { class: 'stat__label' }, [el('span', { class: 'stat__dot' }), t('charts.expense')]),
+        el('div', { class: 'stat__value num' }, formatAmount(0, 'EUR')),
+      ]),
+    ]),
+
+    roseBack(),
+  ]);
+}
+
+// ---------------------------------------------------------------- сердечки
+
+const SYMBOLS = ['💖', '💕', '💗', '💘', '💞', '€', '€', '💶', '✨'];
+
+/** Сколько значков держим в небе разом: больше — заметная нагрузка на телефон. */
+const MAX_ITEMS = 40;
+
+let sky = null;
+let timer = null;
+
+/** Уважаем системную настройку «меньше движения»: розовое останется, полёт — нет. */
+function motionAllowed() {
+  return !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+
+function startSky() {
+  if (sky || !motionAllowed()) return;
+
+  sky = el('div', { class: 'rose-sky', 'aria-hidden': 'true' });
+  document.body.append(sky);
+
+  // Первую горсть выпускаем сразу, иначе экран пару секунд стоит пустым.
+  for (let i = 0; i < 10; i += 1) spawn();
+  timer = setInterval(spawn, 380);
+}
+
+function stopSky() {
+  clearInterval(timer);
+  timer = null;
+  sky?.remove();
+  sky = null;
+}
+
+function spawn() {
+  // Во вкладке в фоне анимации не идут, а таймер тикает: без потолка к
+  // возвращению человека в небе висели бы сотни неподвижных сердечек.
+  if (!sky || sky.childElementCount >= MAX_ITEMS) return;
+
+  const symbol = SYMBOLS[Math.floor(Math.random() * SYMBOLS.length)];
+  const item = el('span', {
+    class: 'rose-sky__item',
+    style: [
+      `left:${Math.random() * 100}%`,
+      `font-size:${16 + Math.random() * 26}px`,
+      `animation-duration:${5.5 + Math.random() * 4.5}s`,
+      `--drift:${(Math.random() * 2 - 1) * 90}px`,
+      `--spin:${(Math.random() * 2 - 1) * 40}deg`,
+    ].join(';'),
+  }, symbol);
+
+  item.addEventListener('animationend', () => item.remove());
+  sky.append(item);
+}

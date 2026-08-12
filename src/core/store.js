@@ -3,8 +3,8 @@
  * Никакой магии — set() сливает патч и уведомляет слушателей.
  */
 
-import { DEFAULT_BASE_CURRENCY, FALLBACK_RATES } from '../config.js?v=49';
-import { monthKey } from './dates.js?v=49';
+import { DEFAULT_BASE_CURRENCY, FALLBACK_RATES } from '../config.js?v=50';
+import { monthKey } from './dates.js?v=50';
 
 const listeners = new Set();
 
@@ -37,6 +37,8 @@ export const state = {
   period: { kind: localStorage.getItem('period') || 'month' },
   /** Активный экран */
   route: 'dashboard',
+  /** Розовые очки: на обзоре вместо баланса миллиард евро. До перезагрузки. */
+  rose: false,
 
   loading: true,
 };

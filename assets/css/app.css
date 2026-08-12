@@ -727,6 +727,93 @@ button { cursor: pointer; border: none; background: none; }
 .btn--ghost { background: rgba(255, 255, 255, 0.045); }
 .btn[disabled] { opacity: 0.4; pointer-events: none; }
 
+/* ---------------------------------------------------------------- розовые очки
+ *
+ * Режим, в котором на счету миллиард евро (см. views/roseGlasses.js).
+ * Настоящих данных не касается — меняется только вид сводки на обзоре.
+ */
+
+/* Вход: неброская кнопка под сводкой, чтобы не спорить с «Добавить». */
+.rose-open {
+  width: 100%;
+  margin-top: 12px;
+  color: #ffb7d5;
+  border-color: rgba(255, 122, 182, 0.32);
+  background: rgba(255, 122, 182, 0.08);
+}
+/* Обе строки нужны: у .btn:hover приоритет выше, и без них на наведении
+   вернулись бы общий фон и общая рамка кнопки. */
+.rose-open:hover {
+  background: rgba(255, 122, 182, 0.16);
+  border-color: rgba(255, 122, 182, 0.5);
+}
+
+.balance--rose {
+  border-color: rgba(255, 122, 182, 0.4);
+  background:
+    radial-gradient(120% 130% at 20% 0%, rgba(255, 122, 182, 0.42), transparent 64%),
+    linear-gradient(158deg, rgba(255, 138, 196, 0.22), rgba(160, 90, 200, 0.16));
+  box-shadow: 0 18px 50px rgba(255, 92, 168, 0.28);
+}
+.balance--rose .balance__label { color: #ffd0e5; }
+.balance--rose .balance__value { color: #fff; text-shadow: 0 0 26px rgba(255, 122, 182, 0.65); }
+.balance--rose .balance__sub { color: #ffc4de; }
+
+/* Пока очки надеты, расход рисуем не тревожным красным, а тем же розовым. */
+.balance--rose + .stat-row .stat {
+  border-color: rgba(255, 122, 182, 0.3);
+  background: linear-gradient(158deg, rgba(255, 122, 182, 0.16), rgba(255, 122, 182, 0.06));
+}
+.balance--rose + .stat-row .stat--out .stat__value { color: #ffb7d5; }
+.balance--rose + .stat-row .stat--out .stat__dot {
+  background: #ffb7d5;
+  box-shadow: 0 0 10px #ffb7d5;
+}
+
+/* Выход: единственная заметная кнопка в режиме — искать её не приходится. */
+.rose-back {
+  width: 100%;
+  margin-top: 14px;
+  color: #2a0a1c;
+  font-weight: 600;
+  border: none;
+  background: linear-gradient(135deg, #ffc3de, #ff8ac4);
+  box-shadow: 0 10px 30px rgba(255, 92, 168, 0.35);
+}
+.rose-back:hover {
+  filter: brightness(1.06);
+  background: linear-gradient(135deg, #ffc3de, #ff8ac4);
+}
+
+/* Небо с сердечками: поверх всего, но кликам не мешает. */
+.rose-sky {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.rose-sky__item {
+  position: absolute;
+  bottom: -60px;
+  line-height: 1;
+  will-change: transform, opacity;
+  animation: rose-fly linear forwards;
+}
+
+/* Всплываем снизу вверх с боковым сносом: --drift и --spin у каждого свои. */
+@keyframes rose-fly {
+  0% { opacity: 0; transform: translate3d(0, 0, 0) rotate(0deg) scale(0.7); }
+  12% { opacity: 1; }
+  85% { opacity: 1; }
+  100% {
+    opacity: 0;
+    transform: translate3d(var(--drift, 0), -104vh, 0) rotate(var(--spin, 0deg)) scale(1);
+  }
+}
+
+
 /* Переключатели */
 .segmented {
   display: flex;

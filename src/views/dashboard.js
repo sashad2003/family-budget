@@ -1,15 +1,16 @@
 /** Обзор: баланс месяца, доходы/расходы, разбивка по категориям, последние операции. */
 
-import { el } from '../core/dom.js?v=49';
-import { state } from '../core/store.js?v=49';
-import { formatAmount } from '../core/money.js?v=49';
-import { monthTransactions, totals, byCategory, unpaidBills } from '../core/selectors.js?v=49';
-import { set } from '../core/store.js?v=49';
-import { txRow, tileGradient } from './list.js?v=49';
-import { openTxForm } from './txForm.js?v=49';
-import { openScanSheet } from './scan.js?v=49';
-import { section } from '../ui/section.js?v=49';
-import { t } from '../core/i18n.js?v=49';
+import { el } from '../core/dom.js?v=50';
+import { state } from '../core/store.js?v=50';
+import { formatAmount } from '../core/money.js?v=50';
+import { monthTransactions, totals, byCategory, unpaidBills } from '../core/selectors.js?v=50';
+import { set } from '../core/store.js?v=50';
+import { txRow, tileGradient } from './list.js?v=50';
+import { openTxForm } from './txForm.js?v=50';
+import { openScanSheet } from './scan.js?v=50';
+import { section } from '../ui/section.js?v=50';
+import { t } from '../core/i18n.js?v=50';
+import { isRose, roseBalance, roseToggle } from './roseGlasses.js?v=50';
 
 export function renderDashboard() {
   const list = monthTransactions(state);
@@ -56,6 +57,9 @@ export function renderDashboard() {
 
 /** Красное напоминание о неоплаченных счетах месяца. */
 function billsReminder() {
+  // В розовых очках долгов не бывает — иначе шутка ломается на первом же счёте.
+  if (isRose()) return null;
+
   const unpaid = unpaidBills(state);
   if (!unpaid.length) return null;
 
@@ -72,6 +76,8 @@ function billsReminder() {
 }
 
 function balanceBlock(balance, income, expense) {
+  if (isRose()) return roseBalance();
+
   return el('div', {}, [
     el('div', { class: 'card balance' }, [
       el('div', { class: 'balance__label' }, t('dash.balance')),
@@ -92,6 +98,8 @@ function balanceBlock(balance, income, expense) {
         el('div', { class: 'stat__value num' }, formatAmount(expense, state.base)),
       ]),
     ]),
+
+    roseToggle(),
   ]);
 }
 
