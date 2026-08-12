@@ -3,13 +3,13 @@
  * Отмечаешь нужное, суммы подставляются из прошлых покупок и правятся в форме.
  */
 
-import { el, render } from '../core/dom.js?v=52';
-import { state } from '../core/store.js?v=52';
-import { quickItemSuggestions } from '../core/selectors.js?v=52';
-import { defaultQuickItems } from '../data/quickItems.js?v=52';
-import { openSheet, closeSheet } from '../ui/sheet.js?v=52';
-import { formatAmount } from '../core/money.js?v=52';
-import { t } from '../core/i18n.js?v=52';
+import { el, render } from '../core/dom.js?v=53';
+import { state } from '../core/store.js?v=53';
+import { quickItemSuggestions } from '../core/selectors.js?v=53';
+import { defaultQuickItems } from '../data/quickItems.js?v=53';
+import { openSheet, closeSheet } from '../ui/sheet.js?v=53';
+import { formatAmount } from '../core/money.js?v=53';
+import { t } from '../core/i18n.js?v=53';
 
 /**
  * openQuickPick(currency, { onDone, onCancel })

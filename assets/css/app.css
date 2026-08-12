@@ -952,19 +952,56 @@ button { cursor: pointer; border: none; background: none; }
 
 .items { display: flex; flex-direction: column; gap: 8px; }
 
-.item-row, .items__head {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 58px 88px 34px;
-  gap: 6px;
-  align-items: center;
+/**
+ * Позиция чека — карточка.
+ *
+ * Раньше это была строка таблицы, где название делило ширину с количеством и
+ * суммой. На телефоне ему доставалось полтора сантиметра, и от «KRASTAVAC
+ * (KOM)» на экране оставалось «KRASTAVAC (K…» — по такому огрызку товар не
+ * узнать, а читают в этом списке именно названия.
+ *
+ * Раскладку выбирает сама строка: пока места мало, название занимает всю
+ * ширину карточки и числа встают под ним; как только ширины хватает на всё
+ * сразу, они возвращаются в один ряд. Отдельного медиазапроса для этого не
+ * нужно — карточка узкая и внутри шторки, где ширина не равна ширине экрана.
+ */
+.item-card {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px;
+  border-radius: var(--r-md);
+  background: var(--glass-1);
+  border: 1px solid var(--edge);
 }
-.item-row .input { padding: 11px 11px; font-size: 14.5px; }
-.item-row .input--num { font-family: var(--mono); text-align: end; }
-.item-row__del { color: var(--fg-2); font-size: 16px; height: 36px; border-radius: 9px; transition: background 0.18s, color 0.18s; }
-.item-row__del:hover { background: rgba(255, 91, 91, 0.14); color: var(--expense); }
 
-.items__head { font-size: 11.5px; color: var(--fg-2); padding: 0 2px 2px; }
-.items__head span:nth-child(n+2) { text-align: end; }
+/* 100% — перенос числам, 200px — порог, ниже которого название не сжимается. */
+.item-card__name { flex: 1 1 100%; min-width: 200px; }
+.item-card__name .input { width: 100%; }
+
+.item-card__nums {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  /* Прижимаем к концу строки: в один ряд с названием числа идут справа. */
+  margin-inline-start: auto;
+}
+
+.item-card__field { display: flex; flex-direction: column; gap: 4px; }
+.item-card__label { font-size: 11px; color: var(--fg-2); padding-inline-start: 2px; }
+
+.item-card .input { padding: 11px; font-size: 14.5px; }
+.item-card .input--num { width: 88px; font-family: var(--mono); text-align: end; }
+
+.item-card__del {
+  flex: none;
+  width: 34px; height: 41px;
+  color: var(--fg-2);
+  font-size: 16px;
+  border-radius: 9px;
+  transition: background 0.18s, color 0.18s;
+}
+.item-card__del:hover { background: rgba(255, 91, 91, 0.14); color: var(--expense); }
 
 /* ------------------------------------------------ шторка */
 

@@ -3,21 +3,21 @@
  * после сканирования каждое поле и каждая строка товара остаются редактируемыми.
  */
 
-import { el, render } from '../core/dom.js?v=52';
-import { state } from '../core/store.js?v=52';
-import { CURRENCY_CODES } from '../config.js?v=52';
-import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=52';
-import { today } from '../core/dates.js?v=52';
-import { guessCategory } from '../data/categories.js?v=52';
-import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=52';
-import { tileGradient } from './list.js?v=52';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=52';
-import { toastOk, toastError } from '../ui/toast.js?v=52';
-import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=52';
-import { openQuickPick } from './quickPick.js?v=52';
-import { findDuplicates } from '../core/selectors.js?v=52';
-import { openDupCompare } from './dupCompare.js?v=52';
-import { t } from '../core/i18n.js?v=52';
+import { el, render } from '../core/dom.js?v=53';
+import { state } from '../core/store.js?v=53';
+import { CURRENCY_CODES } from '../config.js?v=53';
+import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=53';
+import { today } from '../core/dates.js?v=53';
+import { guessCategory } from '../data/categories.js?v=53';
+import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=53';
+import { tileGradient } from './list.js?v=53';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=53';
+import { toastOk, toastError } from '../ui/toast.js?v=53';
+import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=53';
+import { openQuickPick } from './quickPick.js?v=53';
+import { findDuplicates } from '../core/selectors.js?v=53';
+import { openDupCompare } from './dupCompare.js?v=53';
+import { t } from '../core/i18n.js?v=53';
 
 /**
  * openTxForm({ tx })          — правка существующей операции
@@ -365,13 +365,6 @@ function buildReceiptBlock(model, rerender, tx) {
           t('form.mismatch'))
       : null,
 
-    el('div', { class: 'items__head' }, [
-      el('span', {}, t('form.colName')),
-      el('span', {}, t('form.colQty')),
-      el('span', {}, t('form.colSum')),
-      el('span', {}, ''),
-    ]),
-
     el('div', { class: 'items' }, model.items.map((item, index) =>
       itemRow(item, index, model, rerender),
     )),
@@ -429,19 +422,38 @@ function itemRow(item, index, model, rerender) {
     },
   });
 
-  return el('div', { class: 'item-row' }, [
-    nameInput,
-    qtyInput,
-    totalInput,
-    el('button', {
-      class: 'item-row__del',
-      'aria-label': t('form.deleteRow'),
-      onclick: () => {
-        model.items.splice(index, 1);
-        if (!model.items.length) model.showItems = false;
-        rerender();
-      },
-    }, '✕'),
+  /**
+   * Позиция чека — карточка, а не строка таблицы.
+   *
+   * В таблице название делило ширину с количеством и суммой, и на телефоне
+   * от него оставалось два слова: «KRASTAVAC (K…» — по такому огрызку не
+   * понять, что за товар, а именно название человек и читает. В карточке оно
+   * занимает всю ширину, а числа стоят под ним.
+   *
+   * Подписи у количества и суммы теперь у самих полей: общая шапка таблицы
+   * над карточками смысла не имеет.
+   */
+  const field = (label, input) => el('label', { class: 'item-card__field' }, [
+    el('span', { class: 'item-card__label' }, label),
+    input,
+  ]);
+
+  return el('div', { class: 'item-card' }, [
+    el('div', { class: 'item-card__name' }, nameInput),
+
+    el('div', { class: 'item-card__nums' }, [
+      field(t('form.colQty'), qtyInput),
+      field(t('form.colSum'), totalInput),
+      el('button', {
+        class: 'item-card__del',
+        'aria-label': t('form.deleteRow'),
+        onclick: () => {
+          model.items.splice(index, 1);
+          if (!model.items.length) model.showItems = false;
+          rerender();
+        },
+      }, '✕'),
+    ]),
   ]);
 }
 
