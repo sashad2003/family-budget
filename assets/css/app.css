@@ -736,64 +736,65 @@ button { cursor: pointer; border: none; background: none; }
 /**
  * Плавающая кнопка с очками — над WhatsApp, у того же края.
  *
+ * Оправы у кнопки нет намеренно: очки нарисованы с прозрачным фоном и сами
+ * по себе читаются как кнопка, а рамка вокруг них выглядела наклейкой.
+ *
  * Высота считается от кнопки WhatsApp, а не задана числом: обе висят над
  * доком, и стоит доку подрасти, как разъехались бы обе сразу.
- *
- * Очки широкие, поэтому кнопка не круглая, как соседи, а вытянутая: в кружок
- * картинка влезала бы обрезанной по краям оправы.
  */
 .rose-fab {
-  /* Кнопка WhatsApp (52px) плюс зазор. Отдельной переменной — потому что на
-     десктопе очки считают отступ от другого края, а подъём над WhatsApp тот же. */
-  --rose-gap: 64px;
+  /* Кнопка WhatsApp (52px) плюс зазор, чтобы очки не сидели у неё на макушке.
+     Отдельной переменной — на десктопе отступ считается от другого края,
+     а подъём над WhatsApp остаётся тем же. */
+  --rose-gap: 82px;
 
   position: fixed;
   inset-inline-start: 18px;
   bottom: calc(var(--dock-h) + 24px + var(--rose-gap) + env(safe-area-inset-bottom));
   z-index: 41;
-  width: 64px; height: 46px;
   display: grid;
   place-items: center;
-  overflow: hidden;
-  border-radius: 15px;
-  border: 1px solid rgba(255, 122, 182, 0.36);
-  background: linear-gradient(158deg, rgba(255, 122, 182, 0.2), rgba(255, 122, 182, 0.07));
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  box-shadow: 0 12px 26px -12px rgba(255, 92, 168, 0.75);
-  transition: transform 0.16s var(--ease), border-color 0.18s, box-shadow 0.18s;
+  /* Место под полоску держим всегда: иначе кнопка подпрыгивала бы при нажатии. */
+  padding: 10px 0 0;
+  transition: transform 0.16s var(--ease);
 }
 .rose-fab:hover { transform: scale(1.06); }
 .rose-fab:active { transform: scale(0.92); }
 
 .rose-fab img {
-  width: 46px;
+  width: 60px;
   height: auto;
   display: block;
-  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.45));
+  /* Тень заменяет оправу: без неё очки теряются на светлых пятнах фона. */
+  filter: drop-shadow(0 3px 7px rgba(0, 0, 0, 0.6));
+  transition: filter 0.18s;
 }
 
 /* Номера у WhatsApp может не быть — тогда очки опускаются на его место. */
 body:has(.wa[hidden]) .rose-fab { --rose-gap: 0px; }
 
 /**
- * Надетые очки: красная полоска поверх верхнего края.
+ * Надетые очки: красная полоска над ними.
  *
  * Она здесь вместо подписи. Кнопка одна на оба действия, и без пометки
  * второе нажатие читается как «ещё раз включить», а не как выход.
  */
-.rose-fab.is-on {
-  border-color: rgba(255, 122, 182, 0.7);
-  box-shadow: 0 12px 30px -10px rgba(255, 92, 168, 0.95);
-}
-
 .rose-fab.is-on::before {
   content: '';
   position: absolute;
-  inset: 0 0 auto;
-  height: 5px;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 34px;
+  height: 4px;
+  border-radius: 2px;
   background: #ff3b30;
   box-shadow: 0 0 12px rgba(255, 59, 48, 0.9);
+}
+
+/* Розовое свечение — второй признак включённого режима, кроме полоски. */
+.rose-fab.is-on img {
+  filter: drop-shadow(0 3px 7px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 12px rgba(255, 92, 168, 0.95));
 }
 
 .balance--rose {
