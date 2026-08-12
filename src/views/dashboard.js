@@ -10,7 +10,7 @@ import { openTxForm } from './txForm.js?v=50';
 import { openScanSheet } from './scan.js?v=50';
 import { section } from '../ui/section.js?v=50';
 import { t } from '../core/i18n.js?v=50';
-import { isRose, roseBalance, roseToggle } from './roseGlasses.js?v=50';
+import { isRose, roseBalance } from './roseGlasses.js?v=50';
 
 export function renderDashboard() {
   const list = monthTransactions(state);
@@ -98,8 +98,6 @@ function balanceBlock(balance, income, expense) {
         el('div', { class: 'stat__value num' }, formatAmount(expense, state.base)),
       ]),
     ]),
-
-    roseToggle(),
   ]);
 }
 

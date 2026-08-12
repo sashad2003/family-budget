@@ -733,19 +733,67 @@ button { cursor: pointer; border: none; background: none; }
  * Настоящих данных не касается — меняется только вид сводки на обзоре.
  */
 
-/* Вход: неброская кнопка под сводкой, чтобы не спорить с «Добавить». */
-.rose-open {
-  width: 100%;
-  margin-top: 12px;
-  color: #ffb7d5;
-  border-color: rgba(255, 122, 182, 0.32);
-  background: rgba(255, 122, 182, 0.08);
+/**
+ * Плавающая кнопка с очками — над WhatsApp, у того же края.
+ *
+ * Высота считается от кнопки WhatsApp, а не задана числом: обе висят над
+ * доком, и стоит доку подрасти, как разъехались бы обе сразу.
+ *
+ * Очки широкие, поэтому кнопка не круглая, как соседи, а вытянутая: в кружок
+ * картинка влезала бы обрезанной по краям оправы.
+ */
+.rose-fab {
+  /* Кнопка WhatsApp (52px) плюс зазор. Отдельной переменной — потому что на
+     десктопе очки считают отступ от другого края, а подъём над WhatsApp тот же. */
+  --rose-gap: 64px;
+
+  position: fixed;
+  inset-inline-start: 18px;
+  bottom: calc(var(--dock-h) + 24px + var(--rose-gap) + env(safe-area-inset-bottom));
+  z-index: 41;
+  width: 64px; height: 46px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 15px;
+  border: 1px solid rgba(255, 122, 182, 0.36);
+  background: linear-gradient(158deg, rgba(255, 122, 182, 0.2), rgba(255, 122, 182, 0.07));
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 12px 26px -12px rgba(255, 92, 168, 0.75);
+  transition: transform 0.16s var(--ease), border-color 0.18s, box-shadow 0.18s;
 }
-/* Обе строки нужны: у .btn:hover приоритет выше, и без них на наведении
-   вернулись бы общий фон и общая рамка кнопки. */
-.rose-open:hover {
-  background: rgba(255, 122, 182, 0.16);
-  border-color: rgba(255, 122, 182, 0.5);
+.rose-fab:hover { transform: scale(1.06); }
+.rose-fab:active { transform: scale(0.92); }
+
+.rose-fab img {
+  width: 46px;
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.45));
+}
+
+/* Номера у WhatsApp может не быть — тогда очки опускаются на его место. */
+body:has(.wa[hidden]) .rose-fab { --rose-gap: 0px; }
+
+/**
+ * Надетые очки: красная полоска поверх верхнего края.
+ *
+ * Она здесь вместо подписи. Кнопка одна на оба действия, и без пометки
+ * второе нажатие читается как «ещё раз включить», а не как выход.
+ */
+.rose-fab.is-on {
+  border-color: rgba(255, 122, 182, 0.7);
+  box-shadow: 0 12px 30px -10px rgba(255, 92, 168, 0.95);
+}
+
+.rose-fab.is-on::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 5px;
+  background: #ff3b30;
+  box-shadow: 0 0 12px rgba(255, 59, 48, 0.9);
 }
 
 .balance--rose {
@@ -770,26 +818,12 @@ button { cursor: pointer; border: none; background: none; }
   box-shadow: 0 0 10px #ffb7d5;
 }
 
-/* Выход: единственная заметная кнопка в режиме — искать её не приходится. */
-.rose-back {
-  width: 100%;
-  margin-top: 14px;
-  color: #2a0a1c;
-  font-weight: 600;
-  border: none;
-  background: linear-gradient(135deg, #ffc3de, #ff8ac4);
-  box-shadow: 0 10px 30px rgba(255, 92, 168, 0.35);
-}
-.rose-back:hover {
-  filter: brightness(1.06);
-  background: linear-gradient(135deg, #ffc3de, #ff8ac4);
-}
-
 /* Небо с сердечками: поверх всего, но кликам не мешает. */
+/* Ниже плавающих кнопок (41): сердечки не должны закрывать сами очки. */
 .rose-sky {
   position: fixed;
   inset: 0;
-  z-index: 60;
+  z-index: 40;
   overflow: hidden;
   pointer-events: none;
 }
@@ -1495,6 +1529,11 @@ button { cursor: pointer; border: none; background: none; }
 
   /* Дока внизу нет, а «＋» уехала в шапку — место у нижнего края свободно. */
   .wa { bottom: 28px; inset-inline-start: auto; inset-inline-end: 28px; }
+  .rose-fab {
+    bottom: calc(28px + var(--rose-gap));
+    inset-inline-start: auto;
+    inset-inline-end: 28px;
+  }
   .footer { padding-inline: 4px; }
 
   /* Обзор в две колонки */

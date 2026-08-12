@@ -678,13 +678,13 @@ export const DICT = {
   'dash.balance': { ru: 'Баланс за месяц', en: 'Balance this month', he: 'מאזן החודש' },
 
   // ---------------------------------------------------------------- розовые очки
-  'rose.on': { ru: 'Розовые очки', en: 'Rose-tinted glasses', he: 'משקפיים ורודים' },
-  'rose.off': { ru: '↩  Вернуться в реальность', en: '↩  Back to reality', he: '↩  חזרה למציאות' },
+  'rose.on': { ru: 'Надеть розовые очки', en: 'Put on rose-tinted glasses', he: 'להרכיב משקפיים ורודים' },
+  'rose.off': { ru: 'Снять розовые очки', en: 'Take off the rose-tinted glasses', he: 'להסיר את המשקפיים הוורודים' },
   'rose.balance': { ru: 'На счету', en: 'In your account', he: 'ביתרה' },
   'rose.sub': {
-    ru: 'всё хорошо, беспокоиться не о чем — настоящие цифры вернутся по кнопке',
-    en: 'all is well, nothing to worry about — the real numbers are one tap away',
-    he: 'הכול טוב, אין על מה לדאוג — המספרים האמיתיים במרחק הקשה',
+    ru: 'всё хорошо, беспокоиться не о чем — снимите очки, и вернутся настоящие цифры',
+    en: 'all is well, nothing to worry about — take the glasses off for the real numbers',
+    he: 'הכול טוב, אין על מה לדאוג — הסירו את המשקפיים והמספרים האמיתיים יחזרו',
   },
 
   // ---------------------------------------------------------------- редактор категории

@@ -2,15 +2,16 @@
  * Розовые очки — режим, в котором на счету миллиард евро.
  *
  * Данных он не трогает: подменяется только то, что нарисовано на обзоре.
- * Поэтому выход из режима — обычная кнопка рядом с суммой, а не что-то,
- * что надо искать: увидев миллиард, человек должен тут же понимать, откуда
- * он взялся и как вернуть настоящие цифры.
+ *
+ * Надеваются и снимаются очки одной и той же плавающей кнопкой над WhatsApp.
+ * Пока они надеты, у кнопки сверху горит красная полоска — иначе непонятно,
+ * что нажатие не добавит ещё миллиард, а вернёт настоящие цифры.
  *
  * Режим живёт только до перезагрузки страницы. Так и задумано: очки — шутка
  * на минуту, а не настройка, о которой потом забудут и испугаются баланса.
  */
 
-import { el } from '../core/dom.js?v=50';
+import { $, el } from '../core/dom.js?v=50';
 import { state, set } from '../core/store.js?v=50';
 import { formatAmount } from '../core/money.js?v=50';
 import { t } from '../core/i18n.js?v=50';
@@ -22,11 +23,12 @@ export function isRose() {
   return state.rose === true;
 }
 
-/** Включение и выключение: перерисовку делает подписка на состояние. */
+/** Включение и выключение: перерисовку сводки делает подписка на состояние. */
 export function setRose(on) {
   if (on === isRose()) return;
   set({ rose: on });
   if (on) startSky(); else stopSky();
+  drawRoseFab();
 }
 
 /**
@@ -38,24 +40,31 @@ export function setRose(on) {
 export function resetRose() {
   state.rose = false;
   stopSky();
+  drawRoseFab();
 }
 
-// ---------------------------------------------------------------- кнопки
+// ---------------------------------------------------------------- кнопка
 
-/** Кнопка входа — стоит под сводкой обзора. */
-export function roseToggle() {
-  return el('button', {
-    class: 'btn btn--ghost rose-open',
-    onclick: () => setRose(true),
-  }, `🕶  ${t('rose.on')}`);
+/** Плавающая кнопка с очками: одна на оба действия. */
+export function initRoseFab() {
+  $('#btn-rose').addEventListener('click', () => setRose(!isRose()));
+  drawRoseFab();
 }
 
-/** Кнопка выхода — внутри розовой сводки, сразу под суммами. */
-export function roseBack() {
-  return el('button', {
-    class: 'btn rose-back',
-    onclick: () => setRose(false),
-  }, t('rose.off'));
+/**
+ * Вид кнопки под текущее состояние.
+ *
+ * aria-pressed говорит то же самое, что красная полоска, — экранному диктору
+ * полоску не видно, а знать, надеты очки или нет, нужно и ему.
+ */
+export function drawRoseFab() {
+  const button = $('#btn-rose');
+  if (!button) return;
+
+  const on = isRose();
+  button.classList.toggle('is-on', on);
+  button.setAttribute('aria-pressed', String(on));
+  button.setAttribute('aria-label', t(on ? 'rose.off' : 'rose.on'));
 }
 
 // ---------------------------------------------------------------- сводка
@@ -79,8 +88,6 @@ export function roseBalance() {
         el('div', { class: 'stat__value num' }, formatAmount(0, 'EUR')),
       ]),
     ]),
-
-    roseBack(),
   ]);
 }
 
