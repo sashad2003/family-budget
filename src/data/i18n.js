@@ -246,6 +246,7 @@ export const DICT = {
   // ---------------------------------------------------------------- обзор и список
   'dash.recent': { ru: 'Последние операции', en: 'Recent transactions', he: 'תנועות אחרונות' },
   'dash.where': { ru: 'Куда уходят деньги', en: 'Where the money goes', he: 'לאן הכסף הולך' },
+  'dash.from': { ru: 'Откуда приходят деньги', en: 'Where the money comes from', he: 'מאיפה מגיע הכסף' },
   'list.searchPlaceholder': {
     ru: 'Поиск по описанию, магазину, товарам',
     en: 'Search by note, shop or item',

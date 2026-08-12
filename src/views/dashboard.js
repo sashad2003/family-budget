@@ -1,16 +1,16 @@
 /** Обзор: баланс месяца, доходы/расходы, разбивка по категориям, последние операции. */
 
-import { el } from '../core/dom.js?v=53';
-import { state } from '../core/store.js?v=53';
-import { formatAmount } from '../core/money.js?v=53';
-import { monthTransactions, totals, byCategory, unpaidBills } from '../core/selectors.js?v=53';
-import { set } from '../core/store.js?v=53';
-import { txRow, tileGradient } from './list.js?v=53';
-import { openTxForm } from './txForm.js?v=53';
-import { openScanSheet } from './scan.js?v=53';
-import { section } from '../ui/section.js?v=53';
-import { t } from '../core/i18n.js?v=53';
-import { isRose, roseBalance } from './roseGlasses.js?v=53';
+import { el } from '../core/dom.js?v=54';
+import { state } from '../core/store.js?v=54';
+import { formatAmount } from '../core/money.js?v=54';
+import { monthTransactions, totals, byCategory, unpaidBills } from '../core/selectors.js?v=54';
+import { set } from '../core/store.js?v=54';
+import { txRow, tileGradient } from './list.js?v=54';
+import { openTxForm } from './txForm.js?v=54';
+import { openScanSheet } from './scan.js?v=54';
+import { section } from '../ui/section.js?v=54';
+import { t } from '../core/i18n.js?v=54';
+import { isRose, roseBalance } from './roseGlasses.js?v=54';
 
 export function renderDashboard() {
   const list = monthTransactions(state);
@@ -33,7 +33,8 @@ export function renderDashboard() {
     ];
   }
 
-  const categories = byCategory(list.filter((tx) => tx.type === 'expense'), state);
+  const spent = byCategory(list.filter((tx) => tx.type === 'expense'), state);
+  const earned = byCategory(list.filter((tx) => tx.type === 'income'), state);
   const recent = list.slice(0, 6);
 
   // Две колонки на широком экране, одна на телефоне — раскладку задаёт CSS.
@@ -41,7 +42,10 @@ export function renderDashboard() {
     el('div', { class: 'dash__main' }, [
       balanceBlock(balance, income, expense),
       billsReminder(),
-      categories.length ? categoriesCard(categories) : null,
+      spent.length ? categoriesCard(t('dash.where'), spent) : null,
+      // Доходы раскрываем так же, как расходы: одной суммой не видно,
+      // что именно кончилось, если в следующем месяце её не станет.
+      earned.length ? categoriesCard(t('dash.from'), earned) : null,
     ]),
 
     el('div', { class: 'dash__side' }, [
@@ -101,9 +105,53 @@ function balanceBlock(balance, income, expense) {
   ]);
 }
 
-function categoriesCard(categories) {
-  return section(t('dash.where'), [
-    el('div', { class: 'card' }, [
+/**
+ * Пирог долей — на чём уходит больше, видно раньше, чем прочитаны числа.
+ *
+ * Нарисован conic-gradient, без графической библиотеки. Chart.js на обзоре
+ * означал бы полмегабайта с чужого сервера на самом частом экране ради одной
+ * картинки без подсказок и анимации — здесь достаточно одного свойства CSS.
+ *
+ * Доли считаем от точных сумм, а не от округлённых процентов из byCategory:
+ * их сумма даёт то 99, то 101, и на стыке появлялась щель или нахлёст.
+ */
+function pie(rows) {
+  const total = rows.reduce((sum, row) => sum + row.total, 0);
+  if (total <= 0) return null;
+
+  const stops = [];
+  let from = 0;
+
+  rows.forEach((row, index) => {
+    // Последний сегмент дотягиваем до конца сами: иначе остаток дробей
+    // оставлял тонкую полоску фона.
+    const to = index === rows.length - 1 ? 100 : from + (row.total / total) * 100;
+    stops.push(`${safeColor(row.color)} ${from.toFixed(3)}% ${to.toFixed(3)}%`);
+    from = to;
+  });
+
+  return el('div', {
+    class: 'pie',
+    'aria-hidden': 'true',
+    style: `background: conic-gradient(${stops.join(',')})`,
+  });
+}
+
+/**
+ * Цвет приходит из базы, а её наполняет вся семья. В style он попадает
+ * через setAttribute, так что разметку подменить нельзя, но испортить
+ * страницу кривым значением можно — пропускаем только настоящие цвета.
+ */
+function safeColor(value) {
+  return /^#[0-9a-f]{3,8}$/i.test(String(value || '')) ? value : '#8a8a94';
+}
+
+function categoriesCard(title, categories) {
+  return section(title, [
+    el('div', { class: 'card cat-card' }, [
+      // Пирог из одного куска ничего не показывает — только занимает место.
+      categories.length > 1 ? pie(categories) : null,
+
       el('div', { class: 'bar-legend' }, categories.slice(0, 7).map((row) =>
         el('div', {}, [
           el('div', { class: 'legend-row' }, [

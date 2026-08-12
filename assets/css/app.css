@@ -1140,6 +1140,35 @@ button { cursor: pointer; border: none; background: none; }
   padding-top: 0;
 }
 
+/**
+ * Карточка разбивки: пирог и подписи под ним.
+ *
+ * Раскладку выбирает сама карточка. Пока места хватает на пирог и колонку
+ * подписей рядом — они стоят в строку; на телефоне подписи переносятся вниз,
+ * а пирог остаётся по центру над ними.
+ */
+.cat-card {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 18px;
+}
+.cat-card .bar-legend { flex: 1 1 230px; min-width: 0; }
+
+/*
+ * Пирог целиком на conic-gradient: сегменты задаёт разметка, дырку в
+ * середине вырезает маска. Библиотеки для одного круга не нужно.
+ */
+.pie {
+  flex: none;
+  width: 136px;
+  height: 136px;
+  border-radius: 50%;
+  -webkit-mask: radial-gradient(circle, transparent 53%, #000 53.5%);
+  mask: radial-gradient(circle, transparent 53%, #000 53.5%);
+}
+
 .bar-legend { display: flex; flex-direction: column; gap: 11px; }
 .legend-row { display: flex; align-items: center; gap: 10px; font-size: 14.5px; }
 .legend-dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
