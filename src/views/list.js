@@ -1,13 +1,13 @@
 /** Список операций с фильтрами по типу, категории и тексту. */
 
-import { el, render } from '../core/dom.js?v=55';
-import { state } from '../core/store.js?v=55';
-import { formatAmount, txAmountIn } from '../core/money.js?v=55';
-import { dayLabel } from '../core/dates.js?v=55';
-import { monthTransactions, groupByDate, totals } from '../core/selectors.js?v=55';
-import { openTxForm } from './txForm.js?v=55';
-import { section } from '../ui/section.js?v=55';
-import { t, getLocale } from '../core/i18n.js?v=55';
+import { el, render } from '../core/dom.js?v=56';
+import { state } from '../core/store.js?v=56';
+import { formatAmount, txAmountIn } from '../core/money.js?v=56';
+import { dayLabel } from '../core/dates.js?v=56';
+import { monthTransactions, groupByDate, totals } from '../core/selectors.js?v=56';
+import { openTxForm } from './txForm.js?v=56';
+import { section } from '../ui/section.js?v=56';
+import { t, getLocale } from '../core/i18n.js?v=56';
 
 /** Фильтры живут вне state: они локальны для экрана и не влияют на другие. */
 const filters = { type: 'all', categoryId: null, query: '' };
@@ -99,6 +99,7 @@ export function txRow(tx, onClick) {
   else if (tx.source !== 'manual') metaParts.push(t('tx.fromReceipt'));
 
   const inBase = txAmountIn(tx, state.base, state.rates);
+  const foreign = tx.currency !== state.base;
 
   return el('button', { class: 'tx', onclick: onClick }, [
     el('div', {
@@ -111,12 +112,27 @@ export function txRow(tx, onClick) {
       metaParts.length ? el('div', { class: 'tx__meta' }, metaParts.join(' · ')) : null,
     ]),
 
-    el('div', {}, [
+    /**
+     * Валюта ввода помечена отдельно, а не только знаком в конце суммы.
+     *
+     * Знак валюты стоит после цифр и при беглом просмотре теряется: суммы
+     * в списке разного порядка, глаз цепляется за числа, и операция в евро
+     * среди динаров выглядит просто маленькой. Искать по памяти «это было
+     * двенадцать евро» так не выходит. Метка с кодом валюты стоит перед
+     * суммой, поэтому такие строки видно, не читая их.
+     *
+     * Ставим её только там, где валюта не совпадает со сводной: помечать
+     * ею весь список — значит снова ничего не выделить.
+     */
+    el('div', { class: 'tx__sums' }, [
       el('div', {
         class: `tx__amount num ${isIncome ? 'tx__amount--in' : 'tx__amount--out'}`,
-      }, `${isIncome ? '+' : '−'}${formatAmount(tx.amount, tx.currency, { exact: true })}`),
+      }, [
+        foreign ? el('span', { class: 'tx__cur' }, tx.currency) : null,
+        `${isIncome ? '+' : '−'}${formatAmount(tx.amount, tx.currency, { exact: true })}`,
+      ]),
 
-      tx.currency !== state.base
+      foreign
         ? el('span', { class: 'tx__converted num' }, `≈ ${formatAmount(inBase, state.base)}`)
         : null,
     ]),
