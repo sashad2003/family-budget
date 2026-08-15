@@ -1,19 +1,19 @@
 /** Настройки: профиль, участники, валюта, курсы, категории. */
 
-import { el, render } from '../core/dom.js?v=62';
-import { state, set } from '../core/store.js?v=62';
-import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=62';
-import { formatAmount, convert } from '../core/money.js?v=62';
-import { logout } from '../services/auth.js?v=62';
+import { el, render } from '../core/dom.js?v=63';
+import { state, set } from '../core/store.js?v=63';
+import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=63';
+import { formatAmount, convert } from '../core/money.js?v=63';
+import { logout } from '../services/auth.js?v=63';
 import {
   inviteLink, resetInviteLink, removeMember, leaveFamily, isOwner,
-} from '../services/account.js?v=62';
-import { refreshRates } from '../services/rates.js?v=62';
-import { saveCategory, deleteCategory } from '../services/transactions.js?v=62';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=62';
-import { section } from '../ui/section.js?v=62';
-import { t, intlLocale } from '../core/i18n.js?v=62';
-import { toastOk, toastError } from '../ui/toast.js?v=62';
+} from '../services/account.js?v=63';
+import { refreshRates } from '../services/rates.js?v=63';
+import { saveCategory, deleteCategory } from '../services/transactions.js?v=63';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=63';
+import { section } from '../ui/section.js?v=63';
+import { t, intlLocale } from '../core/i18n.js?v=63';
+import { toastOk, toastError } from '../ui/toast.js?v=63';
 
 const PALETTE = ['#2dd98a', '#ff5b5b', '#5b9fff', '#ffb347', '#ff7eb3', '#3de8d0', '#8a8a94'];
 

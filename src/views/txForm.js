@@ -3,21 +3,21 @@
  * после сканирования каждое поле и каждая строка товара остаются редактируемыми.
  */
 
-import { el, render } from '../core/dom.js?v=62';
-import { state } from '../core/store.js?v=62';
-import { CURRENCY_CODES } from '../config.js?v=62';
-import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=62';
-import { today } from '../core/dates.js?v=62';
-import { guessCategory } from '../data/categories.js?v=62';
-import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=62';
-import { tileGradient } from './list.js?v=62';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=62';
-import { toastOk, toastError } from '../ui/toast.js?v=62';
-import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=62';
-import { openQuickPick } from './quickPick.js?v=62';
-import { findDuplicates } from '../core/selectors.js?v=62';
-import { openDupCompare } from './dupCompare.js?v=62';
-import { t } from '../core/i18n.js?v=62';
+import { el, render } from '../core/dom.js?v=63';
+import { state } from '../core/store.js?v=63';
+import { CURRENCY_CODES } from '../config.js?v=63';
+import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=63';
+import { today } from '../core/dates.js?v=63';
+import { guessCategory } from '../data/categories.js?v=63';
+import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=63';
+import { tileGradient } from './list.js?v=63';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=63';
+import { toastOk, toastError } from '../ui/toast.js?v=63';
+import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=63';
+import { openQuickPick } from './quickPick.js?v=63';
+import { findDuplicates } from '../core/selectors.js?v=63';
+import { openDupCompare } from './dupCompare.js?v=63';
+import { t } from '../core/i18n.js?v=63';
 
 /**
  * openTxForm({ tx })          — правка существующей операции
@@ -415,6 +415,9 @@ function itemRow(item, index, model, rerender) {
     class: 'input input--num',
     type: 'text',
     inputmode: 'decimal',
+    // Подписи у поля нет — она нужна только экранному диктору, которому
+    // «второе число в строке» ни о чём не говорит.
+    'aria-label': t('form.colSum'),
     value: item.total || '',
     oninput: (e) => {
       item.total = parseAmount(e.target.value);
@@ -430,19 +433,21 @@ function itemRow(item, index, model, rerender) {
    * понять, что за товар, а именно название человек и читает. В карточке оно
    * занимает всю ширину, а числа стоят под ним.
    *
-   * Подписи у количества и суммы стоят внутри самих полей: общая шапка
-   * таблицы над карточками смысла не имеет, а отдельная строка над каждым
-   * полем растила карточку вдвое ради одного слова. Это label, поэтому
-   * нажатие на подпись ставит курсор в поле.
-   *
    * Внутри карточки два ряда. Сверху название и кнопка удаления — вместе,
    * потому что удаляют именно названную строку, и держать кнопку у чисел
-   * значит целиться в неё, глядя не туда. Снизу количество и сумма пополам:
-   * оба поля числовые и равны по важности, а прижатые к краю они оставляли
-   * половину карточки пустой.
+   * значит целиться в неё, глядя не туда.
+   *
+   * Снизу количество с подписью и сумма без неё. Подписи у обоих полей
+   * не помещаются: два слова и два числа не влезают в ширину телефона, и
+   * на тесных экранах обрезалось то одно, то другое. Подпись оставлена там,
+   * где без неё не догадаться, — количество можно спутать с ценой за штуку.
+   * Второе же число в строке товара всегда сумма, и слово при нём лишнее;
+   * вместо слова его выделяет насыщенность.
    */
-  const field = (label, input) => el('label', { class: 'item-card__field' }, [
-    el('span', { class: 'item-card__label' }, label),
+  const field = (label, input) => el('label', {
+    class: `item-card__field ${label ? '' : 'item-card__field--bare'}`,
+  }, [
+    label ? el('span', { class: 'item-card__label' }, label) : null,
     input,
   ]);
 
@@ -462,7 +467,7 @@ function itemRow(item, index, model, rerender) {
 
     el('div', { class: 'item-card__nums' }, [
       field(t('form.colQty'), qtyInput),
-      field(t('form.colSum'), totalInput),
+      field(null, totalInput),
     ]),
   ]);
 }
