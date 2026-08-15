@@ -3,21 +3,21 @@
  * оплаченные отмечены галочкой, забытые горят красным.
  */
 
-import { el, render } from '../core/dom.js?v=64';
-import { state, set } from '../core/store.js?v=64';
-import { CURRENCY_CODES } from '../config.js?v=64';
-import { formatAmount, parseAmount, currencyInfo, convert } from '../core/money.js?v=64';
-import { monthLabel, monthKey, today } from '../core/dates.js?v=64';
-import { billsForMonth } from '../core/selectors.js?v=64';
-import { createBill, updateBill, deleteBill } from '../services/bills.js?v=64';
-import { autoStartMark } from '../services/autoBills.js?v=64';
-import { createTransaction, deleteTransaction } from '../services/transactions.js?v=64';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=64';
-import { toastOk, toastError } from '../ui/toast.js?v=64';
-import { openTxForm } from './txForm.js?v=64';
-import { tileGradient } from './list.js?v=64';
-import { section } from '../ui/section.js?v=64';
-import { t } from '../core/i18n.js?v=64';
+import { el, render } from '../core/dom.js?v=65';
+import { state, set } from '../core/store.js?v=65';
+import { CURRENCY_CODES } from '../config.js?v=65';
+import { formatAmount, parseAmount, currencyInfo, convert } from '../core/money.js?v=65';
+import { monthLabel, monthKey, today } from '../core/dates.js?v=65';
+import { billsForMonth } from '../core/selectors.js?v=65';
+import { createBill, updateBill, deleteBill } from '../services/bills.js?v=65';
+import { autoStartMark } from '../services/autoBills.js?v=65';
+import { createTransaction, deleteTransaction } from '../services/transactions.js?v=65';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=65';
+import { toastOk, toastError } from '../ui/toast.js?v=65';
+import { openTxForm } from './txForm.js?v=65';
+import { tileGradient } from './list.js?v=65';
+import { section } from '../ui/section.js?v=65';
+import { t } from '../core/i18n.js?v=65';
 
 export function renderBills() {
   const rows = billsForMonth(state);
@@ -370,29 +370,35 @@ function buildBillBody(model, rerender) {
     ]),
 
     /**
-     * Автооплата показывается только у постоянной суммы. У меняющейся
-     * заранее известна лишь прошлая, и записать её как факт — значит
-     * выдумать расход; такой счёт по-прежнему подтверждают руками.
+     * Автооплата работает только у постоянной суммы: у меняющейся заранее
+     * известна лишь прошлая, и записать её как факт — значит выдумать расход.
+     *
+     * Раньше при меняющейся сумме переключателя не было вовсе, и получалось
+     * молчаливое исчезновение: о том, что такая возможность вообще есть,
+     * узнать было неоткуда. Теперь он на месте, но погашен и сам говорит,
+     * чего ему не хватает.
      */
-    model.fixed
-      ? el('button', {
-          class: `toggle ${model.auto ? 'is-on' : ''}`,
-          style: 'margin-top:10px',
-          onclick: () => {
-            model.auto = !model.auto;
-            // Отметка ставится в момент включения: она решает, с какого
-            // месяца счёт начнёт платиться, и назад не отодвигается.
-            if (model.auto) model.autoPaidThrough = autoStartMark(model);
-            rerender();
-          },
-        }, [
-          el('span', {}, [
-            el('span', { class: 'toggle__title' }, t('bills.autoTitle')),
-            el('span', { class: 'toggle__sub' }, t('bills.autoSub')),
-          ]),
-          el('span', { class: 'toggle__knob' }),
-        ])
-      : null,
+    el('button', {
+      class: `toggle ${model.auto ? 'is-on' : ''} ${model.fixed ? '' : 'is-locked'}`,
+      style: 'margin-top:10px',
+      onclick: () => {
+        // Нажатие при меняющейся сумме объясняет, а не молчит.
+        if (!model.fixed) { toastError(t('bills.autoNeedsFixed')); return; }
+
+        model.auto = !model.auto;
+        // Отметка ставится в момент включения: она решает, с какого
+        // месяца счёт начнёт платиться, и назад не отодвигается.
+        if (model.auto) model.autoPaidThrough = autoStartMark(model);
+        rerender();
+      },
+    }, [
+      el('span', {}, [
+        el('span', { class: 'toggle__title' }, t('bills.autoTitle')),
+        el('span', { class: 'toggle__sub' },
+          t(model.fixed ? 'bills.autoSub' : 'bills.autoNeedsFixed')),
+      ]),
+      el('span', { class: 'toggle__knob' }),
+    ]),
 
     el('div', { class: 'field', style: 'margin-top:14px' }, [
       el('label', { class: 'field__label' },

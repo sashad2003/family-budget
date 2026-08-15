@@ -638,6 +638,11 @@ export const DICT = {
     en: 'The expense is recorded on the due day — no monthly confirming',
     he: 'ההוצאה תירשם מעצמה ביום החיוב — בלי לאשר כל חודש',
   },
+  'bills.autoNeedsFixed': {
+    ru: 'Нужна постоянная сумма — меняющуюся приложение угадывать не станет',
+    en: 'Needs a fixed amount — the app will not guess a changing one',
+    he: 'נדרש סכום קבוע — סכום משתנה האפליקציה לא תנחש',
+  },
   'bills.autoMeta': {
     ru: 'спишется само {day}-го',
     en: 'auto on the {day}th',

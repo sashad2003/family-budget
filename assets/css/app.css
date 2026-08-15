@@ -1510,6 +1510,14 @@ button { cursor: pointer; border: none; background: none; }
 .toggle__title { display: block; font-size: 15px; color: var(--fg-0); }
 .toggle__sub { display: block; font-size: 12.5px; color: var(--fg-2); margin-top: 2px; }
 
+/*
+ * Переключатель, которому чего-то не хватает для работы. Он приглушён, но
+ * остаётся на месте и нажимается: спрятанная возможность выглядит как
+ * несуществующая, а объяснить, чего не хватает, можно только показав её.
+ */
+.toggle.is-locked { opacity: 0.55; }
+.toggle.is-locked .toggle__sub { color: var(--yellow); }
+
 .toggle__knob {
   flex: 0 0 44px;
   height: 26px;
