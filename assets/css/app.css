@@ -996,7 +996,7 @@ button { cursor: pointer; border: none; background: none; }
  */
 .item-card {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 10px;
   padding: 12px;
   border-radius: var(--r-md);
@@ -1004,27 +1004,26 @@ button { cursor: pointer; border: none; background: none; }
   border: 1px solid var(--edge);
 }
 
-/* 100% — перенос числам, 200px — порог, ниже которого название не сжимается. */
-.item-card__name { flex: 1 1 100%; min-width: 200px; }
+/* Название и кнопка удаления в одном ряду: удаляют именно названную строку. */
+.item-card__top { display: flex; align-items: center; gap: 8px; }
+.item-card__name { flex: 1; min-width: 0; }
 .item-card__name .input { width: 100%; }
 
-.item-card__nums {
-  display: flex;
-  align-items: flex-end;
-  gap: 8px;
-  /* Прижимаем к концу строки: в один ряд с названием числа идут справа. */
-  margin-inline-start: auto;
-}
+/*
+ * Количество и сумма пополам. Оба поля числовые и равны по важности, а
+ * прижатые к краю они оставляли половину карточки пустой.
+ */
+.item-card__nums { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 
-.item-card__field { display: flex; flex-direction: column; gap: 4px; }
+.item-card__field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .item-card__label { font-size: 12px; color: var(--fg-2); padding-inline-start: 2px; }
 
 .item-card .input { padding: 11px; font-size: 14.5px; }
-.item-card .input--num { width: 88px; font-family: var(--mono); text-align: end; }
+.item-card .input--num { width: 100%; font-family: var(--mono); text-align: end; }
 
 .item-card__del {
   flex: none;
-  width: 34px; height: 41px;
+  width: 38px; height: 41px;
   color: var(--fg-2);
   font-size: 16px;
   border-radius: 9px;

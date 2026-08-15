@@ -5,17 +5,17 @@
  * Данные берутся из общей базы: свои чеки и чеки других пользователей.
  */
 
-import { el, render } from '../core/dom.js?v=56';
-import { state } from '../core/store.js?v=56';
-import { formatAmount, convert } from '../core/money.js?v=56';
-import { dayLabel } from '../core/dates.js?v=56';
-import { searchPrices, groupByShop } from '../services/prices.js?v=56';
-import { quickItemSuggestions } from '../core/selectors.js?v=56';
-import { toastError } from '../ui/toast.js?v=56';
-import { tileGradient } from './list.js?v=56';
-import { openTxForm } from './txForm.js?v=56';
-import { section } from '../ui/section.js?v=56';
-import { t, getLocale } from '../core/i18n.js?v=56';
+import { el, render } from '../core/dom.js?v=57';
+import { state } from '../core/store.js?v=57';
+import { formatAmount, convert } from '../core/money.js?v=57';
+import { dayLabel } from '../core/dates.js?v=57';
+import { searchPrices, groupByShop } from '../services/prices.js?v=57';
+import { quickItemSuggestions } from '../core/selectors.js?v=57';
+import { toastError } from '../ui/toast.js?v=57';
+import { tileGradient } from './list.js?v=57';
+import { openTxForm } from './txForm.js?v=57';
+import { section } from '../ui/section.js?v=57';
+import { t, getLocale } from '../core/i18n.js?v=57';
 
 /** Запрос живёт вне state: он локален для экрана. */
 const search = { query: '', rows: null, busy: false };
