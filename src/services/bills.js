@@ -26,8 +26,8 @@ import {
   serverTimestamp,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=58';
-import { getFamilyId } from '../core/session.js?v=58';
+import { db } from '../core/firebase.js?v=59';
+import { getFamilyId } from '../core/session.js?v=59';
 
 const billCollection = () => collection(db, 'families', getFamilyId(), 'bills');
 

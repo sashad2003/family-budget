@@ -1030,10 +1030,12 @@ button { cursor: pointer; border: none; background: none; }
  */
 .item-card__field {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  align-items: stretch;
   min-width: 0;
-  padding: 0 11px;
+  /* Отступов у самой обёртки нет: их держат подпись и поле по отдельности,
+     иначе подложка подписи не дотягивалась бы до края рамки. */
+  padding: 0;
+  overflow: hidden;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--edge);
   border-radius: var(--r-sm);
@@ -1045,8 +1047,21 @@ button { cursor: pointer; border: none; background: none; }
   box-shadow: 0 0 0 3px rgba(91, 159, 255, 0.14);
 }
 
-/* flex: none — подпись не сжимается, место уступает число. */
-.item-card__label { flex: none; font-size: 11.5px; color: var(--fg-2); }
+/*
+ * Подпись занимает левую часть рамки целиком, отделённая чертой: поле
+ * читается как «что вводим — и само значение», а не как число с приросшим
+ * к нему словом. flex: none — подпись не сжимается, место уступает число.
+ */
+.item-card__label {
+  flex: none;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
+  font-size: 14px;
+  color: var(--fg-1);
+  background: rgba(255, 255, 255, 0.05);
+  border-inline-end: 1px solid var(--edge);
+}
 
 .item-card .input { padding: 11px; font-size: 14.5px; }
 .item-card .input--num { width: 100%; font-family: var(--mono); text-align: end; }
@@ -1055,7 +1070,7 @@ button { cursor: pointer; border: none; background: none; }
 .item-card__field .input:focus {
   flex: 1;
   min-width: 0;
-  padding: 11px 0;
+  padding: 11px 10px;
   background: none;
   border: none;
   box-shadow: none;
