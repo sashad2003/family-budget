@@ -627,6 +627,30 @@ export const DICT = {
     en: 'The AI did not add up: the item total differs from the receipt total. Check the rows.',
     he: 'ה-AI לא הסתדר: סכום השורות שונה מהסך בקבלה. בדקו את השורות.',
   },
+  // ---------------------------------------------------------------- автооплата
+  'bills.autoTitle': {
+    ru: 'Оплачивать автоматически',
+    en: 'Pay automatically',
+    he: 'לשלם אוטומטית',
+  },
+  'bills.autoSub': {
+    ru: 'Расход запишется сам в день оплаты — подтверждать каждый месяц не придётся',
+    en: 'The expense is recorded on the due day — no monthly confirming',
+    he: 'ההוצאה תירשם מעצמה ביום החיוב — בלי לאשר כל חודש',
+  },
+  'bills.autoMeta': {
+    ru: 'спишется само {day}-го',
+    en: 'auto on the {day}th',
+    he: 'אוטומטית ב-{day} בחודש',
+  },
+  'bills.paidAuto': { ru: 'записано само', en: 'recorded automatically', he: 'נרשם אוטומטית' },
+  'bills.paidManual': { ru: 'оплачено', en: 'paid', he: 'שולם' },
+  'bills.autoDone': {
+    ru: 'Записаны платежи: {names}',
+    en: 'Payments recorded: {names}',
+    he: 'נרשמו תשלומים: {names}',
+  },
+
   'form.colName': { ru: 'Название', en: 'Name', he: 'שם' },
   'form.colQty': { ru: 'Кол-во', en: 'Qty', he: 'כמות' },
   'form.colSum': { ru: 'Сумма', en: 'Amount', he: 'סכום' },

@@ -2,44 +2,45 @@
  * Точка входа: авторизация → загрузка семьи → подписки на данные → роутинг.
  */
 
-import { $, render } from './core/dom.js?v=63';
+import { $, render } from './core/dom.js?v=64';
 import {
   t, localeInfo, isRTL, applyDocumentLocale, translateDocument,
-} from './core/i18n.js?v=63';
-import { state, set, subscribe } from './core/store.js?v=63';
-import { SUPPORT_WHATSAPP } from './config.js?v=63';
-import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=63';
-import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=63';
-import { unpaidBills } from './core/selectors.js?v=63';
+} from './core/i18n.js?v=64';
+import { state, set, subscribe } from './core/store.js?v=64';
+import { SUPPORT_WHATSAPP } from './config.js?v=64';
+import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=64';
+import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=64';
+import { unpaidBills } from './core/selectors.js?v=64';
 
-import { watchAuth, signIn } from './services/auth.js?v=63';
+import { watchAuth, signIn } from './services/auth.js?v=64';
 import {
   loadAccount, isAdmin, joinByCode, listFamilies, watchFamily,
-} from './services/account.js?v=63';
-import { setFamilyId } from './core/session.js?v=63';
-import { askProfile } from './views/signup.js?v=63';
+} from './services/account.js?v=64';
+import { setFamilyId } from './core/session.js?v=64';
+import { askProfile } from './views/signup.js?v=64';
 import {
   watchTransactions,
   watchCategories,
   seedCategoriesIfEmpty,
   syncNewCategories,
-} from './services/transactions.js?v=63';
-import { watchBills } from './services/bills.js?v=63';
-import { loadRates } from './services/rates.js?v=63';
+} from './services/transactions.js?v=64';
+import { watchBills } from './services/bills.js?v=64';
+import { runAutoBills } from './services/autoBills.js?v=64';
+import { loadRates } from './services/rates.js?v=64';
 
-import { renderDashboard } from './views/dashboard.js?v=63';
-import { renderList } from './views/list.js?v=63';
-import { renderBills } from './views/bills.js?v=63';
-import { renderPrices } from './views/prices.js?v=63';
-import { renderAdmin } from './views/admin.js?v=63';
-import { openBudgetMenu, budgetName } from './views/budgetMenu.js?v=63';
-import { renderCharts, destroyCharts } from './views/charts.js?v=63';
-import { renderSettings } from './views/settings.js?v=63';
-import { openTxForm } from './views/txForm.js?v=63';
-import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=63';
-import { initRoseButton, drawRoseButton, resetRose } from './views/roseGlasses.js?v=63';
-import { closeSheet } from './ui/sheet.js?v=63';
-import { toastError, toastOk } from './ui/toast.js?v=63';
+import { renderDashboard } from './views/dashboard.js?v=64';
+import { renderList } from './views/list.js?v=64';
+import { renderBills } from './views/bills.js?v=64';
+import { renderPrices } from './views/prices.js?v=64';
+import { renderAdmin } from './views/admin.js?v=64';
+import { openBudgetMenu, budgetName } from './views/budgetMenu.js?v=64';
+import { renderCharts, destroyCharts } from './views/charts.js?v=64';
+import { renderSettings } from './views/settings.js?v=64';
+import { openTxForm } from './views/txForm.js?v=64';
+import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=64';
+import { initRoseButton, drawRoseButton, resetRose } from './views/roseGlasses.js?v=64';
+import { closeSheet } from './ui/sheet.js?v=64';
+import { toastError, toastOk } from './ui/toast.js?v=64';
 
 // Язык ставим до первой отрисовки: иначе видно, как надписи меняются на ходу.
 applyDocumentLocale();
@@ -65,6 +66,9 @@ const ROUTES = {
 };
 
 let unsubscribers = [];
+
+/** Автооплата отрабатывает один раз за сессию бюджета, а не на каждое обновление. */
+let autoBillsStarted = false;
 
 // ---------------------------------------------------------------- запуск
 
@@ -150,6 +154,29 @@ async function acceptInvite(user, account) {
  */
 async function startData() {
   const familyId = state.family.id;
+  const ready = { bills: false, transactions: false, rates: false };
+
+  /**
+   * Автооплата ждёт все три источника сразу.
+   *
+   * Счета говорят, что платить, операции — что уже оплачено, курсы нужны для
+   * снимка, который кладётся в запись. Запустив раньше, можно было бы завести
+   * второй платёж поверх существующего или зафиксировать курс по умолчанию
+   * вместо настоящего — а он останется в записи навсегда.
+   */
+  const runAutoBillsWhenReady = () => {
+    if (autoBillsStarted || !ready.bills || !ready.transactions || !ready.rates) return;
+    if (state.family?.id !== familyId) return;
+    autoBillsStarted = true;
+
+    runAutoBills(state)
+      .then((done) => {
+        if (!done.length) return;
+        const names = [...new Set(done.map((row) => row.bill.name))].join(', ');
+        toastOk(t('bills.autoDone', { names }));
+      })
+      .catch((error) => console.error('Автооплата не прошла', error));
+  };
 
   unsubscribers.push(
     watchCategories(
@@ -160,11 +187,17 @@ async function startData() {
       (transactions) => {
         set({ transactions, loading: false });
         shareOldPrices(transactions);
+        ready.transactions = true;
+        runAutoBillsWhenReady();
       },
       (error) => { console.error(error); toastError(t('error.transactions')); },
     ),
     watchBills(
-      (bills) => set({ bills }),
+      (bills) => {
+        set({ bills });
+        ready.bills = true;
+        runAutoBillsWhenReady();
+      },
       (error) => { console.error(error); toastError(t('error.bills')); },
     ),
     watchFamily(
@@ -183,7 +216,10 @@ async function startData() {
       set({ rates, ratesFetchedAt: fetchedAt });
       if (stale) toastError(t('error.rates'));
     })
-    .catch((error) => console.error(error));
+    .catch((error) => console.error(error))
+    // Курсы могли и не приехать: тогда в записи ляжет запасной набор — это
+    // хуже точного, но лучше, чем не записать платёж вовсе.
+    .finally(() => { ready.rates = true; runAutoBillsWhenReady(); });
 
   seedCategoriesIfEmpty()
     // Категории, добавленные в код позже первого запуска, довозим молча.
@@ -239,7 +275,7 @@ function shareOldPrices(transactions) {
   if (backfillStarted || !state.user || !transactions.length) return;
   backfillStarted = true;
 
-  import('./services/prices.js?v=63')
+  import('./services/prices.js?v=64')
     .then(({ backfillPrices }) => backfillPrices(transactions, state.user.uid))
     .catch((error) => console.error('Не удалось перенести историю цен', error));
 }
@@ -248,6 +284,7 @@ function teardown() {
   unsubscribers.forEach((fn) => fn());
   unsubscribers = [];
   backfillStarted = false;
+  autoBillsStarted = false;
   destroyCharts();
   closeSheet();
   resetRose();

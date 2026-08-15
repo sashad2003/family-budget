@@ -3,20 +3,21 @@
  * оплаченные отмечены галочкой, забытые горят красным.
  */
 
-import { el, render } from '../core/dom.js?v=63';
-import { state, set } from '../core/store.js?v=63';
-import { CURRENCY_CODES } from '../config.js?v=63';
-import { formatAmount, parseAmount, currencyInfo, convert } from '../core/money.js?v=63';
-import { monthLabel, monthKey, today } from '../core/dates.js?v=63';
-import { billsForMonth } from '../core/selectors.js?v=63';
-import { createBill, updateBill, deleteBill } from '../services/bills.js?v=63';
-import { createTransaction, deleteTransaction } from '../services/transactions.js?v=63';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=63';
-import { toastOk, toastError } from '../ui/toast.js?v=63';
-import { openTxForm } from './txForm.js?v=63';
-import { tileGradient } from './list.js?v=63';
-import { section } from '../ui/section.js?v=63';
-import { t } from '../core/i18n.js?v=63';
+import { el, render } from '../core/dom.js?v=64';
+import { state, set } from '../core/store.js?v=64';
+import { CURRENCY_CODES } from '../config.js?v=64';
+import { formatAmount, parseAmount, currencyInfo, convert } from '../core/money.js?v=64';
+import { monthLabel, monthKey, today } from '../core/dates.js?v=64';
+import { billsForMonth } from '../core/selectors.js?v=64';
+import { createBill, updateBill, deleteBill } from '../services/bills.js?v=64';
+import { autoStartMark } from '../services/autoBills.js?v=64';
+import { createTransaction, deleteTransaction } from '../services/transactions.js?v=64';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=64';
+import { toastOk, toastError } from '../ui/toast.js?v=64';
+import { openTxForm } from './txForm.js?v=64';
+import { tileGradient } from './list.js?v=64';
+import { section } from '../ui/section.js?v=64';
+import { t } from '../core/i18n.js?v=64';
 
 export function renderBills() {
   const rows = billsForMonth(state);
@@ -124,10 +125,17 @@ function billRow({ bill, tx, paid, expected, tracked }) {
 }
 
 function billMeta(bill, paid, tx, overdue) {
-  if (paid) return `оплачено${tx?.date ? ` · ${tx.date.slice(8)}.${tx.date.slice(5, 7)}` : ''}`;
+  if (paid) {
+    const date = tx?.date ? ` · ${tx.date.slice(8)}.${tx.date.slice(5, 7)}` : '';
+    // Автоматическую оплату отмечаем: иначе непонятно, откуда взялся расход,
+    // которого никто не подтверждал.
+    const how = tx?.id?.startsWith('auto-') ? t('bills.paidAuto') : t('bills.paidManual');
+    return `${how}${date}`;
+  }
   if (overdue) {
     return bill.dueDay ? t('bills.unpaidBy', { day: bill.dueDay }) : t('bills.unpaid');
   }
+  if (bill.auto) return t('bills.autoMeta', { day: bill.dueDay || 1 });
   return t(bill.fixed ? 'bills.fixedSum' : 'bills.varyingSum');
 }
 
@@ -249,6 +257,8 @@ export function openBillForm(bill = null) {
         startMonth: state.month,
         active: true,
         order: 500,
+        auto: false,
+        autoPaidThrough: null,
       };
 
   const body = el('div');
@@ -344,7 +354,12 @@ function buildBillBody(model, rerender) {
     // Постоянная сумма — тот случай, когда платёж записывается одним тапом
     el('button', {
       class: `toggle ${model.fixed ? 'is-on' : ''}`,
-      onclick: () => { model.fixed = !model.fixed; rerender(); },
+      onclick: () => {
+        model.fixed = !model.fixed;
+        // Автооплата без постоянной суммы невозможна: записывать нечего.
+        if (!model.fixed) model.auto = false;
+        rerender();
+      },
     }, [
       el('span', {}, [
         el('span', { class: 'toggle__title' }, t('bills.fixedTitle')),
@@ -353,6 +368,31 @@ function buildBillBody(model, rerender) {
       ]),
       el('span', { class: 'toggle__knob' }),
     ]),
+
+    /**
+     * Автооплата показывается только у постоянной суммы. У меняющейся
+     * заранее известна лишь прошлая, и записать её как факт — значит
+     * выдумать расход; такой счёт по-прежнему подтверждают руками.
+     */
+    model.fixed
+      ? el('button', {
+          class: `toggle ${model.auto ? 'is-on' : ''}`,
+          style: 'margin-top:10px',
+          onclick: () => {
+            model.auto = !model.auto;
+            // Отметка ставится в момент включения: она решает, с какого
+            // месяца счёт начнёт платиться, и назад не отодвигается.
+            if (model.auto) model.autoPaidThrough = autoStartMark(model);
+            rerender();
+          },
+        }, [
+          el('span', {}, [
+            el('span', { class: 'toggle__title' }, t('bills.autoTitle')),
+            el('span', { class: 'toggle__sub' }, t('bills.autoSub')),
+          ]),
+          el('span', { class: 'toggle__knob' }),
+        ])
+      : null,
 
     el('div', { class: 'field', style: 'margin-top:14px' }, [
       el('label', { class: 'field__label' },

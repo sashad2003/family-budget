@@ -40,11 +40,11 @@ import {
   writeBatch,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=63';
-import { getFamilyId } from '../core/session.js?v=63';
-import { defaultCategories } from '../data/categories.js?v=63';
-import { amountsInAllCurrencies } from '../core/money.js?v=63';
-import { monthOf } from '../core/dates.js?v=63';
+import { db } from '../core/firebase.js?v=64';
+import { getFamilyId } from '../core/session.js?v=64';
+import { defaultCategories } from '../data/categories.js?v=64';
+import { amountsInAllCurrencies } from '../core/money.js?v=64';
+import { monthOf } from '../core/dates.js?v=64';
 
 const txCollection = () => collection(db, 'families', getFamilyId(), 'transactions');
 const catCollection = () => collection(db, 'families', getFamilyId(), 'categories');
@@ -191,6 +191,32 @@ export async function createTransaction(input, { rates, user }) {
 }
 
 /**
+ * Оплата регулярного платежа, записанная автоматически.
+ *
+ * Отличается от обычной записи только именем документа: оно собрано из счёта
+ * и месяца, а не выдано базой. Приложение открывают с телефона и с ноутбука,
+ * в семье оно у нескольких человек, и все они при запуске проверяют одно и то
+ * же. С обычным addDoc каждый завёл бы свою копию платежа; с именем, которое
+ * у всех получается одинаковым, повторная запись просто ложится поверх первой.
+ *
+ * createdBy при этом остаётся у того, чьё устройство успело записать первым, —
+ * так и должно быть: авторство здесь техническое, платёж общий.
+ */
+export async function createAutoBillPayment(input, { rates, user }) {
+  const data = buildTx(input, rates);
+  const id = `auto-${input.billId}-${data.month}`;
+
+  await setDoc(doc(txCollection(), id), {
+    ...data,
+    createdBy: { uid: user.uid, name: user.displayName || user.email, photo: user.photoURL || '' },
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+
+  return id;
+}
+
+/**
  * Товары чека уходят в общую базу цен отдельно от самой операции.
  *
  * Сбой здесь не должен ронять сохранение: операция уже записана, а цены —
@@ -198,7 +224,7 @@ export async function createTransaction(input, { rates, user }) {
  */
 async function shareItemPrices(txId, tx, user) {
   try {
-    const { publishPrices } = await import('./prices.js?v=63');
+    const { publishPrices } = await import('./prices.js?v=64');
     await publishPrices(txId, tx, user.uid);
   } catch (error) {
     console.error('Не удалось обновить базу цен', error);
@@ -233,7 +259,7 @@ export async function deleteTransaction(id, user = null) {
 
   if (!user) return;
   try {
-    const { removePrices } = await import('./prices.js?v=63');
+    const { removePrices } = await import('./prices.js?v=64');
     await removePrices(id, user.uid);
   } catch (error) {
     console.error('Не удалось убрать цены удалённой операции', error);
