@@ -1011,11 +1011,25 @@ button { cursor: pointer; border: none; background: none; }
 .item-card__name { flex: 1; min-width: 0; }
 .item-card__name .input { width: 100%; }
 
-/*
- * Количество и сумма пополам. Оба поля числовые и равны по важности, а
- * прижатые к краю они оставляли половину карточки пустой.
+/**
+ * Количеству отводится ровно столько, сколько ему нужно, сумме — весь остаток.
+ *
+ * Пополам делить неправильно: в количестве стоит «1» или «1.154», а в сумме
+ * «2 156,90», и подпись у суммы вдобавок длиннее — по-английски «Amount»
+ * против «Qty». При равных половинах сумма обрезалась на середине числа.
+ *
+ * Ширину даём числу, а не колонке: подпись у каждого языка своя, и колонка
+ * подстраивается под неё сама.
  */
-.item-card__nums { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.item-card__nums {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+}
+
+/* Шести знаков хватает: «12.345» — предел того, что бывает в количестве.
+   Всё сэкономленное уходит сумме, ей знаков нужно больше. */
+.item-card__field--qty .input { flex: none; width: 52px; }
 
 /**
  * Подпись стоит внутри поля, а не над ним.
@@ -1056,7 +1070,7 @@ button { cursor: pointer; border: none; background: none; }
   flex: none;
   display: flex;
   align-items: center;
-  padding: 0 10px;
+  padding: 0 9px;
   font-size: 14px;
   color: var(--fg-1);
   background: rgba(255, 255, 255, 0.05);
@@ -1070,7 +1084,7 @@ button { cursor: pointer; border: none; background: none; }
 .item-card__field .input:focus {
   flex: 1;
   min-width: 0;
-  padding: 11px 10px;
+  padding: 11px 9px;
   background: none;
   border: none;
   box-shadow: none;
