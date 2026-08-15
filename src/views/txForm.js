@@ -3,21 +3,21 @@
  * после сканирования каждое поле и каждая строка товара остаются редактируемыми.
  */
 
-import { el, render } from '../core/dom.js?v=57';
-import { state } from '../core/store.js?v=57';
-import { CURRENCY_CODES } from '../config.js?v=57';
-import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=57';
-import { today } from '../core/dates.js?v=57';
-import { guessCategory } from '../data/categories.js?v=57';
-import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=57';
-import { tileGradient } from './list.js?v=57';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=57';
-import { toastOk, toastError } from '../ui/toast.js?v=57';
-import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=57';
-import { openQuickPick } from './quickPick.js?v=57';
-import { findDuplicates } from '../core/selectors.js?v=57';
-import { openDupCompare } from './dupCompare.js?v=57';
-import { t } from '../core/i18n.js?v=57';
+import { el, render } from '../core/dom.js?v=58';
+import { state } from '../core/store.js?v=58';
+import { CURRENCY_CODES } from '../config.js?v=58';
+import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=58';
+import { today } from '../core/dates.js?v=58';
+import { guessCategory } from '../data/categories.js?v=58';
+import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=58';
+import { tileGradient } from './list.js?v=58';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=58';
+import { toastOk, toastError } from '../ui/toast.js?v=58';
+import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=58';
+import { openQuickPick } from './quickPick.js?v=58';
+import { findDuplicates } from '../core/selectors.js?v=58';
+import { openDupCompare } from './dupCompare.js?v=58';
+import { t } from '../core/i18n.js?v=58';
 
 /**
  * openTxForm({ tx })          — правка существующей операции
@@ -430,8 +430,10 @@ function itemRow(item, index, model, rerender) {
    * понять, что за товар, а именно название человек и читает. В карточке оно
    * занимает всю ширину, а числа стоят под ним.
    *
-   * Подписи у количества и суммы теперь у самих полей: общая шапка таблицы
-   * над карточками смысла не имеет.
+   * Подписи у количества и суммы стоят внутри самих полей: общая шапка
+   * таблицы над карточками смысла не имеет, а отдельная строка над каждым
+   * полем растила карточку вдвое ради одного слова. Это label, поэтому
+   * нажатие на подпись ставит курсор в поле.
    *
    * Внутри карточки два ряда. Сверху название и кнопка удаления — вместе,
    * потому что удаляют именно названную строку, и держать кнопку у чисел
