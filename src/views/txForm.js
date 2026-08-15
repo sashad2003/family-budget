@@ -3,21 +3,21 @@
  * после сканирования каждое поле и каждая строка товара остаются редактируемыми.
  */
 
-import { el, render } from '../core/dom.js?v=61';
-import { state } from '../core/store.js?v=61';
-import { CURRENCY_CODES } from '../config.js?v=61';
-import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=61';
-import { today } from '../core/dates.js?v=61';
-import { guessCategory } from '../data/categories.js?v=61';
-import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=61';
-import { tileGradient } from './list.js?v=61';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=61';
-import { toastOk, toastError } from '../ui/toast.js?v=61';
-import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=61';
-import { openQuickPick } from './quickPick.js?v=61';
-import { findDuplicates } from '../core/selectors.js?v=61';
-import { openDupCompare } from './dupCompare.js?v=61';
-import { t } from '../core/i18n.js?v=61';
+import { el, render } from '../core/dom.js?v=62';
+import { state } from '../core/store.js?v=62';
+import { CURRENCY_CODES } from '../config.js?v=62';
+import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=62';
+import { today } from '../core/dates.js?v=62';
+import { guessCategory } from '../data/categories.js?v=62';
+import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=62';
+import { tileGradient } from './list.js?v=62';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=62';
+import { toastOk, toastError } from '../ui/toast.js?v=62';
+import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=62';
+import { openQuickPick } from './quickPick.js?v=62';
+import { findDuplicates } from '../core/selectors.js?v=62';
+import { openDupCompare } from './dupCompare.js?v=62';
+import { t } from '../core/i18n.js?v=62';
 
 /**
  * openTxForm({ tx })          — правка существующей операции
@@ -441,7 +441,7 @@ function itemRow(item, index, model, rerender) {
    * оба поля числовые и равны по важности, а прижатые к краю они оставляли
    * половину карточки пустой.
    */
-  const field = (label, input, extra = '') => el('label', { class: `item-card__field ${extra}` }, [
+  const field = (label, input) => el('label', { class: 'item-card__field' }, [
     el('span', { class: 'item-card__label' }, label),
     input,
   ]);
@@ -461,7 +461,7 @@ function itemRow(item, index, model, rerender) {
     ]),
 
     el('div', { class: 'item-card__nums' }, [
-      field(t('form.colQty'), qtyInput, 'item-card__field--qty'),
+      field(t('form.colQty'), qtyInput),
       field(t('form.colSum'), totalInput),
     ]),
   ]);
