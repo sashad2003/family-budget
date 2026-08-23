@@ -731,6 +731,24 @@ export const DICT = {
   'cat.name': { ru: 'Название', en: 'Name', he: 'שם' },
   'cat.namePlaceholder': { ru: 'Например, Продукты', en: 'For example, Groceries', he: 'לדוגמה, מצרכים' },
   'cat.color': { ru: 'Цвет', en: 'Colour', he: 'צבע' },
+
+  // Вкладки выбора значка — названия групп Unicode
+  'emoji.recent': { ru: 'Недавние', en: 'Recent', he: 'אחרונים' },
+  'emoji.smileys': { ru: 'Улыбки', en: 'Smileys', he: 'סמיילים' },
+  'emoji.people': { ru: 'Люди', en: 'People', he: 'אנשים' },
+  'emoji.nature': { ru: 'Природа', en: 'Nature', he: 'טבע' },
+  'emoji.food': { ru: 'Еда', en: 'Food', he: 'אוכל' },
+  'emoji.travel': { ru: 'Места', en: 'Places', he: 'מקומות' },
+  'emoji.activities': { ru: 'Занятия', en: 'Activities', he: 'פעילויות' },
+  'emoji.objects': { ru: 'Предметы', en: 'Objects', he: 'חפצים' },
+  'emoji.symbols': { ru: 'Знаки', en: 'Symbols', he: 'סמלים' },
+  'emoji.flags': { ru: 'Флаги', en: 'Flags', he: 'דגלים' },
+  'cat.iconLoading': { ru: 'Значки загружаются…', en: 'Loading icons…', he: 'הסמלים נטענים…' },
+  'cat.iconFailed': {
+    ru: 'Не удалось загрузить значки. Обновите страницу.',
+    en: 'Could not load the icons. Reload the page.',
+    he: 'לא הצלחנו לטעון את הסמלים. רעננו את הדף.',
+  },
   'cat.moveUp': { ru: 'Выше', en: 'Move up', he: 'העלאה' },
   'cat.moveDown': { ru: 'Ниже', en: 'Move down', he: 'הורדה' },
   'cat.reorderFailed': {

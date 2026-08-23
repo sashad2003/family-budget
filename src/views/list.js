@@ -1,13 +1,13 @@
 /** Список операций с фильтрами по типу, категории и тексту. */
 
-import { el, render } from '../core/dom.js?v=66';
-import { state } from '../core/store.js?v=66';
-import { formatAmount, txAmountIn } from '../core/money.js?v=66';
-import { dayLabel } from '../core/dates.js?v=66';
-import { monthTransactions, groupByDate, totals } from '../core/selectors.js?v=66';
-import { openTxForm } from './txForm.js?v=66';
-import { section } from '../ui/section.js?v=66';
-import { t, getLocale } from '../core/i18n.js?v=66';
+import { el, render } from '../core/dom.js?v=68';
+import { state } from '../core/store.js?v=68';
+import { formatAmount, txAmountIn } from '../core/money.js?v=68';
+import { dayLabel } from '../core/dates.js?v=68';
+import { monthTransactions, groupByDate, totals } from '../core/selectors.js?v=68';
+import { openTxForm } from './txForm.js?v=68';
+import { section } from '../ui/section.js?v=68';
+import { t, getLocale } from '../core/i18n.js?v=68';
 
 /** Фильтры живут вне state: они локальны для экрана и не влияют на другие. */
 const filters = { type: 'all', categoryId: null, query: '' };

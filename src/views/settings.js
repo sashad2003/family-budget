@@ -1,19 +1,19 @@
 /** Настройки: профиль, участники, валюта, курсы, категории. */
 
-import { el, render } from '../core/dom.js?v=66';
-import { state, set } from '../core/store.js?v=66';
-import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=66';
-import { formatAmount, convert } from '../core/money.js?v=66';
-import { logout } from '../services/auth.js?v=66';
+import { el, render } from '../core/dom.js?v=68';
+import { state, set } from '../core/store.js?v=68';
+import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=68';
+import { formatAmount, convert } from '../core/money.js?v=68';
+import { logout } from '../services/auth.js?v=68';
 import {
   inviteLink, resetInviteLink, removeMember, leaveFamily, isOwner,
-} from '../services/account.js?v=66';
-import { refreshRates } from '../services/rates.js?v=66';
-import { saveCategory, deleteCategory, reorderCategories } from '../services/transactions.js?v=66';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=66';
-import { section } from '../ui/section.js?v=66';
-import { t, intlLocale } from '../core/i18n.js?v=66';
-import { toastOk, toastError } from '../ui/toast.js?v=66';
+} from '../services/account.js?v=68';
+import { refreshRates } from '../services/rates.js?v=68';
+import { saveCategory, deleteCategory, reorderCategories } from '../services/transactions.js?v=68';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=68';
+import { section } from '../ui/section.js?v=68';
+import { t, intlLocale } from '../core/i18n.js?v=68';
+import { toastOk, toastError } from '../ui/toast.js?v=68';
 
 const PALETTE = ['#2dd98a', '#ff5b5b', '#5b9fff', '#ffb347', '#ff7eb3', '#3de8d0', '#8a8a94'];
 
@@ -237,48 +237,71 @@ function openCategoryEditor(cat, onDone) {
     order: cat?.order ?? 500,
   };
 
-  const body = el('div');
-  const draw = () => render(body, [
-    el('div', { class: 'segmented', style: 'margin-bottom:14px' }, ['expense', 'income'].map((type) =>
-      el('button', {
-        class: model.type === type ? 'is-active' : '',
-        dataset: { value: type },
-        onclick: () => { model.type = type; draw(); },
-      }, t(type === 'expense' ? 'form.expense' : 'form.income')),
-    )),
+  /**
+   * Шторку собираем один раз, а нажатия меняют узлы на месте.
+   *
+   * Перерисовка всего тела не годится: выбор значка держит свою вкладку и
+   * прокрутку внутри себя, и каждое касание цвета отбрасывало бы человека
+   * в начало списка.
+   */
+  const typeButtons = ['expense', 'income'].map((type) => el('button', {
+    class: model.type === type ? 'is-active' : '',
+    dataset: { value: type },
+    onclick: () => {
+      model.type = type;
+      typeButtons.forEach((b) => b.classList.toggle('is-active', b.dataset.value === type));
+    },
+  }, t(type === 'expense' ? 'form.expense' : 'form.income')));
 
-    el('div', { class: 'row', style: 'margin-bottom:14px' }, [
-      el('div', { style: 'flex:0 0 76px' }, [
-        el('label', { class: 'field__label' }, t('cat.icon')),
-        el('input', {
-          class: 'input',
-          style: 'text-align:center;font-size:20px',
-          value: model.icon,
-          maxlength: 2,
-          oninput: (e) => { model.icon = e.target.value; },
-        }),
-      ]),
-      el('div', {}, [
-        el('label', { class: 'field__label' }, t('cat.name')),
-        el('input', {
-          class: 'input',
-          value: model.name,
-          placeholder: t('cat.namePlaceholder'),
-          oninput: (e) => { model.name = e.target.value; },
-        }),
-      ]),
+  // Выбранный значок стоит в подписи над списком, а не отдельным полем:
+  // поле пришлось бы подгонять по высоте к соседнему, и оно всё равно
+  // разъезжалось бы от размера значка.
+  const preview = el('span', { class: 'cat-preview' }, model.icon);
+
+  const colorButtons = PALETTE.map((color) => el('button', {
+    class: 'chip',
+    style: `background:${color}22;border-color:${model.color === color ? color : 'transparent'}`,
+    onclick: () => {
+      model.color = color;
+      colorButtons.forEach((b, i) => {
+        b.style.borderColor = PALETTE[i] === color ? color : 'transparent';
+      });
+    },
+  }, el('span', { class: 'legend-dot', style: `background:${color}` })));
+
+  // Место под выбор значка: сам список приезжает отдельным модулем,
+  // потому что на остальных экранах он не нужен.
+  const pickerBox = el('div', {}, el('p', { class: 'hint' }, t('cat.iconLoading')));
+
+  import('../ui/emojiPicker.js?v=68')
+    .then(({ emojiPicker }) => render(pickerBox, emojiPicker({
+      value: model.icon,
+      onPick: (glyph) => { model.icon = glyph; preview.textContent = glyph; },
+    })))
+    .catch(() => render(pickerBox, el('p', { class: 'hint' }, t('cat.iconFailed'))));
+
+  const body = el('div', {}, [
+    el('div', { class: 'segmented', style: 'margin-bottom:14px' }, typeButtons),
+
+    el('div', { style: 'margin-bottom:14px' }, [
+      el('label', { class: 'field__label' }, t('cat.name')),
+      el('input', {
+        class: 'input',
+        value: model.name,
+        placeholder: t('cat.namePlaceholder'),
+        oninput: (e) => { model.name = e.target.value; },
+      }),
     ]),
 
-    el('label', { class: 'field__label' }, t('cat.color')),
-    el('div', { class: 'chip-row' }, PALETTE.map((color) =>
-      el('button', {
-        class: 'chip',
-        style: `background:${color}22;border-color:${model.color === color ? color : 'transparent'}`,
-        onclick: () => { model.color = color; draw(); },
-      }, el('span', { class: 'legend-dot', style: `background:${color}` })),
-    )),
+    el('div', { class: 'field__label pick-head' }, [
+      el('span', {}, t('cat.icon')),
+      preview,
+    ]),
+    pickerBox,
+
+    el('label', { class: 'field__label', style: 'margin-top:14px' }, t('cat.color')),
+    el('div', { class: 'chip-row' }, colorButtons),
   ]);
-  draw();
 
   const footer = [
     cat

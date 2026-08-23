@@ -1321,6 +1321,74 @@ button { cursor: pointer; border: none; background: none; }
 .reorder { display: flex; gap: 2px; flex: none; }
 .icon-btn--sm { width: 32px; height: 32px; font-size: 17px; }
 
+/* ------------------------------------------------ выбор значка категории */
+
+/*
+ * Клавиатура значков внутри шторки: ряд вкладок и сетка под ним.
+ *
+ * Высота сетки задана явно и не зависит от числа значков в группе. Иначе
+ * шторка прыгала бы при каждой смене вкладки: в «улыбках» их полторы сотни,
+ * во «флагах» — под три.
+ */
+.emoji-pick {
+  border: 1px solid var(--edge);
+  border-radius: var(--r-md);
+  background: var(--glass-1);
+  overflow: hidden;
+}
+
+.emoji-pick__tabs {
+  display: flex;
+  gap: 2px;
+  padding: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--edge);
+}
+.emoji-pick__tabs::-webkit-scrollbar { display: none; }
+
+.emoji-pick__tab {
+  flex: 0 0 auto;
+  width: 36px; height: 32px;
+  border-radius: 8px;
+  font-size: 17px; line-height: 1;
+  opacity: 0.5;
+  transition: opacity 0.18s, background 0.18s;
+}
+.emoji-pick__tab:hover { opacity: 0.85; }
+.emoji-pick__tab.is-active { opacity: 1; background: var(--glass-3); }
+
+.emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(38px, 1fr));
+  gap: 2px;
+  padding: 8px;
+  height: 194px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.emoji-cell {
+  height: 38px;
+  border-radius: 8px;
+  font-size: 22px; line-height: 1;
+  transition: background 0.14s;
+}
+.emoji-cell:hover { background: var(--glass-3); }
+.emoji-cell.is-active { background: var(--glass-3); box-shadow: inset 0 0 0 1px var(--edge-strong); }
+
+/*
+ * На низком экране (старый телефон, открытая клавиатура) сетка ужимается:
+ * иначе кнопка «Сохранить» уезжает за нижний край и до неё надо прокручивать.
+ */
+@media (max-height: 700px) {
+  .emoji-grid { height: 132px; }
+}
+
+/* Подпись над списком: слева слово «Значок», справа выбранный сейчас */
+.pick-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.cat-preview { font-size: 21px; line-height: 1; }
+
 /* ------------------------------------------------ бюджеты */
 
 .budget-list { display: flex; flex-direction: column; gap: 8px; }
