@@ -1,19 +1,19 @@
 /** Настройки: профиль, участники, валюта, курсы, категории. */
 
-import { el, render } from '../core/dom.js?v=65';
-import { state, set } from '../core/store.js?v=65';
-import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=65';
-import { formatAmount, convert } from '../core/money.js?v=65';
-import { logout } from '../services/auth.js?v=65';
+import { el, render } from '../core/dom.js?v=66';
+import { state, set } from '../core/store.js?v=66';
+import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=66';
+import { formatAmount, convert } from '../core/money.js?v=66';
+import { logout } from '../services/auth.js?v=66';
 import {
   inviteLink, resetInviteLink, removeMember, leaveFamily, isOwner,
-} from '../services/account.js?v=65';
-import { refreshRates } from '../services/rates.js?v=65';
-import { saveCategory, deleteCategory } from '../services/transactions.js?v=65';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=65';
-import { section } from '../ui/section.js?v=65';
-import { t, intlLocale } from '../core/i18n.js?v=65';
-import { toastOk, toastError } from '../ui/toast.js?v=65';
+} from '../services/account.js?v=66';
+import { refreshRates } from '../services/rates.js?v=66';
+import { saveCategory, deleteCategory, reorderCategories } from '../services/transactions.js?v=66';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=66';
+import { section } from '../ui/section.js?v=66';
+import { t, intlLocale } from '../core/i18n.js?v=66';
+import { toastOk, toastError } from '../ui/toast.js?v=66';
 
 const PALETTE = ['#2dd98a', '#ff5b5b', '#5b9fff', '#ffb347', '#ff7eb3', '#3de8d0', '#8a8a94'];
 
@@ -90,24 +90,17 @@ function build(draw) {
       ? el('button', { class: 'chip', onclick: () => openInviteSheet() }, `🔗 ${t('family.invite')}`)
       : null),
 
-    section(t('settings.categories'), ['expense', 'income'].map((type) =>
-      el('div', {}, [
-        el('div', { class: 'tx-group__date' },
-          t(type === 'expense' ? 'settings.expenses' : 'settings.incomes')),
-        ...state.categories.filter((c) => c.type === type).map((cat) =>
-          el('button', {
-            class: 'list-item',
-            onclick: () => openCategoryEditor(cat, draw),
-          }, [
-            el('div', { style: 'display:flex;align-items:center;gap:10px;min-width:0' }, [
-              el('span', { style: 'font-size:18px' }, cat.icon || '•'),
-              el('span', {}, cat.name),
-            ]),
-            el('span', { class: 'legend-dot', style: `background:${cat.color}` }),
-          ]),
-        ),
-      ]),
-    ), el('button', {
+    section(t('settings.categories'), [
+      ...['expense', 'income'].map((type) => {
+        const pool = state.categories.filter((c) => c.type === type);
+        return el('div', {}, [
+          el('div', { class: 'tx-group__date' },
+            t(type === 'expense' ? 'settings.expenses' : 'settings.incomes')),
+          ...pool.map((cat, index) => categoryRow(cat, pool, index, draw)),
+        ]);
+      }),
+      el('p', { class: 'hint' }, t('settings.categoriesHint')),
+    ], el('button', {
       class: 'chip',
       onclick: () => openCategoryEditor(null, draw),
     }, `＋ ${t('common.add')}`)),
@@ -183,6 +176,55 @@ function askLeave() {
       }
     },
   });
+}
+
+/**
+ * Строка категории в настройках: нажатие на название правит её, стрелки —
+ * переставляют.
+ *
+ * Перетаскивание не годится: список длинный, пальцем на телефоне попасть в
+ * нужное место между строк тяжело, а промах молча переставляет не то. Стрелки
+ * делают ровно один понятный шаг.
+ */
+function categoryRow(cat, pool, index, onDone) {
+  const arrow = (label, target, disabled) => el('button', {
+    class: 'icon-btn icon-btn--sm',
+    disabled,
+    'aria-label': t(target < index ? 'cat.moveUp' : 'cat.moveDown'),
+    onclick: () => moveCategory(pool, index, target, onDone),
+  }, label);
+
+  return el('div', { class: 'list-item' }, [
+    el('button', {
+      class: 'list-item__main',
+      onclick: () => openCategoryEditor(cat, onDone),
+    }, [
+      el('span', { style: 'font-size:18px' }, cat.icon || '•'),
+      el('span', {
+        style: 'flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap',
+      }, cat.name),
+      el('span', { class: 'legend-dot', style: `background:${cat.color}` }),
+    ]),
+
+    el('div', { class: 'reorder' }, [
+      arrow('↑', index - 1, index === 0),
+      arrow('↓', index + 1, index === pool.length - 1),
+    ]),
+  ]);
+}
+
+/** Переставляет категорию внутри своего типа и сохраняет новый порядок. */
+async function moveCategory(pool, from, to, onDone) {
+  const next = pool.slice();
+  const [moved] = next.splice(from, 1);
+  next.splice(to, 0, moved);
+
+  try {
+    await reorderCategories(next);
+    onDone();
+  } catch {
+    toastError(t('cat.reorderFailed'));
+  }
 }
 
 function openCategoryEditor(cat, onDone) {

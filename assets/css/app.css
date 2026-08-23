@@ -1278,6 +1278,11 @@ button { cursor: pointer; border: none; background: none; }
 .legend-val { font-family: var(--mono); font-size: 13.5px; }
 
 /* Полоса доли категории */
+/* Категория на обзоре нажимается: открывает свои операции за месяц */
+.cat-row { display: block; width: 100%; text-align: start; }
+.cat-row .legend-name { transition: color 0.18s; }
+.cat-row:hover .legend-name { color: var(--fg-0); }
+
 .legend-bar { position: relative; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.07); overflow: hidden; margin-top: 7px; }
 .legend-bar i { position: absolute; inset: 0 auto 0 0; border-radius: 2px; display: block; }
 
@@ -1297,6 +1302,24 @@ button { cursor: pointer; border: none; background: none; }
 .list-item + .list-item { margin-top: 8px; }
 .list-item:hover { border-color: var(--edge-strong); }
 .list-item__sub { font-size: 12.5px; color: var(--fg-2); }
+
+/*
+ * Строка со своим нажатием внутри: сама строка правится, а кнопки справа
+ * делают что-то другое. Вложить кнопку в кнопку нельзя, поэтому строка —
+ * обычный блок, а нажимается её содержимое.
+ */
+.list-item__main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+  text-align: start;
+}
+
+/* Стрелки порядка категорий */
+.reorder { display: flex; gap: 2px; flex: none; }
+.icon-btn--sm { width: 32px; height: 32px; font-size: 17px; }
 
 /* ------------------------------------------------ бюджеты */
 

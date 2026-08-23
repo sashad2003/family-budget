@@ -18,6 +18,7 @@ export const DICT = {
   'common.refresh': { ru: 'Обновить', en: 'Refresh', he: 'רענון' },
   'common.copy': { ru: 'Скопировать', en: 'Copy', he: 'העתקה' },
   'common.all': { ru: 'все', en: 'all', he: 'הכול' },
+  'common.collapse': { ru: 'свернуть', en: 'collapse', he: 'כיווץ' },
   'common.you': { ru: 'вы', en: 'you', he: 'אתם' },
   'common.notFound': { ru: 'Ничего не найдено', en: 'Nothing found', he: 'לא נמצא דבר' },
 
@@ -222,6 +223,11 @@ export const DICT = {
   },
 
   'settings.categories': { ru: 'Категории', en: 'Categories', he: 'קטגוריות' },
+  'settings.categoriesHint': {
+    ru: 'Стрелки меняют порядок: сверху те, что чаще нужны при записи.',
+    en: 'The arrows change the order: the ones you use most go on top.',
+    he: 'החצים משנים את הסדר: מה שמשמש הכי הרבה נמצא למעלה.',
+  },
   'settings.expenses': { ru: 'Расходы', en: 'Expenses', he: 'הוצאות' },
   'settings.incomes': { ru: 'Доходы', en: 'Income', he: 'הכנסות' },
   'settings.footer': {
@@ -725,6 +731,13 @@ export const DICT = {
   'cat.name': { ru: 'Название', en: 'Name', he: 'שם' },
   'cat.namePlaceholder': { ru: 'Например, Продукты', en: 'For example, Groceries', he: 'לדוגמה, מצרכים' },
   'cat.color': { ru: 'Цвет', en: 'Colour', he: 'צבע' },
+  'cat.moveUp': { ru: 'Выше', en: 'Move up', he: 'העלאה' },
+  'cat.moveDown': { ru: 'Ниже', en: 'Move down', he: 'הורדה' },
+  'cat.reorderFailed': {
+    ru: 'Не удалось переставить категорию',
+    en: 'Could not reorder the category',
+    he: 'לא הצלחנו לשנות את סדר הקטגוריה',
+  },
   'cat.deleteTitle': { ru: 'Удалить категорию?', en: 'Delete this category?', he: 'למחוק את הקטגוריה?' },
   'cat.deleteText': {
     ru: 'Операции сохранятся, но потеряют привязку к этой категории.',

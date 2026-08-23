@@ -40,11 +40,11 @@ import {
   writeBatch,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=65';
-import { getFamilyId } from '../core/session.js?v=65';
-import { defaultCategories } from '../data/categories.js?v=65';
-import { amountsInAllCurrencies } from '../core/money.js?v=65';
-import { monthOf } from '../core/dates.js?v=65';
+import { db } from '../core/firebase.js?v=66';
+import { getFamilyId } from '../core/session.js?v=66';
+import { defaultCategories } from '../data/categories.js?v=66';
+import { amountsInAllCurrencies } from '../core/money.js?v=66';
+import { monthOf } from '../core/dates.js?v=66';
 
 const txCollection = () => collection(db, 'families', getFamilyId(), 'transactions');
 const catCollection = () => collection(db, 'families', getFamilyId(), 'categories');
@@ -120,6 +120,27 @@ export function saveCategory(id, data) {
 
 export function deleteCategory(id) {
   return deleteDoc(doc(catCollection(), id));
+}
+
+/**
+ * Переставляет категории одного типа: порядок задаёт список, номера пишутся
+ * заново с шагом 10.
+ *
+ * Нумеруем весь тип целиком, а не меняем местами два значения. В базе номера
+ * повторяются — у «Прочего» это 999 и в расходах, и в доходах, а у категорий,
+ * заведённых руками, вообще один и тот же 500. Обмен двух одинаковых значений
+ * не поменял бы ничего.
+ *
+ * Доходы сдвинуты на 1000, чтобы два типа не перемешивались там, где список
+ * категорий показывают целиком — например, в фильтрах операций.
+ */
+export function reorderCategories(list) {
+  const base = list[0]?.type === 'income' ? 1000 : 0;
+  const batch = writeBatch(db);
+  list.forEach((cat, index) => {
+    batch.update(doc(catCollection(), cat.id), { order: base + (index + 1) * 10 });
+  });
+  return batch.commit();
 }
 
 /**
@@ -224,7 +245,7 @@ export async function createAutoBillPayment(input, { rates, user }) {
  */
 async function shareItemPrices(txId, tx, user) {
   try {
-    const { publishPrices } = await import('./prices.js?v=65');
+    const { publishPrices } = await import('./prices.js?v=66');
     await publishPrices(txId, tx, user.uid);
   } catch (error) {
     console.error('Не удалось обновить базу цен', error);
@@ -259,7 +280,7 @@ export async function deleteTransaction(id, user = null) {
 
   if (!user) return;
   try {
-    const { removePrices } = await import('./prices.js?v=65');
+    const { removePrices } = await import('./prices.js?v=66');
     await removePrices(id, user.uid);
   } catch (error) {
     console.error('Не удалось убрать цены удалённой операции', error);

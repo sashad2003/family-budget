@@ -1,16 +1,27 @@
 /** Список операций с фильтрами по типу, категории и тексту. */
 
-import { el, render } from '../core/dom.js?v=65';
-import { state } from '../core/store.js?v=65';
-import { formatAmount, txAmountIn } from '../core/money.js?v=65';
-import { dayLabel } from '../core/dates.js?v=65';
-import { monthTransactions, groupByDate, totals } from '../core/selectors.js?v=65';
-import { openTxForm } from './txForm.js?v=65';
-import { section } from '../ui/section.js?v=65';
-import { t, getLocale } from '../core/i18n.js?v=65';
+import { el, render } from '../core/dom.js?v=66';
+import { state } from '../core/store.js?v=66';
+import { formatAmount, txAmountIn } from '../core/money.js?v=66';
+import { dayLabel } from '../core/dates.js?v=66';
+import { monthTransactions, groupByDate, totals } from '../core/selectors.js?v=66';
+import { openTxForm } from './txForm.js?v=66';
+import { section } from '../ui/section.js?v=66';
+import { t, getLocale } from '../core/i18n.js?v=66';
 
 /** Фильтры живут вне state: они локальны для экрана и не влияют на другие. */
 const filters = { type: 'all', categoryId: null, query: '' };
+
+/**
+ * Открывает список сразу на одной категории — с обзора, по нажатию на неё.
+ *
+ * Остальные фильтры сбрасываем: человек пришёл смотреть эту категорию, а
+ * оставшийся с прошлого раза поиск показал бы ему пустоту без объяснений.
+ */
+export function openCategoryList(categoryId, type = 'all') {
+  Object.assign(filters, { type, categoryId, query: '' });
+  window.dispatchEvent(new CustomEvent('goto-list'));
+}
 
 export function renderList() {
   const container = el('div');

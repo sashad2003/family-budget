@@ -1,16 +1,16 @@
 /** Обзор: баланс месяца, доходы/расходы, разбивка по категориям, последние операции. */
 
-import { el } from '../core/dom.js?v=65';
-import { state } from '../core/store.js?v=65';
-import { formatAmount } from '../core/money.js?v=65';
-import { monthTransactions, totals, byCategory, unpaidBills } from '../core/selectors.js?v=65';
-import { set } from '../core/store.js?v=65';
-import { txRow, tileGradient } from './list.js?v=65';
-import { openTxForm } from './txForm.js?v=65';
-import { openScanSheet } from './scan.js?v=65';
-import { section } from '../ui/section.js?v=65';
-import { t } from '../core/i18n.js?v=65';
-import { isRose, roseBalance } from './roseGlasses.js?v=65';
+import { el, render } from '../core/dom.js?v=66';
+import { state } from '../core/store.js?v=66';
+import { formatAmount } from '../core/money.js?v=66';
+import { monthTransactions, totals, byCategory, unpaidBills } from '../core/selectors.js?v=66';
+import { set } from '../core/store.js?v=66';
+import { txRow, tileGradient, openCategoryList } from './list.js?v=66';
+import { openTxForm } from './txForm.js?v=66';
+import { openScanSheet } from './scan.js?v=66';
+import { section } from '../ui/section.js?v=66';
+import { t } from '../core/i18n.js?v=66';
+import { isRose, roseBalance } from './roseGlasses.js?v=66';
 
 export function renderDashboard() {
   const list = monthTransactions(state);
@@ -42,10 +42,10 @@ export function renderDashboard() {
     el('div', { class: 'dash__main' }, [
       balanceBlock(balance, income, expense),
       billsReminder(),
-      spent.length ? categoriesCard(t('dash.where'), spent) : null,
+      spent.length ? categoriesCard(t('dash.where'), spent, 'expense') : null,
       // Доходы раскрываем так же, как расходы: одной суммой не видно,
       // что именно кончилось, если в следующем месяце её не станет.
-      earned.length ? categoriesCard(t('dash.from'), earned) : null,
+      earned.length ? categoriesCard(t('dash.from'), earned, 'income') : null,
     ]),
 
     el('div', { class: 'dash__side' }, [
@@ -146,30 +146,86 @@ function safeColor(value) {
   return /^#[0-9a-f]{3,8}$/i.test(String(value || '')) ? value : '#8a8a94';
 }
 
-function categoriesCard(title, categories) {
-  return section(title, [
-    el('div', { class: 'card cat-card' }, [
+/** Сколько категорий видно, пока список не раскрыт. */
+const CAT_LIMIT = 7;
+
+/**
+ * Разбивка по категориям.
+ *
+ * Свёрнутый список показывает семь строк: дальше карточка перестаёт читаться
+ * с одного взгляда, а пирог уезжает с экрана. Но у кого категорий больше,
+ * тот про остальные так и не узнавал — они не были ни видны, ни упомянуты.
+ * Поэтому рядом с заголовком стоит «все», и она же сворачивает обратно.
+ *
+ * Карточка перерисовывает себя сама: раскрытие — дело этого экрана, а не
+ * состояния приложения, и через set() оно дёргало бы все остальные.
+ */
+function categoriesCard(title, categories, type) {
+  let full = false;
+
+  const toggle = categories.length > CAT_LIMIT
+    ? el('button', { class: 'chip' }, '')
+    : null;
+
+  if (toggle) {
+    toggle.addEventListener('click', () => { full = !full; draw(); });
+  }
+
+  // Перерисовываем начинку раздела, а не сам раздел: отступы между разделами
+  // задаёт CSS по соседству узлов, и лишняя обёртка их бы сбила.
+  const node = section(title, [], toggle);
+  const body = node.querySelector('.section__body');
+
+  function draw() {
+    if (toggle) {
+      toggle.textContent = full
+        ? t('common.collapse')
+        : `${t('common.all')} · ${categories.length}`;
+    }
+
+    const rows = full ? categories : categories.slice(0, CAT_LIMIT);
+
+    render(body, el('div', { class: 'card cat-card' }, [
       // Пирог из одного куска ничего не показывает — только занимает место.
       categories.length > 1 ? pie(categories) : null,
 
-      el('div', { class: 'bar-legend' }, categories.slice(0, 7).map((row) =>
-        el('div', {}, [
-          el('div', { class: 'legend-row' }, [
-            el('span', {
-              class: 'tx__ico',
-              style: `flex:0 0 30px;height:30px;border-radius:9px;font-size:14px;background:${tileGradient(row.color)}`,
-            }, row.icon),
-            el('span', { class: 'legend-name' }, row.name),
-            el('span', { class: 'legend-val' }, formatAmount(row.total, state.base)),
-            el('span', {
-              style: 'width:42px;text-align:right;color:var(--fg-2);font-size:12.5px',
-            }, `${row.share}%`),
-          ]),
-          el('div', { class: 'legend-bar' }, el('i', {
-            style: `width:${Math.max(row.share, 2)}%;background:${tileGradient(row.color)}`,
-          })),
-        ]),
-      )),
+      el('div', { class: 'bar-legend' }, rows.map((row) => categoryRow(row, type))),
+    ]));
+  }
+
+  draw();
+  return node;
+}
+
+/**
+ * Строка категории. Нажатие открывает операции этого месяца по ней одной —
+ * иначе от суммы до её причин путь лежал через список и фильтры вручную.
+ *
+ * У операции без категории id пустой, фильтровать не по чему: такая строка
+ * остаётся просто подписью.
+ */
+function categoryRow(row, type) {
+  const body = [
+    el('div', { class: 'legend-row' }, [
+      el('span', {
+        class: 'tx__ico',
+        style: `flex:0 0 30px;height:30px;border-radius:9px;font-size:14px;background:${tileGradient(row.color)}`,
+      }, row.icon),
+      el('span', { class: 'legend-name' }, row.name),
+      el('span', { class: 'legend-val' }, formatAmount(row.total, state.base)),
+      el('span', {
+        style: 'width:42px;text-align:right;color:var(--fg-2);font-size:12.5px',
+      }, `${row.share}%`),
     ]),
-  ]);
+    el('div', { class: 'legend-bar' }, el('i', {
+      style: `width:${Math.max(row.share, 2)}%;background:${tileGradient(row.color)}`,
+    })),
+  ];
+
+  if (!row.id) return el('div', {}, body);
+
+  return el('button', {
+    class: 'cat-row',
+    onclick: () => openCategoryList(row.id, type),
+  }, body);
 }
