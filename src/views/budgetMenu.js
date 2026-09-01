@@ -5,12 +5,12 @@
  * на телефоне, — но список один и тот же, поэтому и код один.
  */
 
-import { el } from '../core/dom.js?v=77';
-import { state } from '../core/store.js?v=77';
-import { switchFamily } from '../services/account.js?v=77';
-import { openSheet, closeSheet } from '../ui/sheet.js?v=77';
-import { toastError } from '../ui/toast.js?v=77';
-import { t, getLocale } from '../core/i18n.js?v=77';
+import { el } from '../core/dom.js?v=78';
+import { state } from '../core/store.js?v=78';
+import { switchFamily } from '../services/account.js?v=78';
+import { openSheet, closeSheet } from '../ui/sheet.js?v=78';
+import { toastError } from '../ui/toast.js?v=78';
+import { t, getLocale } from '../core/i18n.js?v=78';
 
 export function budgetName(family) {
   return family?.name || family?.title || t('budget.one');

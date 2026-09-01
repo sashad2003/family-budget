@@ -1,16 +1,16 @@
 /** Обзор: баланс месяца, доходы/расходы, разбивка по категориям, последние операции. */
 
-import { el, render } from '../core/dom.js?v=77';
-import { state } from '../core/store.js?v=77';
-import { formatAmount } from '../core/money.js?v=77';
-import { monthTransactions, totals, byCategory, unpaidBills } from '../core/selectors.js?v=77';
-import { set } from '../core/store.js?v=77';
-import { txRow, tileGradient, openCategoryList } from './list.js?v=77';
-import { openTxForm } from './txForm.js?v=77';
-import { openScanSheet } from './scan.js?v=77';
-import { section } from '../ui/section.js?v=77';
-import { t } from '../core/i18n.js?v=77';
-import { isRose, roseBalance } from './roseGlasses.js?v=77';
+import { el, render } from '../core/dom.js?v=78';
+import { state } from '../core/store.js?v=78';
+import { formatAmount } from '../core/money.js?v=78';
+import { monthTransactions, totals, byCategory, unpaidBills } from '../core/selectors.js?v=78';
+import { set } from '../core/store.js?v=78';
+import { txRow, tileGradient, openCategoryList } from './list.js?v=78';
+import { openTxForm } from './txForm.js?v=78';
+import { openScanSheet } from './scan.js?v=78';
+import { section } from '../ui/section.js?v=78';
+import { t } from '../core/i18n.js?v=78';
+import { isRose, roseBalance } from './roseGlasses.js?v=78';
 
 export function renderDashboard() {
   const list = monthTransactions(state);
@@ -82,7 +82,9 @@ function billsReminder() {
 function balanceBlock(balance, income, expense) {
   if (isRose()) return roseBalance();
 
-  return el('div', {}, [
+  // Баланс и пара «доходы/расходы» — один блок: класс нужен стилям, чтобы
+  // следующая карточка отбилась от него отступом.
+  return el('div', { class: 'balance-block' }, [
     el('div', { class: 'card balance' }, [
       el('div', { class: 'balance__label' }, t('dash.balance')),
       el('div', {

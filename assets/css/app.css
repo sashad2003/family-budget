@@ -641,7 +641,14 @@ button { cursor: pointer; border: none; background: none; }
   backdrop-filter: blur(22px) saturate(140%);
   -webkit-backdrop-filter: blur(22px) saturate(140%);
 }
-.card + .card { margin-top: 12px; }
+/*
+ * Отступ между карточками. Баланс с доходами и расходами лежит в общей
+ * обёртке, поэтому соседство «карточка после карточки» на обзоре не
+ * возникало и напоминание о долгах прилипало вплотную к расходам.
+ */
+.card + .card,
+.balance-block + .card,
+.balance-block + .empty { margin-top: 12px; }
 
 .card__label {
   font-size: 13px;
