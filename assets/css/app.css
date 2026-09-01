@@ -910,6 +910,30 @@ button { cursor: pointer; border: none; background: none; }
 }
 
 
+/*
+ * Узкий экран: всё внутреннее — на пятую часть мельче.
+ *
+ * Телефоны с высоким разрешением и крупным системным масштабом показывают
+ * страницу как 360–412 CSS-пикселей. Размеры здесь заданы в пикселях, и на
+ * такой ширине плитки категорий, переключатели и чипы встают впритык, а
+ * подписи ломаются посреди слова. Уменьшаем сами элементы, а не шрифт всего
+ * приложения: читаемость текста остаётся прежней — 11px подписи под иконкой
+ * это ровно то, что было на экране пошире после переноса.
+ */
+@media (max-width: 420px) {
+  .cat-grid { gap: 6px; }
+  .cat { padding: 10px 2px; font-size: 11px; }
+  .cat__ico { width: 32px; height: 32px; font-size: 17px; border-radius: 10px; }
+
+  .segmented { padding: 4px; gap: 3px; }
+  .segmented button { padding: 10px 4px; font-size: 13px; }
+
+  .chip { padding: 7px 11px; font-size: 13px; }
+  .chip-row { gap: 6px; }
+
+  .sheet__body { padding: 14px; }
+}
+
 /* Переключатели */
 .segmented {
   display: flex;
@@ -933,13 +957,24 @@ button { cursor: pointer; border: none; background: none; }
 .segmented button.is-active[data-value="expense"] { background: rgba(255, 91, 91, 0.18); color: var(--expense); }
 
 /* Категории плиткой */
-.cat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 9px; }
+
+/*
+ * minmax(0, 1fr), а не 1fr: колонка с 1fr не даёт себя сузить меньше своего
+ * содержимого, и длинное слово в подписи («Коммунальные») раздвигало сетку
+ * шире экрана — на узких телефонах правый столбец уезжал за край вместе с
+ * половиной категорий. Ноль в minmax разрешает колонке быть уже слова, а
+ * перенос ниже разбивает само слово, если иначе не помещается.
+ */
+.cat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
 
 .cat {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 6px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  hyphens: auto;
   padding: 12px 4px;
   border-radius: var(--r-sm);
   background: rgba(255, 255, 255, 0.045);
@@ -1707,7 +1742,7 @@ button { cursor: pointer; border: none; background: none; }
 .pick--new { border-style: dashed; border-color: var(--edge-strong); color: var(--fg-0); }
 
 /* Пара крупных кнопок съёмки чека */
-.scan-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.scan-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
 
 .scan-tile {
   display: flex;
@@ -1860,7 +1895,7 @@ button { cursor: pointer; border: none; background: none; }
   .dash__side .section { margin-top: 0; }
 
   /* Список операций шире, категории в шесть плиток */
-  .cat-grid { grid-template-columns: repeat(6, 1fr); }
+  .cat-grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
   .chart-box { height: 300px; }
 
   /* Шторка превращается в диалог по центру */
