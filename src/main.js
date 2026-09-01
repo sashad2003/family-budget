@@ -2,45 +2,45 @@
  * Точка входа: авторизация → загрузка семьи → подписки на данные → роутинг.
  */
 
-import { $, render } from './core/dom.js?v=72';
+import { $, render } from './core/dom.js?v=73';
 import {
   t, localeInfo, isRTL, applyDocumentLocale, translateDocument,
-} from './core/i18n.js?v=72';
-import { state, set, subscribe } from './core/store.js?v=72';
-import { SUPPORT_WHATSAPP } from './config.js?v=72';
-import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=72';
-import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=72';
-import { unpaidBills } from './core/selectors.js?v=72';
+} from './core/i18n.js?v=73';
+import { state, set, subscribe } from './core/store.js?v=73';
+import { SUPPORT_WHATSAPP } from './config.js?v=73';
+import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=73';
+import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=73';
+import { unpaidBills } from './core/selectors.js?v=73';
 
-import { watchAuth, signIn } from './services/auth.js?v=72';
+import { watchAuth, signIn } from './services/auth.js?v=73';
 import {
   loadAccount, isAdmin, joinByCode, listFamilies, watchFamily,
-} from './services/account.js?v=72';
-import { setFamilyId } from './core/session.js?v=72';
-import { askProfile } from './views/signup.js?v=72';
+} from './services/account.js?v=73';
+import { setFamilyId } from './core/session.js?v=73';
+import { askProfile } from './views/signup.js?v=73';
 import {
   watchTransactions,
   watchCategories,
   seedCategoriesIfEmpty,
   syncNewCategories,
-} from './services/transactions.js?v=72';
-import { watchBills } from './services/bills.js?v=72';
-import { runAutoBills } from './services/autoBills.js?v=72';
-import { loadRates } from './services/rates.js?v=72';
+} from './services/transactions.js?v=73';
+import { watchBills } from './services/bills.js?v=73';
+import { runAutoBills } from './services/autoBills.js?v=73';
+import { loadRates } from './services/rates.js?v=73';
 
-import { renderDashboard } from './views/dashboard.js?v=72';
-import { renderList } from './views/list.js?v=72';
-import { renderBills } from './views/bills.js?v=72';
-import { renderPrices } from './views/prices.js?v=72';
-import { renderAdmin } from './views/admin.js?v=72';
-import { openBudgetMenu, budgetName } from './views/budgetMenu.js?v=72';
-import { renderCharts, destroyCharts } from './views/charts.js?v=72';
-import { renderSettings } from './views/settings.js?v=72';
-import { openTxForm } from './views/txForm.js?v=72';
-import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=72';
-import { initRoseButton, drawRoseButton, resetRose } from './views/roseGlasses.js?v=72';
-import { closeSheet } from './ui/sheet.js?v=72';
-import { toastError, toastOk } from './ui/toast.js?v=72';
+import { renderDashboard } from './views/dashboard.js?v=73';
+import { renderList } from './views/list.js?v=73';
+import { renderBills } from './views/bills.js?v=73';
+import { renderPrices } from './views/prices.js?v=73';
+import { renderAdmin } from './views/admin.js?v=73';
+import { openBudgetMenu, budgetName } from './views/budgetMenu.js?v=73';
+import { renderCharts, destroyCharts } from './views/charts.js?v=73';
+import { renderSettings } from './views/settings.js?v=73';
+import { openTxForm } from './views/txForm.js?v=73';
+import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=73';
+import { initRoseButton, drawRoseButton, resetRose } from './views/roseGlasses.js?v=73';
+import { closeSheet } from './ui/sheet.js?v=73';
+import { toastError, toastOk } from './ui/toast.js?v=73';
 
 // Язык ставим до первой отрисовки: иначе видно, как надписи меняются на ходу.
 applyDocumentLocale();
@@ -275,7 +275,7 @@ function shareOldPrices(transactions) {
   if (backfillStarted || !state.user || !transactions.length) return;
   backfillStarted = true;
 
-  import('./services/prices.js?v=72')
+  import('./services/prices.js?v=73')
     .then(({ backfillPrices }) => backfillPrices(transactions, state.user.uid))
     .catch((error) => console.error('Не удалось перенести историю цен', error));
 }

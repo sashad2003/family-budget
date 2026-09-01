@@ -4,6 +4,43 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!--
+  Плотные экраны верстаются на 412 пикселей.
+
+  Ширина, которой оперирует вёрстка, — это физическое разрешение, делённое на
+  плотность пикселей, и производители делят по-разному: 1440 при плотности 4
+  дают вёрстке 360, а 1290 при плотности 3 — целых 430. Стекло одинаковое, а
+  места на пятую часть меньше: подписи и фильтры не помещаются там, где на
+  айфоне лежат свободно.
+
+  Поэтому таким телефонам говорим верстать на 412 и уменьшаем масштаб ровно
+  во столько раз, во сколько добавили ширины: физический размер букв остаётся
+  прежним, просто в строку их входит больше.
+
+  Два условия обязательны оба. Плотность выше айфоновской — значит экран
+  действительно крупный. И ширины при этом досталось мало. Обычный маленький
+  телефон тоже сообщает 360, но при плотности 3, и уменьшать ему текст нельзя:
+  это уже не улучшение, а потеря читаемости.
+
+  Скрипт стоит до стилей и выполняется до первой отрисовки — иначе страница
+  успела бы разложиться по старой ширине и прыгнула бы на глазах.
+-->
+<script>
+  (function () {
+    var MIN_RATIO = 3.5;
+    var MAX_WIDTH = 380;
+    var TARGET = 412;
+
+    var width = window.screen && window.screen.width;
+    var ratio = window.devicePixelRatio || 1;
+    if (!width || ratio < MIN_RATIO || width > MAX_WIDTH) return;
+
+    document
+      .querySelector('meta[name="viewport"]')
+      .setAttribute('content',
+        'width=' + TARGET + ', initial-scale=' + (width / TARGET) + ', viewport-fit=cover');
+  })();
+</script>
 <meta name="theme-color" content="#0b0b14">
 <title>Семейный бюджет</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,12 +49,12 @@
      бы что попало. Файлы шрифта скачиваются только если им что-то набрано. -->
 <link href="https://fonts.googleapis.com/css2?family=Geologica:wght@300;400;500;600;700&family=Heebo:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <!-- ?v меняется при правках: заставляет браузер взять новый файл, а не старый из кеша -->
-<link rel="stylesheet" href="assets/css/app.css?v=72">
+<link rel="stylesheet" href="assets/css/app.css?v=73">
 
 <!-- Установка на телефон: значок на рабочем столе и запуск без адресной строки -->
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="assets/icons/icon-192.png?v=72" sizes="192x192">
-<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=72">
+<link rel="icon" href="assets/icons/icon-192.png?v=73" sizes="192x192">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png?v=73">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Бюджет">
@@ -143,7 +180,7 @@
         <!-- Розовые очки. Второе нажатие снимает режим, и чтобы это было
              видно, у нажатой кнопки сверху загорается красная полоска. -->
         <button id="btn-rose" class="rose-btn" aria-pressed="false">
-          <img src="assets/icons/glasses.webp?v=72" alt="" width="680" height="322">
+          <img src="assets/icons/glasses.webp?v=73" alt="" width="680" height="322">
         </button>
 
         <button id="btn-base-currency" class="chip chip--currency" data-i18n-label="nav.langCurrency"></button>
@@ -184,6 +221,6 @@
 <div id="sheet-root"></div>
 <div id="toast-root" class="toast-root"></div>
 
-<script type="module" src="src/main.js?v=72"></script>
+<script type="module" src="src/main.js?v=73"></script>
 </body>
 </html>

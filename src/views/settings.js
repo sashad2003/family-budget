@@ -1,19 +1,19 @@
 /** Настройки: профиль, участники, валюта, курсы, категории. */
 
-import { el, render } from '../core/dom.js?v=72';
-import { state, set } from '../core/store.js?v=72';
-import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=72';
-import { formatAmount, convert } from '../core/money.js?v=72';
-import { logout } from '../services/auth.js?v=72';
+import { el, render } from '../core/dom.js?v=73';
+import { state, set } from '../core/store.js?v=73';
+import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=73';
+import { formatAmount, convert } from '../core/money.js?v=73';
+import { logout } from '../services/auth.js?v=73';
 import {
   inviteLink, resetInviteLink, removeMember, leaveFamily, isOwner,
-} from '../services/account.js?v=72';
-import { refreshRates } from '../services/rates.js?v=72';
-import { saveCategory, deleteCategory, reorderCategories } from '../services/transactions.js?v=72';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=72';
-import { section } from '../ui/section.js?v=72';
-import { t, intlLocale } from '../core/i18n.js?v=72';
-import { toastOk, toastError } from '../ui/toast.js?v=72';
+} from '../services/account.js?v=73';
+import { refreshRates } from '../services/rates.js?v=73';
+import { saveCategory, deleteCategory, reorderCategories } from '../services/transactions.js?v=73';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=73';
+import { section } from '../ui/section.js?v=73';
+import { t, intlLocale } from '../core/i18n.js?v=73';
+import { toastOk, toastError } from '../ui/toast.js?v=73';
 
 const PALETTE = ['#2dd98a', '#ff5b5b', '#5b9fff', '#ffb347', '#ff7eb3', '#3de8d0', '#8a8a94'];
 
@@ -330,7 +330,7 @@ function openCategoryEditor(cat, onDone) {
   // потому что на остальных экранах он не нужен.
   const pickerBox = el('div', {}, el('p', { class: 'hint' }, t('cat.iconLoading')));
 
-  import('../ui/emojiPicker.js?v=72')
+  import('../ui/emojiPicker.js?v=73')
     .then(({ emojiPicker }) => render(pickerBox, emojiPicker({
       value: model.icon,
       onPick: (glyph) => { model.icon = glyph; preview.textContent = glyph; },

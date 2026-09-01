@@ -913,14 +913,15 @@ button { cursor: pointer; border: none; background: none; }
 /*
  * Узкий экран: всё внутреннее — на пятую часть мельче.
  *
- * Телефоны с высоким разрешением и крупным системным масштабом показывают
- * страницу как 360–412 CSS-пикселей. Размеры здесь заданы в пикселях, и на
- * такой ширине плитки категорий, переключатели и чипы встают впритык, а
- * подписи ломаются посреди слова. Уменьшаем сами элементы, а не шрифт всего
+ * Остаются телефоны, которым досталось 360 пикселей честно — маленькие, с
+ * обычной плотностью: подменять им ширину нельзя, буквы стали бы мельче
+ * (см. скрипт в index.html). Размеры здесь заданы в пикселях, и на такой
+ * ширине плитки категорий, переключатели и чипы встают впритык, а подписи
+ * ломаются посреди слова. Уменьшаем сами элементы, а не шрифт всего
  * приложения: читаемость текста остаётся прежней — 11px подписи под иконкой
  * это ровно то, что было на экране пошире после переноса.
  */
-@media (max-width: 420px) {
+@media (max-width: 380px) {
   .cat-grid { gap: 6px; }
   .cat { padding: 10px 2px; font-size: 11px; }
   .cat__ico { width: 32px; height: 32px; font-size: 17px; border-radius: 10px; }
@@ -965,7 +966,7 @@ button { cursor: pointer; border: none; background: none; }
  * половиной категорий. Ноль в minmax разрешает колонке быть уже слова, а
  * перенос ниже разбивает само слово, если иначе не помещается.
  */
-.cat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 9px; }
+.cat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
 
 .cat {
   display: flex;
@@ -975,11 +976,16 @@ button { cursor: pointer; border: none; background: none; }
   min-width: 0;
   overflow-wrap: anywhere;
   hyphens: auto;
-  padding: 12px 4px;
+  padding: 12px 3px;
   border-radius: var(--r-sm);
   background: rgba(255, 255, 255, 0.045);
   border: 1px solid transparent;
-  font-size: 12px;
+  /*
+   * 11.5px, а не 12: самая длинная подпись («Коммунальные») при двенадцати
+   * не помещалась в колонку на телефонах шириной 393–412 и рвалась посреди
+   * слова. Полпикселя решают, а на глаз неотличимы.
+   */
+  font-size: 11.5px;
   color: var(--fg-1);
   text-align: center;
   transition: transform 0.16s var(--ease), background 0.18s;
