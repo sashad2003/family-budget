@@ -43,7 +43,7 @@
   --blue: #5b9fff;
   --yellow: #ffb347;
   --pink: #ff7eb3;
-  --teal: #3de8d0;
+  --teal: #38b6f5;
   --violet: #9b7bff;
 
   /*
@@ -177,7 +177,7 @@ html[data-theme="light"] {
   --blue: #3d6bab;
   --yellow: #8c6227;
   --pink: #a14f71;
-  --teal: #1f766a;
+  --teal: #237198;
   --violet: #715aba;
 
   --expense-soft: #c32c2c;
@@ -442,7 +442,7 @@ button { cursor: pointer; border: none; background: none; }
   display: grid; place-items: center;
   color: var(--on-accent);
   border-radius: 24px;
-  background: linear-gradient(145deg, #5b9fff, #7a3cff 60%, #3de8d0);
+  background: linear-gradient(145deg, #5b9fff, #7a3cff 60%, #38b6f5);
   box-shadow: 0 14px 34px -12px rgba(91, 159, 255, 0.7);
 }
 

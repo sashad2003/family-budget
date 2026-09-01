@@ -7,7 +7,7 @@
  * каждый раз значило бы затирать его собственное название.
  */
 
-import { t } from '../core/i18n.js?v=79';
+import { t } from '../core/i18n.js?v=80';
 
 const CATEGORIES = [
   // Расходы
@@ -20,13 +20,13 @@ const CATEGORIES = [
   { id: 'utilities',  name: 'Коммунальные', type: 'expense', icon: '⚡', color: '#ffb347', order: 50 },
   { id: 'telecom',    name: 'Связь',       type: 'expense', icon: '📶', color: '#5b9fff', order: 55 },
   { id: 'services',   name: 'Услуги',      type: 'expense', icon: '🧑‍💼', color: '#9b7bff', order: 60 },
-  { id: 'education',  name: 'Учёба',       type: 'expense', icon: '📚', color: '#3de8d0', order: 65 },
-  { id: 'bills',      name: 'Счета',       type: 'expense', icon: '🧾', color: '#3de8d0', order: 70 },
+  { id: 'education',  name: 'Учёба',       type: 'expense', icon: '📚', color: '#38b6f5', order: 65 },
+  { id: 'bills',      name: 'Счета',       type: 'expense', icon: '🧾', color: '#38b6f5', order: 70 },
   { id: 'health',     name: 'Здоровье',    type: 'expense', icon: '💊', color: '#ff5b5b', order: 80 },
   { id: 'kids',       name: 'Дети',        type: 'expense', icon: '🧸', color: '#ffb347', order: 90 },
   { id: 'clothes',    name: 'Одежда',      type: 'expense', icon: '👕', color: '#5b9fff', order: 100 },
   { id: 'fun',        name: 'Развлечения', type: 'expense', icon: '🎬', color: '#ff7eb3', order: 110 },
-  { id: 'travel',     name: 'Поездки',     type: 'expense', icon: '✈️', color: '#3de8d0', order: 120 },
+  { id: 'travel',     name: 'Поездки',     type: 'expense', icon: '✈️', color: '#38b6f5', order: 120 },
   { id: 'other-exp',  name: 'Прочее',      type: 'expense', icon: '•',  color: '#8a8a94', order: 999 },
 
   // Доходы

@@ -40,11 +40,11 @@ import {
   writeBatch,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=79';
-import { getFamilyId } from '../core/session.js?v=79';
-import { defaultCategories } from '../data/categories.js?v=79';
-import { amountsInAllCurrencies } from '../core/money.js?v=79';
-import { monthOf } from '../core/dates.js?v=79';
+import { db } from '../core/firebase.js?v=80';
+import { getFamilyId } from '../core/session.js?v=80';
+import { defaultCategories } from '../data/categories.js?v=80';
+import { amountsInAllCurrencies } from '../core/money.js?v=80';
+import { monthOf } from '../core/dates.js?v=80';
 
 const txCollection = () => collection(db, 'families', getFamilyId(), 'transactions');
 const catCollection = () => collection(db, 'families', getFamilyId(), 'categories');
@@ -112,6 +112,36 @@ export async function syncNewCategories() {
   await batch.commit();
 
   return fresh.length;
+}
+
+/**
+ * Разовая замена бирюзового цвета категорий на голубой.
+ *
+ * Бирюзовый #3de8d0 не из той гаммы, что синий интерфейса: рядом с ним он
+ * читается как посторонний, и заметнее всего это на светлой теме. В наборе
+ * по умолчанию он заменён, но у семей, заведённых раньше, цвет лежит в базе,
+ * и сам он оттуда не уйдёт.
+ *
+ * Правим только те категории, где стоит ровно старый цвет: свой выбор
+ * человека не трогаем. Отметку о замене храним в meta, чтобы не возвращаться
+ * к ней каждый запуск и не перекрашивать бирюзовый, выбранный сознательно.
+ */
+export async function retireTealColor() {
+  const OLD = '#3de8d0';
+  const NEW = '#38b6f5';
+
+  const markRef = doc(db, 'families', getFamilyId(), 'meta', 'tealRetired');
+  const [markSnap, catSnap] = await Promise.all([getDoc(markRef), getDocs(catCollection())]);
+  if (markSnap.exists()) return 0;
+
+  const stale = catSnap.docs.filter((d) => (d.data().color || '').toLowerCase() === OLD);
+
+  const batch = writeBatch(db);
+  for (const item of stale) batch.set(doc(catCollection(), item.id), { color: NEW }, { merge: true });
+  batch.set(markRef, { at: new Date().toISOString() });
+  await batch.commit();
+
+  return stale.length;
 }
 
 export function saveCategory(id, data) {
@@ -245,7 +275,7 @@ export async function createAutoBillPayment(input, { rates, user }) {
  */
 async function shareItemPrices(txId, tx, user) {
   try {
-    const { publishPrices } = await import('./prices.js?v=79');
+    const { publishPrices } = await import('./prices.js?v=80');
     await publishPrices(txId, tx, user.uid);
   } catch (error) {
     console.error('Не удалось обновить базу цен', error);
@@ -280,7 +310,7 @@ export async function deleteTransaction(id, user = null) {
 
   if (!user) return;
   try {
-    const { removePrices } = await import('./prices.js?v=79');
+    const { removePrices } = await import('./prices.js?v=80');
     await removePrices(id, user.uid);
   } catch (error) {
     console.error('Не удалось убрать цены удалённой операции', error);
