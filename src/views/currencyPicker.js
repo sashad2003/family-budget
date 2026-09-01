@@ -7,14 +7,14 @@
  * надписи вокруг. Названия языков поэтому написаны каждое на себе самом.
  */
 
-import { el } from '../core/dom.js?v=68';
-import { state, set } from '../core/store.js?v=68';
-import { CURRENCIES } from '../config.js?v=68';
-import { formatAmount, convert } from '../core/money.js?v=68';
-import { openSheet, closeSheet } from '../ui/sheet.js?v=68';
+import { el } from '../core/dom.js?v=69';
+import { state, set } from '../core/store.js?v=69';
+import { CURRENCIES } from '../config.js?v=69';
+import { formatAmount, convert } from '../core/money.js?v=69';
+import { openSheet, closeSheet } from '../ui/sheet.js?v=69';
 import {
   t, LOCALES, getLocale, setLocale, translateDocument,
-} from '../core/i18n.js?v=68';
+} from '../core/i18n.js?v=69';
 
 export function openBaseCurrencyPicker() {
   openSheet({
@@ -34,7 +34,7 @@ export function openBaseCurrencyPicker() {
         }, lang.name),
       )),
 
-      el('div', { class: 'cur-list' }, CURRENCIES.map((cur) =>
+      el('div', { class: 'cur-list' }, CURRENCIES.filter((cur) => state.currencies.includes(cur.code)).map((cur) =>
         el('button', {
           class: `cur ${state.base === cur.code ? 'is-active' : ''}`,
           onclick: () => { set({ base: cur.code }); closeSheet(); },

@@ -3,21 +3,20 @@
  * оплаченные отмечены галочкой, забытые горят красным.
  */
 
-import { el, render } from '../core/dom.js?v=68';
-import { state, set } from '../core/store.js?v=68';
-import { CURRENCY_CODES } from '../config.js?v=68';
-import { formatAmount, parseAmount, currencyInfo, convert } from '../core/money.js?v=68';
-import { monthLabel, monthKey, today } from '../core/dates.js?v=68';
-import { billsForMonth } from '../core/selectors.js?v=68';
-import { createBill, updateBill, deleteBill } from '../services/bills.js?v=68';
-import { autoStartMark } from '../services/autoBills.js?v=68';
-import { createTransaction, deleteTransaction } from '../services/transactions.js?v=68';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=68';
-import { toastOk, toastError } from '../ui/toast.js?v=68';
-import { openTxForm } from './txForm.js?v=68';
-import { tileGradient } from './list.js?v=68';
-import { section } from '../ui/section.js?v=68';
-import { t } from '../core/i18n.js?v=68';
+import { el, render } from '../core/dom.js?v=69';
+import { state, set, currencyChoices } from '../core/store.js?v=69';
+import { formatAmount, parseAmount, currencyInfo, convert } from '../core/money.js?v=69';
+import { monthLabel, monthKey, today } from '../core/dates.js?v=69';
+import { billsForMonth } from '../core/selectors.js?v=69';
+import { createBill, updateBill, deleteBill } from '../services/bills.js?v=69';
+import { autoStartMark } from '../services/autoBills.js?v=69';
+import { createTransaction, deleteTransaction } from '../services/transactions.js?v=69';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=69';
+import { toastOk, toastError } from '../ui/toast.js?v=69';
+import { openTxForm } from './txForm.js?v=69';
+import { tileGradient } from './list.js?v=69';
+import { section } from '../ui/section.js?v=69';
+import { t } from '../core/i18n.js?v=69';
 
 export function renderBills() {
   const rows = billsForMonth(state);
@@ -343,7 +342,7 @@ function buildBillBody(model, rerender) {
 
     el('div', { class: 'field' }, [
       el('label', { class: 'field__label' }, t('bills.currency')),
-      el('div', { class: 'segmented' }, CURRENCY_CODES.map((code) =>
+      el('div', { class: 'segmented' }, currencyChoices(model.currency).map((code) =>
         el('button', {
           class: model.currency === code ? 'is-active' : '',
           onclick: () => { model.currency = code; rerender(); },

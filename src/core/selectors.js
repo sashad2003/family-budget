@@ -1,8 +1,8 @@
 /** Выборки и агрегаты над транзакциями. Чистые функции — их удобно переиспользовать. */
 
-import { txAmountIn, round } from './money.js?v=68';
-import { monthOf, shiftMonth } from './dates.js?v=68';
-import { t } from './i18n.js?v=68';
+import { txAmountIn, round } from './money.js?v=69';
+import { monthOf, shiftMonth } from './dates.js?v=69';
+import { t } from './i18n.js?v=69';
 
 /** Операции выбранного месяца с учётом фильтров экрана «Операции». */
 export function monthTransactions(state, filters = {}) {
@@ -15,10 +15,38 @@ export function monthTransactions(state, filters = {}) {
     if (categoryId && tx.categoryId !== categoryId) return false;
     if (needle) {
       const haystack = `${tx.note} ${tx.merchant} ${(tx.items || []).map((i) => i.name).join(' ')}`;
-      if (!haystack.toLowerCase().includes(needle)) return false;
+      if (!haystack.toLowerCase().includes(needle) && !matchesAmount(tx, needle)) return false;
     }
     return true;
   });
+}
+
+/**
+ * Поиск по сумме: «303» находит покупку за 303, за 303,50 и за 1303.
+ *
+ * Название вспоминается не всегда, а цена — часто: человек помнит, что вещь
+ * стоила триста три, и ищет её так. Сверяем и сумму операции, и её пересчёт
+ * в другие валюты (снимок лежит в tx.amounts), и цены товаров из чека —
+ * запомниться могла любая из них.
+ */
+function matchesAmount(tx, needle) {
+  const digits = needle.replace(',', '.');
+  if (!/^\d+\.?\d*$/.test(digits)) return false;
+
+  const values = [
+    Number(tx.amount) || 0,
+    ...Object.values(tx.amounts || {}),
+    ...(tx.items || []).map((item) => Number(item.price) || 0),
+  ];
+
+  return values.some((value) => numberText(value).includes(digits));
+}
+
+/** 303.5 → '303.5', 303 → '303' — вид, в котором сумму ищут глазами. */
+function numberText(value) {
+  const num = Number(value);
+  if (!Number.isFinite(num)) return '';
+  return String(Math.round(Math.abs(num) * 100) / 100);
 }
 
 /** Операции за произвольный отрезок дат (границы включительно). */

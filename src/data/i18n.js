@@ -139,6 +139,22 @@ export const DICT = {
   'settings.noName': { ru: 'Без имени', en: 'No name', he: 'ללא שם' },
   'settings.signOut': { ru: 'Выйти', en: 'Sign out', he: 'התנתקות' },
   'settings.language': { ru: 'Язык', en: 'Language', he: 'שפה' },
+  'settings.currencies': { ru: 'Мои валюты', en: 'My currencies', he: 'המטבעות שלי' },
+  'settings.currenciesHint': {
+    ru: 'Выключенная валюта не предлагается при вводе операций и не показывается в курсах. Уже записанные операции остаются в своей валюте.',
+    en: 'A currency you turn off is not offered when adding transactions and is hidden from the rates. Transactions already saved keep their own currency.',
+    he: 'מטבע שכיביתם לא מוצע בעת הוספת תנועה ולא מופיע בשערים. תנועות שכבר נשמרו נשארות במטבע שלהן.',
+  },
+  'settings.currencyBase': {
+    ru: 'Это валюта сводных сумм — сначала выберите другую',
+    en: 'This is the currency for totals — pick another one first',
+    he: 'זהו מטבע הסיכומים — בחרו קודם אחר',
+  },
+  'settings.currencyLast': {
+    ru: 'Хотя бы одна валюта нужна',
+    en: 'At least one currency is required',
+    he: 'נדרש לפחות מטבע אחד',
+  },
   'settings.baseCurrency': { ru: 'Валюта сводных сумм', en: 'Currency for totals', he: 'מטבע הסיכומים' },
   'settings.baseCurrencyHint': {
     ru: 'Операции хранятся в своей валюте. Итоги и графики показываются в выбранной здесь — по курсу, зафиксированному в момент добавления каждой операции.',
@@ -254,9 +270,9 @@ export const DICT = {
   'dash.where': { ru: 'Куда уходят деньги', en: 'Where the money goes', he: 'לאן הכסף הולך' },
   'dash.from': { ru: 'Откуда приходят деньги', en: 'Where the money comes from', he: 'מאיפה מגיע הכסף' },
   'list.searchPlaceholder': {
-    ru: 'Поиск по описанию, магазину, товарам',
-    en: 'Search by note, shop or item',
-    he: 'חיפוש לפי הערה, חנות או מוצר',
+    ru: 'Поиск по описанию, магазину, товарам, сумме',
+    en: 'Search by note, shop, item or amount',
+    he: 'חיפוש לפי הערה, חנות, מוצר או סכום',
   },
   'list.typeAll': { ru: 'Все', en: 'All', he: 'הכול' },
   'list.typeExpense': { ru: 'Расходы', en: 'Expenses', he: 'הוצאות' },

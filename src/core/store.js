@@ -3,8 +3,8 @@
  * Никакой магии — set() сливает патч и уведомляет слушателей.
  */
 
-import { DEFAULT_BASE_CURRENCY, FALLBACK_RATES } from '../config.js?v=68';
-import { monthKey } from './dates.js?v=68';
+import { CURRENCY_CODES, DEFAULT_BASE_CURRENCY, FALLBACK_RATES } from '../config.js?v=69';
+import { monthKey } from './dates.js?v=69';
 
 const listeners = new Set();
 
@@ -31,6 +31,8 @@ export const state = {
 
   /** Валюта сводных сумм */
   base: localStorage.getItem('base') || DEFAULT_BASE_CURRENCY,
+  /** Валюты, которыми человек пользуется: только они предлагаются при вводе */
+  currencies: savedCurrencies(),
   /** Выбранный месяц, 'YYYY-MM' */
   month: monthKey(new Date()),
   /** Период статистики: { kind: 'month' | 'm3' | 'm6' | 'm12' | 'ytd' | 'all' | 'custom', from, to } */
@@ -43,9 +45,48 @@ export const state = {
   loading: true,
 };
 
+/**
+ * Валюты человека. Хранятся у него в браузере, а не в семье: живущим в разных
+ * странах удобно по-разному, а операции всё равно записываются каждая в своей
+ * валюте и пересчитываются по снимку курсов.
+ *
+ * Пустой или испорченный список означает «все» — иначе выбрать валюту при
+ * вводе стало бы нечем.
+ */
+function savedCurrencies() {
+  const saved = (localStorage.getItem('currencies') || '')
+    .split(',')
+    .filter((code) => CURRENCY_CODES.includes(code));
+
+  return saved.length ? CURRENCY_CODES.filter((code) => saved.includes(code)) : [...CURRENCY_CODES];
+}
+
+/**
+ * Валюты для выбора при вводе.
+ *
+ * К своим добавляем ту, что уже стоит у редактируемой операции: валюту могли
+ * выключить после того, как операция записана, и не показать её означало бы
+ * молча подменить сумму при первом же сохранении.
+ */
+export function currencyChoices(current) {
+  if (!current || state.currencies.includes(current)) return state.currencies;
+  return [...state.currencies, current];
+}
+
+/**
+ * Валюта сводных сумм обязана быть среди включённых: иначе итоги считались бы
+ * в валюте, которой нигде нет в выборе, и вернуть её было бы нечем.
+ */
+if (!state.currencies.includes(state.base)) {
+  state.currencies = CURRENCY_CODES.filter(
+    (code) => code === state.base || state.currencies.includes(code),
+  );
+}
+
 export function set(patch) {
   Object.assign(state, patch);
   if (patch.base) localStorage.setItem('base', patch.base);
+  if (patch.currencies) localStorage.setItem('currencies', patch.currencies.join(','));
   if (patch.period?.kind) localStorage.setItem('period', patch.period.kind);
   listeners.forEach((fn) => fn(state));
 }

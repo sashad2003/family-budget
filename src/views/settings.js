@@ -1,19 +1,19 @@
 /** Настройки: профиль, участники, валюта, курсы, категории. */
 
-import { el, render } from '../core/dom.js?v=68';
-import { state, set } from '../core/store.js?v=68';
-import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=68';
-import { formatAmount, convert } from '../core/money.js?v=68';
-import { logout } from '../services/auth.js?v=68';
+import { el, render } from '../core/dom.js?v=69';
+import { state, set } from '../core/store.js?v=69';
+import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=69';
+import { formatAmount, convert } from '../core/money.js?v=69';
+import { logout } from '../services/auth.js?v=69';
 import {
   inviteLink, resetInviteLink, removeMember, leaveFamily, isOwner,
-} from '../services/account.js?v=68';
-import { refreshRates } from '../services/rates.js?v=68';
-import { saveCategory, deleteCategory, reorderCategories } from '../services/transactions.js?v=68';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=68';
-import { section } from '../ui/section.js?v=68';
-import { t, intlLocale } from '../core/i18n.js?v=68';
-import { toastOk, toastError } from '../ui/toast.js?v=68';
+} from '../services/account.js?v=69';
+import { refreshRates } from '../services/rates.js?v=69';
+import { saveCategory, deleteCategory, reorderCategories } from '../services/transactions.js?v=69';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=69';
+import { section } from '../ui/section.js?v=69';
+import { t, intlLocale } from '../core/i18n.js?v=69';
+import { toastOk, toastError } from '../ui/toast.js?v=69';
 
 const PALETTE = ['#2dd98a', '#ff5b5b', '#5b9fff', '#ffb347', '#ff7eb3', '#3de8d0', '#8a8a94'];
 
@@ -41,8 +41,18 @@ function build(draw) {
       el('button', { class: 'chip', onclick: () => logout() }, t('settings.signOut')),
     ]),
 
+    section(t('settings.currencies'), [
+      el('div', { class: 'chip-row' }, CURRENCIES.map((cur) =>
+        el('button', {
+          class: `chip ${state.currencies.includes(cur.code) ? 'is-active' : ''}`,
+          onclick: () => { toggleCurrency(cur.code); draw(); },
+        }, `${cur.code} ${cur.symbol}`),
+      )),
+      el('p', { class: 'hint' }, t('settings.currenciesHint')),
+    ]),
+
     section(t('settings.baseCurrency'), [
-      el('div', { class: 'segmented' }, CURRENCY_CODES.map((code) =>
+      el('div', { class: 'segmented' }, state.currencies.map((code) =>
         el('button', {
           class: state.base === code ? 'is-active' : '',
           onclick: () => { set({ base: code }); draw(); },
@@ -53,7 +63,7 @@ function build(draw) {
 
     section(t('settings.rates'), [
       el('div', { class: 'card' }, [
-        ...CURRENCIES.filter((c) => c.code !== state.base).map((c) =>
+        ...CURRENCIES.filter((c) => c.code !== state.base && state.currencies.includes(c.code)).map((c) =>
           el('div', { class: 'legend-row' }, [
             el('span', { class: 'legend-name' }, `1 ${c.code}`),
             el('span', { class: 'legend-val' },
@@ -107,6 +117,32 @@ function build(draw) {
 
     el('p', { class: 'hint', style: 'margin-top:26px;text-align:center' }, t('settings.footer')),
   ];
+}
+
+/**
+ * Включает и выключает валюту.
+ *
+ * Валюту сводных сумм и последнюю оставшуюся выключить нельзя: без них
+ * приложению нечего показывать в итогах и не из чего выбирать при вводе.
+ * Уже записанные операции выключение не трогает — они остаются в своей валюте.
+ */
+function toggleCurrency(code) {
+  const on = state.currencies.includes(code);
+
+  if (on && code === state.base) {
+    toastError(t('settings.currencyBase'));
+    return;
+  }
+  if (on && state.currencies.length === 1) {
+    toastError(t('settings.currencyLast'));
+    return;
+  }
+
+  const next = on
+    ? state.currencies.filter((c) => c !== code)
+    : CURRENCY_CODES.filter((c) => c === code || state.currencies.includes(c));
+
+  set({ currencies: next });
 }
 
 /**
@@ -273,7 +309,7 @@ function openCategoryEditor(cat, onDone) {
   // потому что на остальных экранах он не нужен.
   const pickerBox = el('div', {}, el('p', { class: 'hint' }, t('cat.iconLoading')));
 
-  import('../ui/emojiPicker.js?v=68')
+  import('../ui/emojiPicker.js?v=69')
     .then(({ emojiPicker }) => render(pickerBox, emojiPicker({
       value: model.icon,
       onPick: (glyph) => { model.icon = glyph; preview.textContent = glyph; },

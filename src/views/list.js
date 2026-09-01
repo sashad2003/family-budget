@@ -1,13 +1,13 @@
 /** Список операций с фильтрами по типу, категории и тексту. */
 
-import { el, render } from '../core/dom.js?v=68';
-import { state } from '../core/store.js?v=68';
-import { formatAmount, txAmountIn } from '../core/money.js?v=68';
-import { dayLabel } from '../core/dates.js?v=68';
-import { monthTransactions, groupByDate, totals } from '../core/selectors.js?v=68';
-import { openTxForm } from './txForm.js?v=68';
-import { section } from '../ui/section.js?v=68';
-import { t, getLocale } from '../core/i18n.js?v=68';
+import { el, render } from '../core/dom.js?v=69';
+import { state } from '../core/store.js?v=69';
+import { formatAmount, txAmountIn } from '../core/money.js?v=69';
+import { dayLabel } from '../core/dates.js?v=69';
+import { monthTransactions, groupByDate, totals } from '../core/selectors.js?v=69';
+import { openTxForm } from './txForm.js?v=69';
+import { section } from '../ui/section.js?v=69';
+import { t, getLocale } from '../core/i18n.js?v=69';
 
 /** Фильтры живут вне state: они локальны для экрана и не влияют на другие. */
 const filters = { type: 'all', categoryId: null, query: '' };
@@ -26,13 +26,29 @@ export function openCategoryList(categoryId, type = 'all') {
 export function renderList() {
   const container = el('div');
 
-  const draw = () => {
+  /**
+   * Поле поиска создаётся один раз и не участвует в перерисовке.
+   *
+   * Раньше каждая буква перерисовывала экран целиком вместе с самим полем —
+   * браузер терял на нём фокус, и клавиатура закрывалась после первого же
+   * символа. Название товара так было не набрать.
+   */
+  const search = el('input', {
+    class: 'input',
+    type: 'search',
+    placeholder: t('list.searchPlaceholder'),
+    value: filters.query,
+    oninput: (e) => { filters.query = e.target.value; drawResults(); },
+  });
+
+  const chips = el('div');
+  const results = el('div');
+
+  const drawResults = () => {
     const list = monthTransactions(state, filters);
     const { income, expense } = totals(list, state);
 
-    render(container, [
-      filterBar(draw),
-
+    render(results, [
       list.length
         ? section(
             countLabel(list.length),
@@ -52,19 +68,19 @@ export function renderList() {
     ]);
   };
 
+  const draw = () => { drawChips(chips, draw); drawResults(); };
+
+  render(container, [
+    el('div', { style: 'margin-bottom:4px' }, [search, chips]),
+    results,
+  ]);
+
   draw();
   return container;
 }
 
-function filterBar(draw) {
-  const search = el('input', {
-    class: 'input',
-    type: 'search',
-    placeholder: t('list.searchPlaceholder'),
-    value: filters.query,
-    oninput: (e) => { filters.query = e.target.value; draw(); },
-  });
-
+/** Кнопки типа и категорий. Перерисовываются отдельно от поля поиска. */
+function drawChips(node, draw) {
   const typeChips = ['all', 'expense', 'income'].map((value) =>
     el('button', {
       class: `chip ${filters.type === value ? 'is-active' : ''}`,
@@ -87,8 +103,7 @@ function filterBar(draw) {
     }, `${cat.icon} ${cat.name}`),
   );
 
-  return el('div', { style: 'margin-bottom:4px' }, [
-    search,
+  render(node, [
     el('div', { class: 'chip-row', style: 'margin-top:10px' }, typeChips),
     el('div', { class: 'chip-row', style: 'margin-top:7px' }, catChips),
   ]);
