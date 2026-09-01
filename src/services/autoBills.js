@@ -21,9 +21,9 @@
  * потом удалили руками.
  */
 
-import { monthOf, shiftMonth } from '../core/dates.js?v=78';
-import { createAutoBillPayment } from './transactions.js?v=78';
-import { markAutoPaid } from './bills.js?v=78';
+import { monthOf, shiftMonth } from '../core/dates.js?v=79';
+import { createAutoBillPayment } from './transactions.js?v=79';
+import { markAutoPaid } from './bills.js?v=79';
 
 /**
  * Насколько глубоко догоняем пропущенное.

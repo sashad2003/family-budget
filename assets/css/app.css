@@ -71,6 +71,29 @@
   --shadow-toast: 0 16px 36px -14px rgba(0, 0, 0, 0.9);
   --shadow-ico: 0 3px 7px rgba(0, 0, 0, 0.6);
 
+  /*
+   * Поверхности карточек. В ночной теме это стекло: подсветка сверху вниз,
+   * сквозь которую видно сияние фона. В светлой — плоский белый лист с
+   * мягкой тенью, поэтому фон карточки вынесен в токен целиком.
+   */
+  --card-bg: linear-gradient(158deg, var(--glass-2), var(--glass-1));
+  --card-shadow: none;
+  --balance-bg:
+    radial-gradient(120% 130% at 20% 0%, rgba(91, 159, 255, 0.22), transparent 62%),
+    linear-gradient(158deg, var(--glass-3), var(--glass-1));
+  --alert-bg:
+    radial-gradient(120% 130% at 20% 0%, rgba(255, 91, 91, 0.2), transparent 62%),
+    linear-gradient(158deg, var(--glass-2), var(--glass-1));
+  --alert-edge: rgba(255, 91, 91, 0.45);
+
+  /* Заливка акцентных кнопок: дока, «плюса», «Сохранить» */
+  --accent-fill: linear-gradient(150deg, #5b9fff, #3a63ff);
+  --accent-fill-hover: linear-gradient(150deg, #6ea8ff, #4a71ff);
+  --accent-shadow: 0 12px 26px -12px rgba(58, 99, 255, 0.9);
+  --tab-fill: linear-gradient(150deg, #4f8dff, #3a63ff);
+  --tab-shadow: 0 8px 20px -8px rgba(79, 141, 255, 0.9);
+  --fab-shadow: 0 14px 30px -10px rgba(58, 99, 255, 0.85);
+
   /* Крупные поверхности, у которых свой фон, а не стекло */
   --topbar-bg: linear-gradient(180deg, rgba(8, 8, 15, 0.9), rgba(8, 8, 15, 0.35));
   --sheet-bg: linear-gradient(180deg, #191926, #101019);
@@ -124,17 +147,23 @@
  */
 html[data-theme="light"] {
   --bg-void: #eceef6;
-  --bg-deep: #f7f8fc;
+  --bg-deep: #f5f6fb;
   --bg-film: rgb(247 248 252 / 62%);
 
-  --glass-1: rgba(255, 255, 255, 0.72);
-  --glass-2: rgba(255, 255, 255, 0.88);
+  /*
+   * На светлом «стекло» перестаёт быть стеклом. Полупрозрачный белый поверх
+   * белого не виден, поэтому все служебные поверхности — поля, чипы, строки
+   * списков — это лёгкая серая подложка, а не подсветка.
+   */
+  --glass-1: rgba(17, 20, 45, 0.04);
+  --glass-2: rgba(17, 20, 45, 0.03);
   --glass-3: rgba(17, 20, 45, 0.08);
-  --glass-hover: rgba(17, 20, 45, 0.05);
+  --glass-hover: rgba(17, 20, 45, 0.06);
 
-  --edge: rgba(17, 20, 45, 0.10);
-  --edge-strong: rgba(17, 20, 45, 0.18);
-  --edge-glow: rgba(255, 255, 255, 0.9);
+  --edge: rgba(17, 20, 45, 0.08);
+  --edge-strong: rgba(17, 20, 45, 0.16);
+  /* Световой кромки на светлом нет: белая полоска по белому — только шум */
+  --edge-glow: transparent;
 
   --ico-gloss: rgba(255, 255, 255, 0.35);
   --track: rgba(17, 20, 45, 0.12);
@@ -155,23 +184,50 @@ html[data-theme="light"] {
   --expense-ink: #a02020;
   --expense-meta: #bd3838;
 
-  --glow-top: #dfe5ff;
-  --glow-a: #9db6ff;
-  --glow-b: #a7ece1;
-  --glow-c: #cbb8ff;
-  --glow-opacity: 0.38;
-  --glow-opacity-b: 0.26;
-  --glow-opacity-c: 0.24;
-  --grain-opacity: 0.02;
+  /*
+   * Сияние почти выключено. На тёмном оно даёт глубину, на светлом крупные
+   * цветные пятна под полупрозрачными карточками читаются как грязь.
+   */
+  --glow-top: #e7ebff;
+  --glow-a: #c3d2ff;
+  --glow-b: #cdeee9;
+  --glow-c: #ded3ff;
+  --glow-opacity: 0.5;
+  --glow-opacity-b: 0.35;
+  --glow-opacity-c: 0.3;
+  --grain-opacity: 0;
 
-  --shadow-card: 0 18px 40px -26px rgba(24, 30, 60, 0.45);
-  --shadow-pop: 0 20px 44px -20px rgba(24, 30, 60, 0.35);
-  --shadow-sheet: 0 -30px 70px -26px rgba(24, 30, 60, 0.35);
-  --shadow-toast: 0 16px 36px -16px rgba(24, 30, 60, 0.4);
-  --shadow-ico: 0 3px 7px rgba(24, 30, 60, 0.25);
+  /*
+   * Карточка — белый лист с мягкой тенью, без градиента. Тень синевато-серая:
+   * чёрная на светлом фоне выглядит грязью, а не глубиной.
+   */
+  --card-bg: #ffffff;
+  --card-shadow: 0 6px 18px -10px rgba(28, 39, 84, 0.22);
+  /* Баланс — тот же лист, только с холодным светом сверху */
+  --balance-bg: linear-gradient(180deg, #f2f6ff, #ffffff 70%);
+  --alert-bg: #fff1f2;
+  --alert-edge: rgba(175, 63, 63, 0.28);
+
+  /*
+   * Акцент плоский: градиент на светлом фоне мутит цвет. Взят тёмный конец
+   * ночного градиента — тот же синий, но белая надпись на нём даёт 4.8:1,
+   * а на светлом #5b9fff было бы 2.7:1.
+   */
+  --accent-fill: #3a63ff;
+  --accent-fill-hover: #2f56cc;
+  --accent-shadow: 0 10px 22px -12px rgba(58, 99, 255, 0.55);
+  --tab-fill: #3a63ff;
+  --tab-shadow: 0 8px 18px -10px rgba(58, 99, 255, 0.5);
+  --fab-shadow: 0 12px 26px -12px rgba(58, 99, 255, 0.55);
+
+  --shadow-card: 0 6px 18px -10px rgba(28, 39, 84, 0.22);
+  --shadow-pop: 0 14px 34px -18px rgba(28, 39, 84, 0.28);
+  --shadow-sheet: 0 -24px 60px -28px rgba(28, 39, 84, 0.3);
+  --shadow-toast: 0 14px 30px -16px rgba(28, 39, 84, 0.32);
+  --shadow-ico: 0 3px 7px rgba(28, 39, 84, 0.22);
 
   --topbar-bg: linear-gradient(180deg, rgba(247, 248, 252, 0.92), rgba(247, 248, 252, 0.4));
-  --sheet-bg: linear-gradient(180deg, #ffffff, #f3f4fa);
+  --sheet-bg: #ffffff;
   --scrim: rgba(20, 22, 45, 0.35);
   --toast-bg: rgba(255, 255, 255, 0.96);
   --toast-ok-bg: rgba(213, 246, 231, 0.97);
@@ -202,7 +258,20 @@ html[data-theme="light"] .toggle__knob::after { box-shadow: 0 1px 3px rgba(24, 3
  * почти белые — как карточки, только плотнее, чтобы читались поверх списка.
  */
 html[data-theme="light"] .rail {
-  background: linear-gradient(158deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.86));
+  background: rgba(255, 255, 255, 0.96);
+}
+
+/*
+ * Размытие фона под белой непрозрачной карточкой не видно, а стоит дорого:
+ * браузер пересчитывает его при каждой прокрутке. На светлой теме выключаем.
+ */
+html[data-theme="light"] .card,
+html[data-theme="light"] .stat,
+html[data-theme="light"] .glass,
+html[data-theme="light"] .rail,
+html[data-theme="light"] .sheet {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 /*
@@ -316,7 +385,7 @@ button { cursor: pointer; border: none; background: none; }
 
 .glass {
   position: relative;
-  background: linear-gradient(158deg, var(--glass-2), var(--glass-1));
+  background: var(--card-bg);
   border: 1px solid var(--edge);
   border-radius: var(--r-md);
   backdrop-filter: blur(22px) saturate(140%);
@@ -530,8 +599,8 @@ button { cursor: pointer; border: none; background: none; }
 
 .tab.is-active {
   color: var(--on-accent);
-  background: linear-gradient(150deg, #4f8dff, #3a63ff);
-  box-shadow: 0 8px 20px -8px rgba(79, 141, 255, 0.9);
+  background: var(--tab-fill);
+  box-shadow: var(--tab-shadow);
 }
 
 /* Пункты меню «Ещё» */
@@ -580,8 +649,8 @@ button { cursor: pointer; border: none; background: none; }
   border-radius: 50%;
   color: var(--on-accent);
   font-size: 26px; font-weight: 300; line-height: 1;
-  background: linear-gradient(150deg, #5b9fff, #3a63ff);
-  box-shadow: 0 14px 30px -10px rgba(58, 99, 255, 0.85);
+  background: var(--accent-fill);
+  box-shadow: var(--fab-shadow);
   transition: transform 0.18s var(--ease);
 }
 .fab:active { transform: scale(0.92); }
@@ -635,7 +704,8 @@ button { cursor: pointer; border: none; background: none; }
 .card {
   position: relative;
   padding: 18px;
-  background: linear-gradient(158deg, var(--glass-2), var(--glass-1));
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
   border: 1px solid var(--edge);
   border-radius: var(--r-md);
   backdrop-filter: blur(22px) saturate(140%);
@@ -663,9 +733,7 @@ button { cursor: pointer; border: none; background: none; }
 .balance {
   overflow: hidden;
   padding: 26px 22px 24px;
-  background:
-    radial-gradient(120% 130% at 20% 0%, rgba(91, 159, 255, 0.22), transparent 62%),
-    linear-gradient(158deg, var(--glass-3), var(--glass-1));
+  background: var(--balance-bg);
 }
 
 .balance__label { font-size: 14px; color: var(--fg-1); }
@@ -693,7 +761,8 @@ button { cursor: pointer; border: none; background: none; }
 .stat {
   padding: 15px 16px;
   border-radius: var(--r-md);
-  background: linear-gradient(158deg, var(--glass-2), var(--glass-1));
+  background: var(--card-bg);
+  box-shadow: var(--card-shadow);
   border: 1px solid var(--edge);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
@@ -876,10 +945,10 @@ button { cursor: pointer; border: none; background: none; }
   border: none;
   color: var(--on-accent);
   font-weight: 500;
-  background: linear-gradient(150deg, #5b9fff, #3a63ff);
-  box-shadow: 0 12px 26px -12px rgba(58, 99, 255, 0.9);
+  background: var(--accent-fill);
+  box-shadow: var(--accent-shadow);
 }
-.btn--primary:hover { background: linear-gradient(150deg, #6ea8ff, #4a71ff); }
+.btn--primary:hover { background: var(--accent-fill-hover); }
 
 .btn--danger { background: rgba(255, 91, 91, 0.1); border-color: rgba(255, 91, 91, 0.35); color: var(--expense-soft); }
 
@@ -1726,7 +1795,7 @@ button { cursor: pointer; border: none; background: none; }
   font-size: 17px;
   background: var(--glass-2);
 }
-.cur.is-active .cur__sym { background: linear-gradient(150deg, #5b9fff, #3a63ff); color: var(--on-accent); }
+.cur.is-active .cur__sym { background: var(--accent-fill); color: var(--on-accent); }
 
 .cur__body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .cur__code { font-size: 16px; font-weight: 500; }
@@ -1736,10 +1805,8 @@ button { cursor: pointer; border: none; background: none; }
 /* ------------------------------------------------ регулярные платежи */
 
 .card--alert {
-  border-color: rgba(255, 91, 91, 0.45);
-  background:
-    radial-gradient(120% 130% at 20% 0%, rgba(255, 91, 91, 0.2), transparent 62%),
-    linear-gradient(158deg, var(--glass-2), var(--glass-1));
+  border-color: var(--alert-edge);
+  background: var(--alert-bg);
 }
 .card--action { display: block; width: 100%; text-align: start; color: inherit; }
 .card--action:hover { border-color: rgba(255, 91, 91, 0.7); }
@@ -1863,7 +1930,7 @@ button { cursor: pointer; border: none; background: none; }
   transition: transform 0.2s var(--ease);
 }
 .toggle.is-on { border-color: rgba(91, 159, 255, 0.5); }
-.toggle.is-on .toggle__knob { background: linear-gradient(150deg, #5b9fff, #3a63ff); }
+.toggle.is-on .toggle__knob { background: var(--accent-fill); }
 /* В иврите переключатель едет в другую сторону — логического аналога
    у translateX нет, поэтому вторая сторона задана отдельно ниже. */
 .toggle.is-on .toggle__knob::after { transform: translateX(18px); }
@@ -2004,8 +2071,8 @@ button { cursor: pointer; border: none; background: none; }
     display: grid; place-items: center;
     border-radius: 12px;
     color: var(--on-accent);
-    background: linear-gradient(145deg, #5b9fff, #7a3cff);
-    box-shadow: 0 10px 22px -10px rgba(91, 159, 255, 0.9);
+    background: var(--accent-fill);
+    box-shadow: var(--accent-shadow);
   }
   .rail__name { font-size: 16px; font-weight: 500; letter-spacing: -0.01em; }
 
@@ -2026,7 +2093,7 @@ button { cursor: pointer; border: none; background: none; }
   }
   .tab:hover { background: var(--glass-2); color: var(--fg-0); }
   .tab__ico svg { width: 21px; height: 21px; }
-  .tab.is-active { background: linear-gradient(150deg, #4f8dff, #3a63ff); }
+  .tab.is-active { background: var(--tab-fill); }
 
   .rail__user {
     display: flex;
