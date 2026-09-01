@@ -1,13 +1,13 @@
 /** Список операций с фильтрами по типу, категории и тексту. */
 
-import { el, render } from '../core/dom.js?v=73';
-import { state } from '../core/store.js?v=73';
-import { formatAmount, txAmountIn } from '../core/money.js?v=73';
-import { dayLabel } from '../core/dates.js?v=73';
-import { monthTransactions, groupByDate, totals } from '../core/selectors.js?v=73';
-import { openTxForm } from './txForm.js?v=73';
-import { section } from '../ui/section.js?v=73';
-import { t, getLocale } from '../core/i18n.js?v=73';
+import { el, render } from '../core/dom.js?v=77';
+import { state } from '../core/store.js?v=77';
+import { formatAmount, txAmountIn } from '../core/money.js?v=77';
+import { dayLabel } from '../core/dates.js?v=77';
+import { monthTransactions, groupByDate, totals } from '../core/selectors.js?v=77';
+import { openTxForm } from './txForm.js?v=77';
+import { section } from '../ui/section.js?v=77';
+import { t, getLocale } from '../core/i18n.js?v=77';
 
 /** Фильтры живут вне state: они локальны для экрана и не влияют на другие. */
 const filters = { type: 'all', categoryId: null, query: '' };
@@ -95,7 +95,8 @@ function drawChips(node, draw) {
   const catChips = pool.map((cat) =>
     el('button', {
       class: `chip ${filters.categoryId === cat.id ? 'is-active' : ''}`,
-      style: filters.categoryId === cat.id ? `color:${cat.color}` : '',
+      // Цвет категории отдаём стилям через --tint: на светлой теме его надо затемнить.
+      style: filters.categoryId === cat.id ? `--tint:${cat.color}` : '',
       onclick: () => {
         filters.categoryId = filters.categoryId === cat.id ? null : cat.id;
         draw();

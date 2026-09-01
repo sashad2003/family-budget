@@ -3,20 +3,20 @@
  * оплаченные отмечены галочкой, забытые горят красным.
  */
 
-import { el, render } from '../core/dom.js?v=73';
-import { state, set, currencyChoices } from '../core/store.js?v=73';
-import { formatAmount, parseAmount, currencyInfo, convert } from '../core/money.js?v=73';
-import { monthLabel, monthKey, today } from '../core/dates.js?v=73';
-import { billsForMonth } from '../core/selectors.js?v=73';
-import { createBill, updateBill, deleteBill } from '../services/bills.js?v=73';
-import { autoStartMark } from '../services/autoBills.js?v=73';
-import { createTransaction, deleteTransaction } from '../services/transactions.js?v=73';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=73';
-import { toastOk, toastError } from '../ui/toast.js?v=73';
-import { openTxForm } from './txForm.js?v=73';
-import { tileGradient } from './list.js?v=73';
-import { section } from '../ui/section.js?v=73';
-import { t } from '../core/i18n.js?v=73';
+import { el, render } from '../core/dom.js?v=77';
+import { state, set, currencyChoices } from '../core/store.js?v=77';
+import { formatAmount, parseAmount, currencyInfo, convert } from '../core/money.js?v=77';
+import { monthLabel, monthKey, today } from '../core/dates.js?v=77';
+import { billsForMonth } from '../core/selectors.js?v=77';
+import { createBill, updateBill, deleteBill } from '../services/bills.js?v=77';
+import { autoStartMark } from '../services/autoBills.js?v=77';
+import { createTransaction, deleteTransaction } from '../services/transactions.js?v=77';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=77';
+import { toastOk, toastError } from '../ui/toast.js?v=77';
+import { openTxForm } from './txForm.js?v=77';
+import { tileGradient } from './list.js?v=77';
+import { section } from '../ui/section.js?v=77';
+import { t } from '../core/i18n.js?v=77';
 
 export function renderBills() {
   const rows = billsForMonth(state);
@@ -44,7 +44,7 @@ export function renderBills() {
   render(container, [
     unpaid.length && isPast
       ? el('div', { class: 'card card--alert' }, [
-          el('div', { class: 'card__label', style: 'color:#ffb3b3' },
+          el('div', { class: 'card__label', style: 'color:var(--expense-ink)' },
             `Не оплачено · ${monthLabel(state.month)}`),
           el('div', { style: 'font-size:17px' },
             unpaid.map((row) => row.bill.name).join(', ')),
@@ -330,7 +330,7 @@ function buildBillBody(model, rerender) {
       el('div', { class: 'cat-grid' }, pool.map((cat) =>
         el('button', {
           class: `cat ${model.categoryId === cat.id ? 'is-active' : ''}`,
-          style: model.categoryId === cat.id ? `color:${cat.color}` : '',
+          style: model.categoryId === cat.id ? `--tint:${cat.color}` : '',
           onclick: () => { model.categoryId = cat.id; rerender(); },
         }, [
           el('span', { class: 'cat__ico', style: `background:${tileGradient(cat.color)}` },

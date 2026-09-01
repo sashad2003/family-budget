@@ -7,13 +7,14 @@
  * Chart.js грузится с CDN по требованию — на других экранах он не нужен.
  */
 
-import { el, render } from '../core/dom.js?v=73';
-import { state, set } from '../core/store.js?v=73';
-import { formatAmount } from '../core/money.js?v=73';
-import { monthLabel } from '../core/dates.js?v=73';
-import { PERIODS, resolvePeriod } from '../core/period.js?v=73';
-import { rangeTransactions, byCategory, totals, seriesForMonths } from '../core/selectors.js?v=73';
-import { t, getLocale } from '../core/i18n.js?v=73';
+import { el, render } from '../core/dom.js?v=77';
+import { state, set } from '../core/store.js?v=77';
+import { formatAmount } from '../core/money.js?v=77';
+import { monthLabel } from '../core/dates.js?v=77';
+import { PERIODS, resolvePeriod } from '../core/period.js?v=77';
+import { rangeTransactions, byCategory, totals, seriesForMonths } from '../core/selectors.js?v=77';
+import { t, getLocale } from '../core/i18n.js?v=77';
+import { themeColor } from '../core/theme.js?v=77';
 
 const CHART_JS = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.7/+esm';
 
@@ -24,10 +25,13 @@ async function loadChartJs() {
   if (!ChartLib) {
     const module = await import(CHART_JS);
     ChartLib = module.default || module.Chart;
-    ChartLib.defaults.color = '#8a8a94';
     ChartLib.defaults.font.family = "'Geologica', sans-serif";
     ChartLib.defaults.font.size = 13;
   }
+
+  // Цвет подписей ставим при каждой отрисовке: на светлой теме они должны
+  // быть тёмными, а тему меняют, не перезагружая приложение.
+  ChartLib.defaults.color = themeColor('--fg-1', '#8a8a94');
   return ChartLib;
 }
 
@@ -124,8 +128,8 @@ export function renderCharts() {
       data: {
         labels: series.map((row) => shortMonth(row.month)),
         datasets: [
-          lineSet(t('charts.income'), series.map((r) => Math.round(r.income)), '#2dd98a'),
-          lineSet(t('charts.expense'), series.map((r) => Math.round(r.expense)), '#ff5b5b'),
+          lineSet(t('charts.income'), series.map((r) => Math.round(r.income)), themeColor('--income', '#2dd98a')),
+          lineSet(t('charts.expense'), series.map((r) => Math.round(r.expense)), themeColor('--expense', '#ff5b5b')),
         ],
       },
       options: {
@@ -144,7 +148,7 @@ export function renderCharts() {
         labels: [t('charts.income'), t('charts.expense')],
         datasets: [{
           data: [Math.round(income), Math.round(expense)],
-          backgroundColor: ['#2dd98a', '#ff5b5b'],
+          backgroundColor: [themeColor('--income', '#2dd98a'), themeColor('--expense', '#ff5b5b')],
           borderRadius: 8,
           barThickness: 44,
         }],
@@ -284,10 +288,13 @@ function lineSet(label, data, color) {
 }
 
 function gridScales() {
+  // Сетка — тот же токен кромки, что у карточек: на светлой теме она тёмная.
+  const grid = themeColor('--edge', 'rgba(255,255,255,0.05)');
+
   return {
-    x: { grid: { color: 'rgba(255,255,255,0.05)' }, border: { display: false } },
+    x: { grid: { color: grid }, border: { display: false } },
     y: {
-      grid: { color: 'rgba(255,255,255,0.05)' },
+      grid: { color: grid },
       border: { display: false },
       ticks: { callback: (value) => compact(value) },
     },

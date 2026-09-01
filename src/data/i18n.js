@@ -139,6 +139,16 @@ export const DICT = {
   'settings.noName': { ru: 'Без имени', en: 'No name', he: 'ללא שם' },
   'settings.signOut': { ru: 'Выйти', en: 'Sign out', he: 'התנתקות' },
   'settings.language': { ru: 'Язык', en: 'Language', he: 'שפה' },
+  'settings.theme': { ru: 'Оформление', en: 'Appearance', he: 'מראה' },
+  'settings.themeSystem': { ru: 'Как в системе', en: 'System', he: 'לפי המערכת' },
+  'settings.themeLight': { ru: 'Светлая', en: 'Light', he: 'בהיר' },
+  'settings.themeDark': { ru: 'Тёмная', en: 'Dark', he: 'כהה' },
+  'settings.themeHint': {
+    ru: '«Как в системе» — тема меняется вместе с телефоном: днём светлая, ночью тёмная, если так настроен сам телефон.',
+    en: '“System” follows your phone: light by day and dark at night, if the phone is set up that way.',
+    he: '«לפי המערכת» עוקב אחרי הטלפון: בהיר ביום וכהה בלילה, אם כך הוגדר בטלפון.',
+  },
+
   'settings.currencies': { ru: 'Мои валюты', en: 'My currencies', he: 'המטבעות שלי' },
   'settings.currenciesHint': {
     ru: 'Оставьте те, которыми пользуетесь. Выключенная валюта не предлагается при вводе и не показывается в курсах; уже записанные операции остаются в своей валюте. Выключить главную можно — итоги просто переедут в следующую.',

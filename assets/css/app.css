@@ -8,15 +8,24 @@
   /* Основа: почти чёрный с уходом в индиго */
   --bg-void: #08080f;
   --bg-deep: #0f0f1a;
+  /* Плёнка поверх сияния: сквозь неё фон виден, но текст остаётся читаемым */
+  --bg-film: rgb(8 8 15 / 51%);
 
   /* Поверхности — стекло разной плотности */
   --glass-1: rgba(255, 255, 255, 0.045);
   --glass-2: rgba(255, 255, 255, 0.07);
   --glass-3: rgba(255, 255, 255, 0.10);
+  --glass-hover: rgba(255, 255, 255, 0.08);
 
   --edge: rgba(255, 255, 255, 0.09);
   --edge-strong: rgba(255, 255, 255, 0.16);
   --edge-glow: rgba(255, 255, 255, 0.22);
+
+  /* Блик на цветной плитке значка — он же выпуклость */
+  --ico-gloss: rgba(255, 255, 255, 0.25);
+
+  /* Дорожка под заполнением: полоска доли, шкала. Всегда темнее поверхности */
+  --track: rgba(255, 255, 255, 0.07);
 
   --fg-0: #f4f4f8;
   --fg-1: #9a9ab0;
@@ -37,6 +46,46 @@
   --teal: #3de8d0;
   --violet: #9b7bff;
 
+  /*
+   * Бледные оттенки для текста предупреждений: на тёмном фоне полноцветный
+   * красный режет глаз и хуже читается, чем разбавленный белым.
+   */
+  --expense-soft: #ff8080;
+  --expense-ink: #ffb0b0;
+  --expense-meta: #ff9a9a;
+
+  /* Сияние на фоне */
+  --glow-a: #2b4bff;
+  --glow-b: #00c2a8;
+  --glow-c: #7a3cff;
+  --glow-top: #16173a;
+  --glow-opacity: 0.55;
+  --glow-opacity-b: 0.32;
+  --glow-opacity-c: 0.3;
+  --grain-opacity: 0.032;
+
+  /* Тени. На светлой теме они синевато-серые: чёрная тень там выглядит грязью */
+  --shadow-card: 0 18px 40px -24px rgba(0, 0, 0, 0.9);
+  --shadow-pop: 0 20px 44px -18px rgba(0, 0, 0, 0.95);
+  --shadow-sheet: 0 -30px 70px -20px rgba(0, 0, 0, 0.9);
+  --shadow-toast: 0 16px 36px -14px rgba(0, 0, 0, 0.9);
+  --shadow-ico: 0 3px 7px rgba(0, 0, 0, 0.6);
+
+  /* Крупные поверхности, у которых свой фон, а не стекло */
+  --topbar-bg: linear-gradient(180deg, rgba(8, 8, 15, 0.9), rgba(8, 8, 15, 0.35));
+  --sheet-bg: linear-gradient(180deg, #191926, #101019);
+  --scrim: rgba(4, 4, 10, 0.68);
+  --toast-bg: rgba(30, 30, 46, 0.92);
+  --toast-ok-bg: rgba(16, 60, 44, 0.92);
+  --toast-ok-fg: #b6f5da;
+  --toast-error-bg: rgba(72, 22, 30, 0.92);
+  --toast-error-fg: #ffd2d2;
+  --knob: #f4f4f8;
+  --badge-ring: rgba(10, 10, 18, 0.9);
+
+  /* Текст на цветной заливке — белый в обеих темах: заливка всегда насыщенная */
+  --on-accent: #fff;
+
   --r-sm: 12px;
   --r-md: 18px;
   --r-lg: 26px;
@@ -54,6 +103,125 @@
 }
 
 /*
+ * Светлая тема.
+ *
+ * Тема выбирается человеком в настройках; если он оставил «как в системе»,
+ * подходящую подставляет скрипт в index.html — на <html> всегда стоит
+ * data-theme="dark" или data-theme="light", поэтому здесь достаточно одного
+ * набора значений и не нужен второй такой же в @media.
+ *
+ * Меняются только цветовые токены: правила остальной таблицы к теме не
+ * привязаны. Полупрозрачное «стекло» на светлом фоне переворачивается —
+ * панели становятся белыми, а подсветка нажатого, наоборот, тёмной: белое
+ * по белому не видно.
+ *
+ * Акценты взяты темнее ночных. Тот же зелёный #2dd98a на светлом фоне даёт
+ * контраст 1.8:1 при норме 4.5:1 — суммы доходов пришлось бы угадывать.
+ * Каждый акцент здесь затемнён ровно настолько, чтобы дать не меньше 4.6:1
+ * на фоне страницы и на белой панели; оттенок при этом сохранён. Красный
+ * дополнительно проверен на своей же подложке — «Расходы» в переключателе
+ * пишутся красным по бледно-красному, и там запас контраста меньше всего.
+ */
+html[data-theme="light"] {
+  --bg-void: #eceef6;
+  --bg-deep: #f7f8fc;
+  --bg-film: rgb(247 248 252 / 62%);
+
+  --glass-1: rgba(255, 255, 255, 0.72);
+  --glass-2: rgba(255, 255, 255, 0.88);
+  --glass-3: rgba(17, 20, 45, 0.08);
+  --glass-hover: rgba(17, 20, 45, 0.05);
+
+  --edge: rgba(17, 20, 45, 0.10);
+  --edge-strong: rgba(17, 20, 45, 0.18);
+  --edge-glow: rgba(255, 255, 255, 0.9);
+
+  --ico-gloss: rgba(255, 255, 255, 0.35);
+  --track: rgba(17, 20, 45, 0.12);
+
+  --fg-0: #14141f;
+  --fg-1: #545469;
+  --fg-2: #66667c;
+
+  --income: #197a4d;
+  --expense: #af3f3f;
+  --blue: #3d6bab;
+  --yellow: #8c6227;
+  --pink: #a14f71;
+  --teal: #1f766a;
+  --violet: #715aba;
+
+  --expense-soft: #c32c2c;
+  --expense-ink: #a02020;
+  --expense-meta: #bd3838;
+
+  --glow-top: #dfe5ff;
+  --glow-a: #9db6ff;
+  --glow-b: #a7ece1;
+  --glow-c: #cbb8ff;
+  --glow-opacity: 0.38;
+  --glow-opacity-b: 0.26;
+  --glow-opacity-c: 0.24;
+  --grain-opacity: 0.02;
+
+  --shadow-card: 0 18px 40px -26px rgba(24, 30, 60, 0.45);
+  --shadow-pop: 0 20px 44px -20px rgba(24, 30, 60, 0.35);
+  --shadow-sheet: 0 -30px 70px -26px rgba(24, 30, 60, 0.35);
+  --shadow-toast: 0 16px 36px -16px rgba(24, 30, 60, 0.4);
+  --shadow-ico: 0 3px 7px rgba(24, 30, 60, 0.25);
+
+  --topbar-bg: linear-gradient(180deg, rgba(247, 248, 252, 0.92), rgba(247, 248, 252, 0.4));
+  --sheet-bg: linear-gradient(180deg, #ffffff, #f3f4fa);
+  --scrim: rgba(20, 22, 45, 0.35);
+  --toast-bg: rgba(255, 255, 255, 0.96);
+  --toast-ok-bg: rgba(213, 246, 231, 0.97);
+  --toast-ok-fg: #06553a;
+  --toast-error-bg: rgba(255, 227, 227, 0.97);
+  --toast-error-fg: #8d1c1c;
+  --knob: #ffffff;
+  --badge-ring: rgba(247, 248, 252, 0.95);
+}
+
+/*
+ * Тёмный текст на светлом фоне выглядит толще, чем светлый на тёмном при том
+ * же начертании: сглаживание в тёмной теме съедает часть штриха, а в светлой
+ * добавляет. Поэтому на светлой отключаем «утоньшающее» сглаживание, иначе
+ * буквы кажутся жирнее, чем задумано.
+ */
+html[data-theme="light"] body { -webkit-font-smoothing: auto; }
+
+/*
+ * Белый кружок переключателя на светлой дорожке сам по себе не виден —
+ * держим его тенью, как физическую кнопку.
+ */
+html[data-theme="light"] .toggle__knob::after { box-shadow: 0 1px 3px rgba(24, 30, 60, 0.35); }
+
+/*
+ * Док и боковая колонка на тёмном сделаны из подсветки поверх фона. На
+ * светлом такая же подложка даёт грязно-серую плашку, поэтому здесь они
+ * почти белые — как карточки, только плотнее, чтобы читались поверх списка.
+ */
+html[data-theme="light"] .rail {
+  background: linear-gradient(158deg, rgba(255, 255, 255, 0.96), rgba(255, 255, 255, 0.86));
+}
+
+/*
+ * Цвет категории приходит из данных и в разметке лежит в --tint. На тёмном
+ * фоне им красится сама подпись, на светлом тот же цвет пришлось бы читать
+ * с контрастом около двух к одному — поэтому там он замешивается с чернильным
+ * до читаемого, а роль «выбрано» берёт на себя рамка.
+ */
+html[data-theme="light"] .cat.is-active,
+html[data-theme="light"] .chip.is-active {
+  /*
+   * 48% цвета — доля, при которой самый светлый цвет палитры (бирюзовый)
+   * даёт на светлом фоне 4.7:1. При двух третях он давал 3.2:1, то есть
+   * подпись выбранной категории читалась хуже невыбранных соседок.
+   */
+  color: color-mix(in srgb, var(--tint, currentColor) 48%, #0b0b14);
+}
+
+/*
  * У Geologica нет еврейских букв, и на иврите система подставляла бы
  * случайный запасной шрифт — обычно с другой высотой строки и толщиной.
  * Heebo нарисован под ту же плотность, поэтому раскладка не едет.
@@ -65,7 +233,7 @@ html[lang="he"] { --font: 'Heebo', system-ui, sans-serif; }
 /* Тёмная основа на html, полупрозрачная плёнка на body: сквозь неё
    проступает сияние, но текст остаётся читаемым. */
 html { background: var(--bg-void); }
-body { background: rgb(8 8 15 / 51%); }
+body { background: var(--bg-film); }
 
 html, body {
   margin: 0;
@@ -94,7 +262,7 @@ button { cursor: pointer; border: none; background: none; }
   z-index: -1;
   overflow: hidden;
   background:
-    radial-gradient(120% 80% at 50% -10%, #16173a 0%, transparent 60%),
+    radial-gradient(120% 80% at 50% -10%, var(--glow-top) 0%, transparent 60%),
     linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-void) 55%);
 }
 
@@ -113,34 +281,34 @@ button { cursor: pointer; border: none; background: none; }
   position: absolute;
   border-radius: 50%;
   filter: blur(90px);
-  opacity: 0.55;
+  opacity: var(--glow-opacity);
 }
 
 .aurora__blob--a {
   width: 62vmax; height: 62vmax;
   top: -28vmax; left: -18vmax;
-  background: radial-gradient(circle, #2b4bff 0%, transparent 68%);
+  background: radial-gradient(circle, var(--glow-a) 0%, transparent 68%);
 }
 
 .aurora__blob--b {
   width: 48vmax; height: 48vmax;
   top: -14vmax; right: -20vmax;
-  background: radial-gradient(circle, #00c2a8 0%, transparent 66%);
-  opacity: 0.32;
+  background: radial-gradient(circle, var(--glow-b) 0%, transparent 66%);
+  opacity: var(--glow-opacity-b);
 }
 
 .aurora__blob--c {
   width: 54vmax; height: 54vmax;
   bottom: -32vmax; left: 12vmax;
-  background: radial-gradient(circle, #7a3cff 0%, transparent 68%);
-  opacity: 0.3;
+  background: radial-gradient(circle, var(--glow-c) 0%, transparent 68%);
+  opacity: var(--glow-opacity-c);
 }
 
 /* Плёнка зерна — убирает бандинг на градиентах */
 .aurora__grain {
   position: absolute;
   inset: -50%;
-  opacity: 0.032;
+  opacity: var(--grain-opacity);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
@@ -153,7 +321,7 @@ button { cursor: pointer; border: none; background: none; }
   border-radius: var(--r-md);
   backdrop-filter: blur(22px) saturate(140%);
   -webkit-backdrop-filter: blur(22px) saturate(140%);
-  box-shadow: 0 18px 40px -24px rgba(0, 0, 0, 0.9);
+  box-shadow: var(--shadow-card);
 }
 
 /* Световая кромка сверху — от неё стекло выглядит объёмным */
@@ -173,7 +341,7 @@ button { cursor: pointer; border: none; background: none; }
 
 .spinner {
   width: 30px; height: 30px;
-  border: 2px solid rgba(255, 255, 255, 0.12);
+  border: 2px solid var(--edge-strong);
   border-top-color: var(--blue);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
@@ -203,7 +371,7 @@ button { cursor: pointer; border: none; background: none; }
   width: 74px; height: 74px;
   margin: 0 auto 24px;
   display: grid; place-items: center;
-  color: #fff;
+  color: var(--on-accent);
   border-radius: 24px;
   background: linear-gradient(145deg, #5b9fff, #7a3cff 60%, #3de8d0);
   box-shadow: 0 14px 34px -12px rgba(91, 159, 255, 0.7);
@@ -212,7 +380,7 @@ button { cursor: pointer; border: none; background: none; }
 .auth__title { margin: 0 0 8px; font-size: 27px; font-weight: 500; letter-spacing: -0.02em; }
 .auth__title em { font-style: normal; color: var(--blue); font-weight: 600; }
 .auth__sub { margin: 0 0 30px; color: var(--fg-1); font-size: 15px; }
-.auth__error { margin-top: 18px; color: #ffb0b0; font-size: 14px; line-height: 1.55; }
+.auth__error { margin-top: 18px; color: var(--expense-ink); font-size: 14px; line-height: 1.55; }
 
 .auth__legal { margin: 24px 0 0; font-size: 13.5px; line-height: 1.9; color: var(--fg-2); }
 .auth__legal a { color: var(--fg-2); text-decoration: none; }
@@ -237,7 +405,7 @@ button { cursor: pointer; border: none; background: none; }
   justify-content: space-between;
   gap: 10px;
   padding: 14px 16px;
-  background: linear-gradient(180deg, rgba(8, 8, 15, 0.9), rgba(8, 8, 15, 0.35));
+  background: var(--topbar-bg);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
 }
@@ -317,12 +485,12 @@ button { cursor: pointer; border: none; background: none; }
   width: min(calc(100% - 28px), 420px);
   padding: 7px;
   display: flex;
-  background: linear-gradient(158deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.05));
+  background: linear-gradient(158deg, var(--edge-strong), var(--glass-1));
   border: 1px solid var(--edge-strong);
   border-radius: var(--r-pill);
   backdrop-filter: blur(26px) saturate(150%);
   -webkit-backdrop-filter: blur(26px) saturate(150%);
-  box-shadow: 0 20px 44px -18px rgba(0, 0, 0, 0.95);
+  box-shadow: var(--shadow-pop);
 }
 
 .rail__brand, .rail__user { display: none; }
@@ -361,7 +529,7 @@ button { cursor: pointer; border: none; background: none; }
 }
 
 .tab.is-active {
-  color: #fff;
+  color: var(--on-accent);
   background: linear-gradient(150deg, #4f8dff, #3a63ff);
   box-shadow: 0 8px 20px -8px rgba(79, 141, 255, 0.9);
 }
@@ -410,7 +578,7 @@ button { cursor: pointer; border: none; background: none; }
   z-index: 41;
   width: 56px; height: 56px;
   border-radius: 50%;
-  color: #fff;
+  color: var(--on-accent);
   font-size: 26px; font-weight: 300; line-height: 1;
   background: linear-gradient(150deg, #5b9fff, #3a63ff);
   box-shadow: 0 14px 30px -10px rgba(58, 99, 255, 0.85);
@@ -565,7 +733,7 @@ button { cursor: pointer; border: none; background: none; }
   text-transform: uppercase;
   /* Капитель мелким кеглем на чёрном теряется быстрее обычного текста —
      самый тусклый серый из палитры здесь не годится. */
-  color: #c2c2d6;
+  color: var(--fg-0);
   white-space: nowrap;
 }
 
@@ -609,8 +777,8 @@ button { cursor: pointer; border: none; background: none; }
   display: grid;
   place-items: center;
   font-size: 20px;
-  color: #fff;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  color: var(--on-accent);
+  box-shadow: inset 0 1px 0 var(--ico-gloss);
 }
 
 .tx__body { flex: 1; min-width: 0; }
@@ -639,7 +807,7 @@ button { cursor: pointer; border: none; background: none; }
   font-weight: 500;
   letter-spacing: 0.04em;
   color: var(--fg-1);
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--glass-hover);
   border: 1px solid var(--edge);
 }
 
@@ -658,7 +826,7 @@ button { cursor: pointer; border: none; background: none; }
 .input, .select, .textarea {
   width: 100%;
   padding: 13px 15px;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--glass-1);
   border: 1px solid var(--edge);
   border-radius: var(--r-sm);
   outline: none;
@@ -678,7 +846,7 @@ button { cursor: pointer; border: none; background: none; }
   letter-spacing: -0.03em;
   text-align: center;
   padding: 20px 16px;
-  background: radial-gradient(120% 140% at 50% 0%, rgba(91, 159, 255, 0.14), rgba(255, 255, 255, 0.04));
+  background: radial-gradient(120% 140% at 50% 0%, rgba(91, 159, 255, 0.14), var(--glass-1));
 }
 
 .row { display: flex; gap: 10px; }
@@ -699,14 +867,14 @@ button { cursor: pointer; border: none; background: none; }
 
 .btn--primary {
   border: none;
-  color: #fff;
+  color: var(--on-accent);
   font-weight: 500;
   background: linear-gradient(150deg, #5b9fff, #3a63ff);
   box-shadow: 0 12px 26px -12px rgba(58, 99, 255, 0.9);
 }
 .btn--primary:hover { background: linear-gradient(150deg, #6ea8ff, #4a71ff); }
 
-.btn--danger { background: rgba(255, 91, 91, 0.1); border-color: rgba(255, 91, 91, 0.35); color: #ff8080; }
+.btn--danger { background: rgba(255, 91, 91, 0.1); border-color: rgba(255, 91, 91, 0.35); color: var(--expense-soft); }
 
 /* Предупреждение о повторном вводе: красная рамка, чтобы его нельзя было пролистать. */
 .alert {
@@ -714,13 +882,13 @@ button { cursor: pointer; border: none; background: none; }
   border: 1px solid rgba(255, 91, 91, 0.4);
   border-radius: var(--r-sm);
   padding: 12px 14px;
-  color: #ffb0b0;
+  color: var(--expense-ink);
   font-size: 14px;
   line-height: 1.45;
 }
-.alert__title { color: #ff8080; font-weight: 600; margin-bottom: 8px; }
+.alert__title { color: var(--expense-soft); font-weight: 600; margin-bottom: 8px; }
 .alert__row { color: var(--fg-0); font-size: 13px; margin-top: 6px; }
-.alert__row b { color: #ff8080; }
+.alert__row b { color: var(--expense-soft); }
 
 /*
  * Сверка с уже записанным: карточка на каждую найденную операцию.
@@ -769,7 +937,7 @@ button { cursor: pointer; border: none; background: none; }
   line-height: 1.4;
 }
 .dup-hint:hover { background: rgba(255, 179, 71, 0.16); }
-.btn--ghost { background: rgba(255, 255, 255, 0.045); }
+.btn--ghost { background: var(--glass-1); }
 .btn[disabled] { opacity: 0.4; pointer-events: none; }
 
 /* ---------------------------------------------------------------- розовые очки
@@ -801,7 +969,7 @@ button { cursor: pointer; border: none; background: none; }
   height: auto;
   display: block;
   /* Тень заменяет оправу: без неё очки теряются на светлых пятнах фона. */
-  filter: drop-shadow(0 3px 7px rgba(0, 0, 0, 0.6));
+  filter: drop-shadow(var(--shadow-ico));
   transition: filter 0.18s;
 }
 
@@ -826,7 +994,7 @@ button { cursor: pointer; border: none; background: none; }
 
 /* Розовое свечение — второй признак включённого режима, кроме полоски. */
 .rose-btn.is-on img {
-  filter: drop-shadow(0 3px 7px rgba(0, 0, 0, 0.6)) drop-shadow(0 0 12px rgba(255, 92, 168, 0.95));
+  filter: drop-shadow(var(--shadow-ico)) drop-shadow(0 0 12px rgba(255, 92, 168, 0.95));
 }
 
 .balance--rose {
@@ -846,7 +1014,7 @@ button { cursor: pointer; border: none; background: none; }
  * границу задаём сами — иначе её перебил бы десктопный медиазапрос.
  */
 .balance--rose .balance__value {
-  color: #fff;
+  color: var(--on-accent);
   font-size: clamp(20px, 6.6vw, 34px);
   text-shadow: 0 0 26px rgba(255, 122, 182, 0.65);
 }
@@ -940,7 +1108,7 @@ button { cursor: pointer; border: none; background: none; }
   display: flex;
   gap: 4px;
   padding: 5px;
-  background: rgba(255, 255, 255, 0.045);
+  background: var(--glass-1);
   border: 1px solid var(--edge);
   border-radius: var(--r-sm);
 }
@@ -978,7 +1146,7 @@ button { cursor: pointer; border: none; background: none; }
   hyphens: auto;
   padding: 12px 3px;
   border-radius: var(--r-sm);
-  background: rgba(255, 255, 255, 0.045);
+  background: var(--glass-1);
   border: 1px solid transparent;
   /*
    * 11.5px, а не 12: самая длинная подпись («Коммунальные») при двенадцати
@@ -990,28 +1158,29 @@ button { cursor: pointer; border: none; background: none; }
   text-align: center;
   transition: transform 0.16s var(--ease), background 0.18s;
 }
-.cat:hover { background: rgba(255, 255, 255, 0.08); transform: translateY(-2px); }
+.cat:hover { background: var(--glass-hover); transform: translateY(-2px); }
 .cat__ico {
   width: 38px; height: 38px;
   display: grid; place-items: center;
   border-radius: 12px;
   font-size: 19px;
-  color: #fff;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  color: var(--on-accent);
+  box-shadow: inset 0 1px 0 var(--ico-gloss);
 }
-.cat.is-active { color: var(--fg-0); background: rgba(255, 255, 255, 0.1); border-color: currentColor; }
+/* --tint приходит из разметки: это цвет выбранной категории */
+.cat.is-active { color: var(--tint, var(--fg-0)); background: var(--glass-3); border-color: currentColor; }
 
 .chip {
   padding: 8px 14px;
   border-radius: var(--r-pill);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--glass-1);
   border: 1px solid var(--edge);
   font-size: 14px;
   color: var(--fg-1);
   transition: background 0.18s, color 0.18s, border-color 0.18s;
 }
 .chip:hover { color: var(--fg-0); border-color: var(--edge-strong); }
-.chip.is-active { background: var(--glass-3); color: var(--fg-0); border-color: var(--edge-strong); }
+.chip.is-active { background: var(--glass-3); color: var(--tint, var(--fg-0)); border-color: var(--edge-strong); }
 .chip--currency { font-family: var(--mono); font-weight: 500; color: var(--fg-0); }
 
 /*
@@ -1109,7 +1278,7 @@ button { cursor: pointer; border: none; background: none; }
      иначе подложка подписи не дотягивалась бы до края рамки. */
   padding: 0;
   overflow: hidden;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--glass-1);
   border: 1px solid var(--edge);
   border-radius: var(--r-sm);
   transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
@@ -1132,7 +1301,7 @@ button { cursor: pointer; border: none; background: none; }
   padding: 0 9px;
   font-size: 14px;
   color: var(--fg-1);
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--glass-1);
   border-inline-end: 1px solid var(--edge);
 }
 
@@ -1171,7 +1340,7 @@ button { cursor: pointer; border: none; background: none; }
   position: fixed;
   inset: 0;
   z-index: 50;
-  background: rgba(4, 4, 10, 0.68);
+  background: var(--scrim);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
   animation: fade 0.2s ease;
@@ -1188,11 +1357,11 @@ button { cursor: pointer; border: none; background: none; }
   max-height: 92dvh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(180deg, #191926, #101019);
+  background: var(--sheet-bg);
   border: 1px solid var(--edge-strong);
   border-bottom: none;
   border-radius: var(--r-lg) var(--r-lg) 0 0;
-  box-shadow: 0 -30px 70px -20px rgba(0, 0, 0, 0.9);
+  box-shadow: var(--shadow-sheet);
   animation: slide-up 0.3s var(--ease);
 }
 
@@ -1251,15 +1420,15 @@ button { cursor: pointer; border: none; background: none; }
   padding: 12px 20px;
   border-radius: var(--r-pill);
   font-size: 14.5px;
-  background: rgba(30, 30, 46, 0.92);
+  background: var(--toast-bg);
   border: 1px solid var(--edge-strong);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 16px 36px -14px rgba(0, 0, 0, 0.9);
+  box-shadow: var(--shadow-toast);
   animation: fade 0.2s ease;
 }
-.toast--error { background: rgba(72, 22, 30, 0.92); border-color: rgba(255, 91, 91, 0.45); color: #ffd2d2; }
-.toast--ok { background: rgba(16, 60, 44, 0.92); border-color: rgba(45, 217, 138, 0.45); color: #b6f5da; }
+.toast--error { background: var(--toast-error-bg); border-color: rgba(255, 91, 91, 0.45); color: var(--toast-error-fg); }
+.toast--ok { background: var(--toast-ok-bg); border-color: rgba(45, 217, 138, 0.45); color: var(--toast-ok-fg); }
 
 /* ------------------------------------------------ прочее */
 
@@ -1290,7 +1459,7 @@ button { cursor: pointer; border: none; background: none; }
   font-size: 13.5px;
   text-align: end;
 }
-.mrow + .mrow { border-top: 1px solid rgba(255, 255, 255, 0.05); }
+.mrow + .mrow { border-top: 1px solid var(--edge); }
 .mrow > span:first-child { text-align: start; }
 .mrow__month { color: var(--fg-1); text-transform: capitalize; }
 .mrow--head {
@@ -1343,7 +1512,7 @@ button { cursor: pointer; border: none; background: none; }
 .cat-row .legend-name { transition: color 0.18s; }
 .cat-row:hover .legend-name { color: var(--fg-0); }
 
-.legend-bar { position: relative; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.07); overflow: hidden; margin-top: 7px; }
+.legend-bar { position: relative; height: 4px; border-radius: 2px; background: var(--track); overflow: hidden; margin-top: 7px; }
 .legend-bar i { position: absolute; inset: 0 auto 0 0; border-radius: 2px; display: block; }
 
 .list-item {
@@ -1530,12 +1699,12 @@ button { cursor: pointer; border: none; background: none; }
   padding: 13px 15px;
   border-radius: var(--r-md);
   border: 1px solid var(--edge);
-  background: rgba(255, 255, 255, 0.045);
+  background: var(--glass-1);
   color: var(--fg-0);
   text-align: start;
   transition: border-color 0.18s, background 0.18s;
 }
-.cur:hover { background: rgba(255, 255, 255, 0.08); }
+.cur:hover { background: var(--glass-hover); }
 .cur.is-active {
   border-color: rgba(91, 159, 255, 0.6);
   background: linear-gradient(150deg, rgba(91, 159, 255, 0.22), rgba(58, 99, 255, 0.1));
@@ -1548,9 +1717,9 @@ button { cursor: pointer; border: none; background: none; }
   place-items: center;
   border-radius: 13px;
   font-size: 17px;
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--glass-2);
 }
-.cur.is-active .cur__sym { background: linear-gradient(150deg, #5b9fff, #3a63ff); color: #fff; }
+.cur.is-active .cur__sym { background: linear-gradient(150deg, #5b9fff, #3a63ff); color: var(--on-accent); }
 
 .cur__body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .cur__code { font-size: 16px; font-weight: 500; }
@@ -1621,15 +1790,15 @@ button { cursor: pointer; border: none; background: none; }
   display: grid;
   place-items: center;
   font-size: 19px;
-  color: #fff;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  color: var(--on-accent);
+  box-shadow: inset 0 1px 0 var(--ico-gloss);
 }
 .bill.is-paid .bill__ico { background: linear-gradient(150deg, #2dd98a, #18906090) !important; }
 
 .bill__body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .bill__name { font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .bill__meta { font-size: 12.5px; color: var(--fg-2); }
-.bill.is-overdue .bill__meta { color: #ff9a9a; }
+.bill.is-overdue .bill__meta { color: var(--expense-meta); }
 .bill.is-paid .bill__meta { color: var(--income); }
 
 .bill__amount { font-size: 16px; font-weight: 500; white-space: nowrap; }
@@ -1653,7 +1822,7 @@ button { cursor: pointer; border: none; background: none; }
   padding: 13px 15px;
   border-radius: var(--r-sm);
   border: 1px solid var(--edge);
-  background: rgba(255, 255, 255, 0.045);
+  background: var(--glass-1);
   color: var(--fg-1);
   text-align: start;
   transition: border-color 0.18s, background 0.18s, color 0.18s;
@@ -1673,7 +1842,7 @@ button { cursor: pointer; border: none; background: none; }
   flex: 0 0 44px;
   height: 26px;
   border-radius: var(--r-pill);
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--edge-strong);
   position: relative;
   transition: background 0.2s;
 }
@@ -1683,7 +1852,7 @@ button { cursor: pointer; border: none; background: none; }
   top: 3px; inset-inline-start: 3px;
   width: 20px; height: 20px;
   border-radius: 50%;
-  background: #f4f4f8;
+  background: var(--knob);
   transition: transform 0.2s var(--ease);
 }
 .toggle.is-on { border-color: rgba(91, 159, 255, 0.5); }
@@ -1703,16 +1872,16 @@ button { cursor: pointer; border: none; background: none; }
   padding: 0 4px;
   border-radius: var(--r-pill);
   background: var(--expense);
-  color: #fff;
+  color: var(--on-accent);
   font-size: 11px;
   font-weight: 500;
   line-height: 17px;
   text-align: center;
-  box-shadow: 0 0 0 2px rgba(10, 10, 18, 0.9);
+  box-shadow: 0 0 0 2px var(--badge-ring);
 }
 
 /* Месяц с долгами в шапке */
-.topbar__month.has-overdue { color: #ff9a9a; }
+.topbar__month.has-overdue { color: var(--expense-meta); }
 
 /* Быстрый выбор товаров */
 .pick-grid {
@@ -1730,21 +1899,21 @@ button { cursor: pointer; border: none; background: none; }
   padding: 11px 13px;
   border-radius: var(--r-sm);
   border: 1px solid var(--edge);
-  background: rgba(255, 255, 255, 0.045);
+  background: var(--glass-1);
   color: var(--fg-1);
   font-size: 14.5px;
   text-align: start;
   transition: background 0.16s, border-color 0.16s, color 0.16s;
 }
-.pick:hover { background: rgba(255, 255, 255, 0.08); color: var(--fg-0); }
+.pick:hover { background: var(--glass-hover); color: var(--fg-0); }
 .pick.is-active {
-  color: #fff;
+  color: var(--on-accent);
   border-color: rgba(91, 159, 255, 0.6);
   background: linear-gradient(150deg, rgba(91, 159, 255, 0.28), rgba(58, 99, 255, 0.16));
 }
 .pick__name { line-height: 1.25; }
 .pick__price { font-size: 12px; color: var(--fg-2); }
-.pick.is-active .pick__price { color: rgba(255, 255, 255, 0.75); }
+.pick.is-active .pick__price { color: rgba(255, 255, 255, 0.78); }
 .pick--new { border-style: dashed; border-color: var(--edge-strong); color: var(--fg-0); }
 
 /* Пара крупных кнопок съёмки чека */
@@ -1827,7 +1996,7 @@ button { cursor: pointer; border: none; background: none; }
     width: 38px; height: 38px;
     display: grid; place-items: center;
     border-radius: 12px;
-    color: #fff;
+    color: var(--on-accent);
     background: linear-gradient(145deg, #5b9fff, #7a3cff);
     box-shadow: 0 10px 22px -10px rgba(91, 159, 255, 0.9);
   }
@@ -1848,7 +2017,7 @@ button { cursor: pointer; border: none; background: none; }
     border-radius: var(--r-sm);
     font-size: 15.5px;
   }
-  .tab:hover { background: rgba(255, 255, 255, 0.06); color: var(--fg-0); }
+  .tab:hover { background: var(--glass-2); color: var(--fg-0); }
   .tab__ico svg { width: 21px; height: 21px; }
   .tab.is-active { background: linear-gradient(150deg, #4f8dff, #3a63ff); }
 
@@ -1859,13 +2028,13 @@ button { cursor: pointer; border: none; background: none; }
     padding: 10px 12px;
     border-radius: var(--r-sm);
     border: 1px solid var(--edge);
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--glass-1);
     color: var(--fg-1);
     font-size: 14px;
     text-align: start;
     transition: background 0.18s, color 0.18s;
   }
-  .rail__user:hover { background: rgba(255, 255, 255, 0.08); color: var(--fg-0); }
+  .rail__user:hover { background: var(--glass-hover); color: var(--fg-0); }
   .rail__avatar { width: 28px; height: 28px; border-radius: 50%; flex: 0 0 auto; }
   .rail__username { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 

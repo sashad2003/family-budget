@@ -4,7 +4,24 @@
  * интерфейс незачем.
  */
 
-:root { color-scheme: dark; }
+:root { color-scheme: dark light; }
+
+/*
+ * Страницы читают до входа в приложение, настройки темы здесь нет — поэтому
+ * идём за системой. Цвета те же, что в светлой теме приложения.
+ */
+@media (prefers-color-scheme: light) {
+  body { background: #eceef6; color: #2a2a38; }
+  h1, h2 { color: #14141f; }
+  a, .back { color: #3d6bab; }
+  .updated { color: #66667c; }
+  .langs a { color: #545469; border-color: rgba(17, 20, 45, 0.16); }
+  .langs a.is-active {
+    color: #14141f;
+    border-color: rgba(17, 20, 45, 0.32);
+    background: rgba(17, 20, 45, 0.06);
+  }
+}
 
 html[lang="he"] body { font-family: 'Heebo', system-ui, -apple-system, sans-serif; }
 

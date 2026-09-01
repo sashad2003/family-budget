@@ -1,19 +1,20 @@
 /** Настройки: профиль, участники, валюта, курсы, категории. */
 
-import { el, render } from '../core/dom.js?v=73';
-import { state, set } from '../core/store.js?v=73';
-import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=73';
-import { formatAmount, convert } from '../core/money.js?v=73';
-import { logout } from '../services/auth.js?v=73';
+import { el, render } from '../core/dom.js?v=77';
+import { state, set } from '../core/store.js?v=77';
+import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=77';
+import { formatAmount, convert } from '../core/money.js?v=77';
+import { logout } from '../services/auth.js?v=77';
 import {
   inviteLink, resetInviteLink, removeMember, leaveFamily, isOwner,
-} from '../services/account.js?v=73';
-import { refreshRates } from '../services/rates.js?v=73';
-import { saveCategory, deleteCategory, reorderCategories } from '../services/transactions.js?v=73';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=73';
-import { section } from '../ui/section.js?v=73';
-import { t, intlLocale } from '../core/i18n.js?v=73';
-import { toastOk, toastError } from '../ui/toast.js?v=73';
+} from '../services/account.js?v=77';
+import { refreshRates } from '../services/rates.js?v=77';
+import { saveCategory, deleteCategory, reorderCategories } from '../services/transactions.js?v=77';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=77';
+import { section } from '../ui/section.js?v=77';
+import { t, intlLocale } from '../core/i18n.js?v=77';
+import { THEMES, getTheme, setTheme } from '../core/theme.js?v=77';
+import { toastOk, toastError } from '../ui/toast.js?v=77';
 
 const PALETTE = ['#2dd98a', '#ff5b5b', '#5b9fff', '#ffb347', '#ff7eb3', '#3de8d0', '#8a8a94'];
 
@@ -39,6 +40,20 @@ function build(draw) {
         el('div', { class: 'list-item__sub' }, state.user?.email || ''),
       ]),
       el('button', { class: 'chip', onclick: () => logout() }, t('settings.signOut')),
+    ]),
+
+    section(t('settings.theme'), [
+      el('div', { class: 'segmented' }, THEMES.map((name) =>
+        el('button', {
+          class: getTheme() === name ? 'is-active' : '',
+          onclick: () => { setTheme(name); draw(); },
+        }, t({
+          system: 'settings.themeSystem',
+          light: 'settings.themeLight',
+          dark: 'settings.themeDark',
+        }[name])),
+      )),
+      el('p', { class: 'hint' }, t('settings.themeHint')),
     ]),
 
     section(t('settings.currencies'), [
@@ -330,7 +345,7 @@ function openCategoryEditor(cat, onDone) {
   // потому что на остальных экранах он не нужен.
   const pickerBox = el('div', {}, el('p', { class: 'hint' }, t('cat.iconLoading')));
 
-  import('../ui/emojiPicker.js?v=73')
+  import('../ui/emojiPicker.js?v=77')
     .then(({ emojiPicker }) => render(pickerBox, emojiPicker({
       value: model.icon,
       onPick: (glyph) => { model.icon = glyph; preview.textContent = glyph; },
