@@ -202,7 +202,8 @@ html[data-theme="light"] {
    * чёрная на светлом фоне выглядит грязью, а не глубиной.
    */
   --card-bg: #ffffff;
-  --card-shadow: 0 6px 18px -10px rgba(28, 39, 84, 0.22);
+  /* Рамки у карточек нет — вес держит тень, поэтому она чуть плотнее */
+  --card-shadow: 0 8px 22px -12px rgba(28, 39, 84, 0.28);
   /* Баланс — тот же лист, только с холодным светом сверху */
   --balance-bg: linear-gradient(180deg, #f2f6ff, #ffffff 70%);
   --alert-bg: #fff1f2;
@@ -220,7 +221,7 @@ html[data-theme="light"] {
   --tab-shadow: 0 8px 18px -10px rgba(58, 99, 255, 0.5);
   --fab-shadow: 0 12px 26px -12px rgba(58, 99, 255, 0.55);
 
-  --shadow-card: 0 6px 18px -10px rgba(28, 39, 84, 0.22);
+  --shadow-card: 0 8px 22px -12px rgba(28, 39, 84, 0.28);
   --shadow-pop: 0 14px 34px -18px rgba(28, 39, 84, 0.28);
   --shadow-sheet: 0 -24px 60px -28px rgba(28, 39, 84, 0.3);
   --shadow-toast: 0 14px 30px -16px rgba(28, 39, 84, 0.32);
@@ -260,6 +261,25 @@ html[data-theme="light"] .toggle__knob::after { box-shadow: 0 1px 3px rgba(24, 3
 html[data-theme="light"] .rail {
   background: rgba(255, 255, 255, 0.96);
 }
+
+/*
+ * Карточки на светлой теме без рамки.
+ *
+ * Рамка нужна там, где поверхность того же цвета, что фон под ней: иначе
+ * граница неразличима. Белая карточка на сероватом фоне отделяется сама, и
+ * серая линия по её краю только дробит картинку. Границу держит тень.
+ *
+ * Поля ввода, чипы и переключатели рамку сохраняют: у них подложка почти
+ * того же тона, что карточка, и без контура непонятно, где можно нажать.
+ * Красную рамку напоминания о долгах тоже оставляем — она несёт смысл, а не
+ * разделяет поверхности.
+ */
+html[data-theme="light"] .card,
+html[data-theme="light"] .stat,
+html[data-theme="light"] .glass {
+  border-color: transparent;
+}
+html[data-theme="light"] .card--alert { border-color: var(--alert-edge); }
 
 /*
  * Размытие фона под белой непрозрачной карточкой не видно, а стоит дорого:
