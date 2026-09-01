@@ -141,25 +141,25 @@ export const DICT = {
   'settings.language': { ru: 'Язык', en: 'Language', he: 'שפה' },
   'settings.currencies': { ru: 'Мои валюты', en: 'My currencies', he: 'המטבעות שלי' },
   'settings.currenciesHint': {
-    ru: 'Выключенная валюта не предлагается при вводе операций и не показывается в курсах. Уже записанные операции остаются в своей валюте.',
-    en: 'A currency you turn off is not offered when adding transactions and is hidden from the rates. Transactions already saved keep their own currency.',
-    he: 'מטבע שכיביתם לא מוצע בעת הוספת תנועה ולא מופיע בשערים. תנועות שכבר נשמרו נשארות במטבע שלהן.',
+    ru: 'Оставьте те, которыми пользуетесь. Выключенная валюта не предлагается при вводе и не показывается в курсах; уже записанные операции остаются в своей валюте. Выключить главную можно — итоги просто переедут в следующую.',
+    en: 'Keep the ones you use. A currency you turn off is not offered when adding transactions and is hidden from the rates; transactions already saved keep their own currency. You can turn off the main one too — totals simply move to the next currency.',
+    he: 'השאירו את אלה שאתם משתמשים בהם. מטבע שכיביתם לא מוצע בהוספת תנועה ולא מופיע בשערים; תנועות שכבר נשמרו נשארות במטבע שלהן. אפשר לכבות גם את המטבע הראשי — הסיכומים פשוט יעברו למטבע הבא.',
   },
-  'settings.currencyBase': {
-    ru: 'Это валюта сводных сумм — сначала выберите другую',
-    en: 'This is the currency for totals — pick another one first',
-    he: 'זהו מטבע הסיכומים — בחרו קודם אחר',
+  'settings.currencyMoved': {
+    ru: 'Итоги теперь считаются в {code}',
+    en: 'Totals are now shown in {code}',
+    he: 'הסיכומים מוצגים מעתה ב-{code}',
   },
   'settings.currencyLast': {
     ru: 'Хотя бы одна валюта нужна',
     en: 'At least one currency is required',
     he: 'נדרש לפחות מטבע אחד',
   },
-  'settings.baseCurrency': { ru: 'Валюта сводных сумм', en: 'Currency for totals', he: 'מטבע הסיכומים' },
+  'settings.baseCurrency': { ru: 'Главная валюта', en: 'Main currency', he: 'מטבע ראשי' },
   'settings.baseCurrencyHint': {
-    ru: 'Операции хранятся в своей валюте. Итоги и графики показываются в выбранной здесь — по курсу, зафиксированному в момент добавления каждой операции.',
-    en: 'Transactions keep their own currency. Totals and charts use the one chosen here, at the rate recorded when each transaction was added.',
-    he: 'התנועות נשמרות במטבע שלהן. הסיכומים והגרפים מוצגים במטבע שנבחר כאן, לפי השער שנרשם בעת הוספת כל תנועה.',
+    ru: 'В ней показываются баланс, итоги месяца и графики. Каждая операция остаётся в своей валюте — её пересчитывают по курсу того дня, когда её записали, поэтому прошлые месяцы не меняются.',
+    en: 'Your balance, monthly totals and charts are shown in it. Every transaction keeps its own currency and is converted at the rate of the day it was added, so past months never change.',
+    he: 'בו מוצגים היתרה, סיכומי החודש והגרפים. כל תנועה נשארת במטבע שלה ומומרת לפי שער היום שבו נרשמה, ולכן חודשים קודמים אינם משתנים.',
   },
   'settings.rates': { ru: 'Курсы валют', en: 'Exchange rates', he: 'שערי מטבע' },
   'settings.ratesUpdated': { ru: 'Обновлено: {when}', en: 'Updated: {when}', he: 'עודכן: {when}' },
@@ -298,12 +298,12 @@ export const DICT = {
   'period.allLower': { ru: 'всё время', en: 'all time', he: 'כל הזמן' },
 
   // ---------------------------------------------------------------- валюта
-  'currency.title': { ru: 'Валюта сводных сумм', en: 'Currency for totals', he: 'מטבע הסיכומים' },
+  'currency.title': { ru: 'Главная валюта', en: 'Main currency', he: 'מטבע ראשי' },
   'currency.langTitle': { ru: 'Язык и валюта', en: 'Language and currency', he: 'שפה ומטבע' },
   'currency.hint': {
-    ru: 'Операции остаются в своей валюте — меняется только валюта итогов.',
-    en: 'Transactions keep their own currency — only the totals change.',
-    he: 'התנועות נשארות במטבע שלהן — רק הסיכומים משתנים.',
+    ru: 'В ней показываются итоги и графики. Операции остаются в своей валюте. Список валют — в настройках.',
+    en: 'Totals and charts are shown in it. Transactions keep their own currency. The list of currencies is in settings.',
+    he: 'בו מוצגים הסיכומים והגרפים. התנועות נשארות במטבע שלהן. רשימת המטבעות נמצאת בהגדרות.',
   },
   'currency.current': { ru: 'сейчас', en: 'current', he: 'נוכחי' },
 

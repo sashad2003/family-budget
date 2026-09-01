@@ -5,11 +5,11 @@
  * Firestore — спрятанной кнопки мало, чужие профили закрывает база.
  */
 
-import { el, render } from '../core/dom.js?v=70';
-import { listUsers } from '../services/account.js?v=70';
-import { toastError, toastOk } from '../ui/toast.js?v=70';
-import { section } from '../ui/section.js?v=70';
-import { t, intlLocale } from '../core/i18n.js?v=70';
+import { el, render } from '../core/dom.js?v=71';
+import { listUsers } from '../services/account.js?v=71';
+import { toastError, toastOk } from '../ui/toast.js?v=71';
+import { section } from '../ui/section.js?v=71';
+import { t, intlLocale } from '../core/i18n.js?v=71';
 
 const cache = { users: null, query: '' };
 

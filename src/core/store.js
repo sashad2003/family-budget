@@ -3,8 +3,8 @@
  * Никакой магии — set() сливает патч и уведомляет слушателей.
  */
 
-import { CURRENCY_CODES, DEFAULT_BASE_CURRENCY, FALLBACK_RATES } from '../config.js?v=70';
-import { monthKey } from './dates.js?v=70';
+import { CURRENCY_CODES, DEFAULT_BASE_CURRENCY, FALLBACK_RATES } from '../config.js?v=71';
+import { monthKey } from './dates.js?v=71';
 
 const listeners = new Set();
 
@@ -74,13 +74,14 @@ export function currencyChoices(current) {
 }
 
 /**
- * Валюта сводных сумм обязана быть среди включённых: иначе итоги считались бы
- * в валюте, которой нигде нет в выборе, и вернуть её было бы нечем.
+ * Главная валюта берётся из включённых.
+ *
+ * Список валют человек правит сам, и валюты по умолчанию среди них может не
+ * оказаться — считать итоги в валюте, которой нет в выборе, незачем.
  */
 if (!state.currencies.includes(state.base)) {
-  state.currencies = CURRENCY_CODES.filter(
-    (code) => code === state.base || state.currencies.includes(code),
-  );
+  state.base = state.currencies[0];
+  localStorage.setItem('base', state.base);
 }
 
 export function set(patch) {

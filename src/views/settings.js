@@ -1,19 +1,19 @@
 /** Настройки: профиль, участники, валюта, курсы, категории. */
 
-import { el, render } from '../core/dom.js?v=70';
-import { state, set } from '../core/store.js?v=70';
-import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=70';
-import { formatAmount, convert } from '../core/money.js?v=70';
-import { logout } from '../services/auth.js?v=70';
+import { el, render } from '../core/dom.js?v=71';
+import { state, set } from '../core/store.js?v=71';
+import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=71';
+import { formatAmount, convert } from '../core/money.js?v=71';
+import { logout } from '../services/auth.js?v=71';
 import {
   inviteLink, resetInviteLink, removeMember, leaveFamily, isOwner,
-} from '../services/account.js?v=70';
-import { refreshRates } from '../services/rates.js?v=70';
-import { saveCategory, deleteCategory, reorderCategories } from '../services/transactions.js?v=70';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=70';
-import { section } from '../ui/section.js?v=70';
-import { t, intlLocale } from '../core/i18n.js?v=70';
-import { toastOk, toastError } from '../ui/toast.js?v=70';
+} from '../services/account.js?v=71';
+import { refreshRates } from '../services/rates.js?v=71';
+import { saveCategory, deleteCategory, reorderCategories } from '../services/transactions.js?v=71';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=71';
+import { section } from '../ui/section.js?v=71';
+import { t, intlLocale } from '../core/i18n.js?v=71';
+import { toastOk, toastError } from '../ui/toast.js?v=71';
 
 const PALETTE = ['#2dd98a', '#ff5b5b', '#5b9fff', '#ffb347', '#ff7eb3', '#3de8d0', '#8a8a94'];
 
@@ -134,17 +134,20 @@ function build(draw) {
 /**
  * Включает и выключает валюту.
  *
- * Валюту сводных сумм и последнюю оставшуюся выключить нельзя: без них
- * приложению нечего показывать в итогах и не из чего выбирать при вводе.
- * Уже записанные операции выключение не трогает — они остаются в своей валюте.
+ * Выключить можно любую, включая главную: человеку, который не бывает в
+ * Сербии, динары не нужны, и держать их включёнными ради того, что в них
+ * считаются итоги, — насилие над ним. Итоги в таком случае переезжают в
+ * следующую оставшуюся валюту, и об этом говорится вслух.
+ *
+ * Нельзя только выключить последнюю: без валюты нечего выбрать при вводе
+ * и не в чем показать баланс.
+ *
+ * Уже записанные операции выключение не трогает — они остаются в своей
+ * валюте вместе со снимком курсов.
  */
 function toggleCurrency(code) {
   const on = state.currencies.includes(code);
 
-  if (on && code === state.base) {
-    toastError(t('settings.currencyBase'));
-    return;
-  }
   if (on && state.currencies.length === 1) {
     toastError(t('settings.currencyLast'));
     return;
@@ -153,6 +156,12 @@ function toggleCurrency(code) {
   const next = on
     ? state.currencies.filter((c) => c !== code)
     : CURRENCY_CODES.filter((c) => c === code || state.currencies.includes(c));
+
+  if (on && code === state.base) {
+    set({ currencies: next, base: next[0] });
+    toastOk(t('settings.currencyMoved', { code: next[0] }));
+    return;
+  }
 
   set({ currencies: next });
 }
@@ -321,7 +330,7 @@ function openCategoryEditor(cat, onDone) {
   // потому что на остальных экранах он не нужен.
   const pickerBox = el('div', {}, el('p', { class: 'hint' }, t('cat.iconLoading')));
 
-  import('../ui/emojiPicker.js?v=70')
+  import('../ui/emojiPicker.js?v=71')
     .then(({ emojiPicker }) => render(pickerBox, emojiPicker({
       value: model.icon,
       onPick: (glyph) => { model.icon = glyph; preview.textContent = glyph; },
