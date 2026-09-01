@@ -3,20 +3,20 @@
  * после сканирования каждое поле и каждая строка товара остаются редактируемыми.
  */
 
-import { el, render } from '../core/dom.js?v=69';
-import { state, currencyChoices } from '../core/store.js?v=69';
-import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=69';
-import { today } from '../core/dates.js?v=69';
-import { guessCategory } from '../data/categories.js?v=69';
-import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=69';
-import { tileGradient } from './list.js?v=69';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=69';
-import { toastOk, toastError } from '../ui/toast.js?v=69';
-import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=69';
-import { openQuickPick } from './quickPick.js?v=69';
-import { findDuplicates } from '../core/selectors.js?v=69';
-import { openDupCompare } from './dupCompare.js?v=69';
-import { t } from '../core/i18n.js?v=69';
+import { el, render } from '../core/dom.js?v=70';
+import { state, currencyChoices } from '../core/store.js?v=70';
+import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=70';
+import { today } from '../core/dates.js?v=70';
+import { guessCategory } from '../data/categories.js?v=70';
+import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=70';
+import { tileGradient } from './list.js?v=70';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=70';
+import { toastOk, toastError } from '../ui/toast.js?v=70';
+import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=70';
+import { openQuickPick } from './quickPick.js?v=70';
+import { findDuplicates } from '../core/selectors.js?v=70';
+import { openDupCompare } from './dupCompare.js?v=70';
+import { t } from '../core/i18n.js?v=70';
 
 /**
  * openTxForm({ tx })          — правка существующей операции

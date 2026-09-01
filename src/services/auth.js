@@ -8,7 +8,7 @@ import {
   signOut,
   onAuthStateChanged,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-import { auth } from '../core/firebase.js?v=69';
+import { auth } from '../core/firebase.js?v=70';
 
 const provider = new GoogleAuthProvider();
 provider.setCustomParameters({ prompt: 'select_account' });

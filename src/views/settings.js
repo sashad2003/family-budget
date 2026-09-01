@@ -1,19 +1,19 @@
 /** Настройки: профиль, участники, валюта, курсы, категории. */
 
-import { el, render } from '../core/dom.js?v=69';
-import { state, set } from '../core/store.js?v=69';
-import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=69';
-import { formatAmount, convert } from '../core/money.js?v=69';
-import { logout } from '../services/auth.js?v=69';
+import { el, render } from '../core/dom.js?v=70';
+import { state, set } from '../core/store.js?v=70';
+import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=70';
+import { formatAmount, convert } from '../core/money.js?v=70';
+import { logout } from '../services/auth.js?v=70';
 import {
   inviteLink, resetInviteLink, removeMember, leaveFamily, isOwner,
-} from '../services/account.js?v=69';
-import { refreshRates } from '../services/rates.js?v=69';
-import { saveCategory, deleteCategory, reorderCategories } from '../services/transactions.js?v=69';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=69';
-import { section } from '../ui/section.js?v=69';
-import { t, intlLocale } from '../core/i18n.js?v=69';
-import { toastOk, toastError } from '../ui/toast.js?v=69';
+} from '../services/account.js?v=70';
+import { refreshRates } from '../services/rates.js?v=70';
+import { saveCategory, deleteCategory, reorderCategories } from '../services/transactions.js?v=70';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=70';
+import { section } from '../ui/section.js?v=70';
+import { t, intlLocale } from '../core/i18n.js?v=70';
+import { toastOk, toastError } from '../ui/toast.js?v=70';
 
 const PALETTE = ['#2dd98a', '#ff5b5b', '#5b9fff', '#ffb347', '#ff7eb3', '#3de8d0', '#8a8a94'];
 
@@ -42,12 +42,24 @@ function build(draw) {
     ]),
 
     section(t('settings.currencies'), [
-      el('div', { class: 'chip-row' }, CURRENCIES.map((cur) =>
-        el('button', {
-          class: `chip ${state.currencies.includes(cur.code) ? 'is-active' : ''}`,
+      /**
+       * Включённая валюта помечена галочкой и цветом, выключенная — плюсом.
+       *
+       * Раньше состояние показывала только плотность подложки, 0.05 против
+       * 0.10 прозрачности: рядом друг с другом такие кнопки выглядят
+       * одинаково тусклыми, и понять, что выбрано, было нельзя.
+       */
+      el('div', { class: 'chip-row' }, CURRENCIES.map((cur) => {
+        const on = state.currencies.includes(cur.code);
+        return el('button', {
+          class: `chip chip--toggle ${on ? 'is-active' : ''}`,
+          'aria-pressed': on ? 'true' : 'false',
           onclick: () => { toggleCurrency(cur.code); draw(); },
-        }, `${cur.code} ${cur.symbol}`),
-      )),
+        }, [
+          el('span', { class: 'chip__mark' }, on ? '✓' : '＋'),
+          el('span', {}, `${cur.code} ${cur.symbol}`),
+        ]);
+      })),
       el('p', { class: 'hint' }, t('settings.currenciesHint')),
     ]),
 
@@ -309,7 +321,7 @@ function openCategoryEditor(cat, onDone) {
   // потому что на остальных экранах он не нужен.
   const pickerBox = el('div', {}, el('p', { class: 'hint' }, t('cat.iconLoading')));
 
-  import('../ui/emojiPicker.js?v=69')
+  import('../ui/emojiPicker.js?v=70')
     .then(({ emojiPicker }) => render(pickerBox, emojiPicker({
       value: model.icon,
       onPick: (glyph) => { model.icon = glyph; preview.textContent = glyph; },

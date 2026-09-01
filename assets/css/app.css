@@ -973,6 +973,25 @@ button { cursor: pointer; border: none; background: none; }
 .chip.is-active { background: var(--glass-3); color: var(--fg-0); border-color: var(--edge-strong); }
 .chip--currency { font-family: var(--mono); font-weight: 500; color: var(--fg-0); }
 
+/*
+ * Кнопка-переключатель: не «выбрана одна из», а «включена или выключена».
+ *
+ * Разницы между --glass-1 и --glass-3 (0.05 и 0.10 белого) для этого мало:
+ * стоящие рядом чипы выглядят одинаково тусклыми. Поэтому включённое
+ * состояние отмечено цветом дохода и галочкой, выключенное — плюсом:
+ * различие видно и в цвете, и в значке, то есть и при дальтонизме.
+ * Зелёный на здешнем фоне даёт контраст 9.9:1, серый выключенного — 6.9:1.
+ */
+.chip--toggle { display: inline-flex; align-items: center; gap: 7px; }
+.chip--toggle .chip__mark { font-size: 12px; opacity: 0.75; }
+.chip--toggle.is-active {
+  color: var(--income);
+  background: rgba(45, 217, 138, 0.14);
+  border-color: rgba(45, 217, 138, 0.55);
+}
+.chip--toggle.is-active .chip__mark { opacity: 1; }
+.chip--toggle.is-active:hover { color: var(--income); }
+
 .chip-row { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
 .chip-row::-webkit-scrollbar { display: none; }
 .chip-row .chip { flex: 0 0 auto; }
