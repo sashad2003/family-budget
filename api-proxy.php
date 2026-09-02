@@ -13,6 +13,7 @@ declare(strict_types=1);
  *   rates          — курсы валют (внешний бесплатный источник, без ключа)
  *   receipt_image  — распознать фото чека
  *   receipt_url    — распознать страницу чека по ссылке (QR с инвойса)
+ *   send_mail      — письмо о новом в приложении, только админу
  */
 
 ini_set('display_errors', '0');
@@ -25,6 +26,15 @@ const MAX_PAGE_BYTES   = 512 * 1024;        // 512 КБ с чужой стран
 const MAX_PDF_BYTES    = 4 * 1024 * 1024;   // если по ссылке отдают PDF — шлём его целиком
 const MAX_SMS_CHARS    = 2000;              // банковская SMS во много раз короче
 const MAX_TOKENS      = 8000;
+
+// Рассылка. Письма уходят по одному на адрес — получатели не должны видеть
+// друг друга, — поэтому порция ограничена: длинный запрос упрётся в таймаут
+// PHP раньше, чем разошлётся.
+const MAX_MAIL_BATCH   = 50;
+const MAX_MAIL_SUBJECT = 200;
+const MAX_MAIL_BYTES   = 100 * 1024;
+
+const AHASEND_API = 'https://api.ahasend.com/v2/accounts/%s/messages';
 
 /**
  * Цена модели в долларах за миллион токенов — чтобы знать, во что обходится
@@ -129,11 +139,121 @@ switch ($action) {
                 . $sms],
         ]));
 
+    case 'send_mail':
+        respond(200, sendMail($config, $user, $req));
+
     default:
         respond(400, ['error' => 'unknown_action']);
 }
 
 // ================================================================ функции
+
+/**
+ * Рассылка письма о новом в приложении.
+ *
+ * Отправляет по одному сообщению на адрес, а не одно на всех: в письме на
+ * несколько получателей каждый видит адреса остальных, а это чужие почты.
+ *
+ * Право писать людям есть только у админа — список лежит в config.php рядом с
+ * ключами. Проверка здесь, а не на странице: спрятанная кнопка ничего не
+ * закрывает, запрос можно отправить и без неё.
+ *
+ * Кому именно писать, решает вызывающая сторона: она знает, кто отписался.
+ * Здесь только проверяется, что адреса похожи на адреса, и что их не слишком
+ * много за раз.
+ */
+function sendMail(array $config, array $user, array $req): array
+{
+    $admins = array_map('strtolower', $config['admin_emails'] ?? []);
+    if ($admins === [] || !in_array($user['email'], $admins, true)) {
+        respond(403, ['error' => 'not_admin']);
+    }
+
+    $key = (string)($config['ahasend_key'] ?? '');
+    $account = (string)($config['ahasend_account_id'] ?? '');
+    $fromEmail = (string)($config['mail_from_email'] ?? '');
+    if ($key === '' || $account === '' || $fromEmail === '') {
+        respond(500, ['error' => 'mail_not_configured']);
+    }
+
+    $subject = trim((string)($req['subject'] ?? ''));
+    $html = (string)($req['html'] ?? '');
+    $text = (string)($req['text'] ?? '');
+    if ($subject === '' || mb_strlen($subject) > MAX_MAIL_SUBJECT) {
+        respond(400, ['error' => 'mail_subject_invalid']);
+    }
+    if ($html === '' && $text === '') {
+        respond(400, ['error' => 'mail_body_empty']);
+    }
+    if (strlen($html) + strlen($text) > MAX_MAIL_BYTES) {
+        respond(400, ['error' => 'mail_body_too_large']);
+    }
+
+    $recipients = is_array($req['recipients'] ?? null) ? $req['recipients'] : [];
+    if ($recipients === [] || count($recipients) > MAX_MAIL_BATCH) {
+        respond(400, ['error' => 'mail_recipients_invalid']);
+    }
+
+    $sent = 0;
+    $failed = [];
+
+    foreach ($recipients as $person) {
+        $email = strtolower(trim((string)($person['email'] ?? '')));
+        $name = trim((string)($person['name'] ?? ''));
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $failed[] = ['email' => $email, 'error' => 'invalid_email'];
+            continue;
+        }
+
+        $payload = [
+            'from' => ['email' => $fromEmail, 'name' => (string)($config['mail_from_name'] ?? 'Бюджет')],
+            'recipients' => [array_filter(['email' => $email, 'name' => $name])],
+            'subject' => $subject,
+        ];
+        if ($text !== '') $payload['text_content'] = $text;
+        if ($html !== '') $payload['html_content'] = $html;
+
+        $result = httpPostJson(
+            sprintf(AHASEND_API, rawurlencode($account)),
+            $payload,
+            20,
+            [
+                'Authorization: Bearer ' . $key,
+                'Content-Type: application/json',
+                // Ключ идемпотентности: повторная отправка того же письма тому
+                // же человеку в тот же день не удвоится, если рука дрогнула.
+                'Idempotency-Key: ' . substr(hash('sha256', $email . '|' . $subject . '|' . date('Y-m-d')), 0, 40),
+            ],
+        );
+
+        if ($result['status'] >= 200 && $result['status'] < 300) {
+            $sent += 1;
+        } else {
+            $failed[] = ['email' => $email, 'error' => 'send_failed', 'status' => $result['status']];
+        }
+    }
+
+    return ['sent' => $sent, 'failed' => $failed];
+}
+
+/** POST с JSON-телом. Ответ отдаём как есть: разбирает его вызывающий. */
+function httpPostJson(string $url, array $payload, int $timeout, array $headers): array
+{
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => json_encode($payload, JSON_UNESCAPED_UNICODE),
+        CURLOPT_HTTPHEADER     => $headers,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => $timeout,
+    ]);
+
+    $body = curl_exec($ch);
+    $status = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    return ['status' => $status, 'body' => is_string($body) ? $body : ''];
+}
 
 function respond(int $code, array $payload): never
 {

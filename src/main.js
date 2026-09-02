@@ -2,47 +2,47 @@
  * Точка входа: авторизация → загрузка семьи → подписки на данные → роутинг.
  */
 
-import { $, render } from './core/dom.js?v=98';
+import { $, render } from './core/dom.js?v=100';
 import {
   t, localeInfo, isRTL, applyDocumentLocale, translateDocument,
-} from './core/i18n.js?v=98';
-import { state, set, subscribe } from './core/store.js?v=98';
-import { applyTheme } from './core/theme.js?v=98';
-import { SUPPORT_WHATSAPP } from './config.js?v=98';
-import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=98';
-import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=98';
-import { unpaidBills } from './core/selectors.js?v=98';
+} from './core/i18n.js?v=100';
+import { state, set, subscribe } from './core/store.js?v=100';
+import { applyTheme } from './core/theme.js?v=100';
+import { SUPPORT_WHATSAPP } from './config.js?v=100';
+import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=100';
+import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=100';
+import { unpaidBills } from './core/selectors.js?v=100';
 
-import { watchAuth, signIn } from './services/auth.js?v=98';
+import { watchAuth, signIn } from './services/auth.js?v=100';
 import {
-  loadAccount, isAdmin, joinByCode, listFamilies, watchFamily,
-} from './services/account.js?v=98';
-import { setFamilyId } from './core/session.js?v=98';
-import { askProfile } from './views/signup.js?v=98';
+  loadAccount, isAdmin, joinByCode, listFamilies, watchFamily, setMarketing,
+} from './services/account.js?v=100';
+import { setFamilyId } from './core/session.js?v=100';
+import { askProfile } from './views/signup.js?v=100';
 import {
   watchTransactions,
   watchCategories,
   seedCategoriesIfEmpty,
   syncNewCategories,
   retireTealColor,
-} from './services/transactions.js?v=98';
-import { watchBills } from './services/bills.js?v=98';
-import { runAutoBills } from './services/autoBills.js?v=98';
-import { loadRates } from './services/rates.js?v=98';
+} from './services/transactions.js?v=100';
+import { watchBills } from './services/bills.js?v=100';
+import { runAutoBills } from './services/autoBills.js?v=100';
+import { loadRates } from './services/rates.js?v=100';
 
-import { renderDashboard } from './views/dashboard.js?v=98';
-import { renderList } from './views/list.js?v=98';
-import { renderBills } from './views/bills.js?v=98';
-import { renderPrices } from './views/prices.js?v=98';
-import { renderAdmin } from './views/admin.js?v=98';
-import { openBudgetMenu, budgetName } from './views/budgetMenu.js?v=98';
-import { renderCharts, destroyCharts } from './views/charts.js?v=98';
-import { renderSettings } from './views/settings.js?v=98';
-import { openTxForm } from './views/txForm.js?v=98';
-import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=98';
-import { initRoseButton, drawRoseButton, resetRose } from './views/roseGlasses.js?v=98';
-import { closeSheet } from './ui/sheet.js?v=98';
-import { toastError, toastOk } from './ui/toast.js?v=98';
+import { renderDashboard } from './views/dashboard.js?v=100';
+import { renderList } from './views/list.js?v=100';
+import { renderBills } from './views/bills.js?v=100';
+import { renderPrices } from './views/prices.js?v=100';
+import { renderAdmin } from './views/admin.js?v=100';
+import { openBudgetMenu, budgetName } from './views/budgetMenu.js?v=100';
+import { renderCharts, destroyCharts } from './views/charts.js?v=100';
+import { renderSettings } from './views/settings.js?v=100';
+import { openTxForm } from './views/txForm.js?v=100';
+import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=100';
+import { initRoseButton, drawRoseButton, resetRose } from './views/roseGlasses.js?v=100';
+import { closeSheet } from './ui/sheet.js?v=100';
+import { toastError, toastOk } from './ui/toast.js?v=100';
 
 // Язык ставим до первой отрисовки: иначе видно, как надписи меняются на ходу.
 applyDocumentLocale();
@@ -114,6 +114,9 @@ watchAuth(async (user) => {
 
     await startData();
     showScreen('app');
+
+    // Пришёл по ссылке «отписаться» из письма — выключаем письма.
+    handleUnsubscribe();
   } catch (error) {
     console.error(error);
     showScreen('auth');
@@ -279,7 +282,7 @@ function shareOldPrices(transactions) {
   if (backfillStarted || !state.user || !transactions.length) return;
   backfillStarted = true;
 
-  import('./services/prices.js?v=98')
+  import('./services/prices.js?v=100')
     .then(({ backfillPrices }) => backfillPrices(transactions, state.user.uid))
     .catch((error) => console.error('Не удалось перенести историю цен', error));
 }
@@ -461,6 +464,35 @@ window.addEventListener('goto-list', () => set({ route: 'list' }));
  */
 // Скрипт в <head> уже поставил тему; здесь модуль берёт её под своё наблюдение.
 applyTheme();
+
+/**
+ * Отписка по ссылке из письма.
+ *
+ * Ссылка ведёт сюда же, в приложение: страницы, которая пишет в базу без
+ * человека, у нас нет. Если он уже вошёл — выключаем письма сразу и говорим
+ * об этом; если нет — он увидит вход, а отписка сработает следом, потому что
+ * адрес остаётся тем же до перезагрузки.
+ */
+async function handleUnsubscribe() {
+  const params = new URLSearchParams(location.search);
+  if (params.get('unsubscribe') !== '1') return;
+  if (!state.user || !state.profile) return;
+
+  // Адрес чистим сразу: перезагрузка страницы не должна отписывать заново
+  // того, кто минуту назад передумал и включил письма обратно.
+  params.delete('unsubscribe');
+  const rest = params.toString();
+  history.replaceState(null, '', location.pathname + (rest ? `?${rest}` : ''));
+
+  try {
+    await setMarketing(state.user.uid, false);
+    set({ profile: { ...state.profile, marketing: false, mailOptOut: true } });
+    toastOk(t('settings.mailOff'));
+  } catch (error) {
+    console.error(error);
+    toastError(t('settings.mailFailed'));
+  }
+}
 
 window.addEventListener('theme-change', () => {
   if (state.user && !$('#app').hidden) drawView();

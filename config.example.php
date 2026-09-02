@@ -27,4 +27,17 @@ return [
 
     // Лимит AI-запросов на пользователя в час.
     'rate_limit_per_hour' => 60,
+
+    // Кому разрешено рассылать письма о новом. Проверяется на сервере:
+    // спрятанной кнопки в админ-панели для этого мало.
+    'admin_emails' => ['sashad2003@gmail.com'],
+
+    // AhaSend — почта по HTTP API v2, без SMTP.
+    // Ключ вида aha-sk-..., id аккаунта — из панели AhaSend.
+    // Домен отправителя должен быть подтверждён там же (SPF и DKIM),
+    // иначе письма уедут в спам.
+    'ahasend_key'        => getenv('AHASEND_API_KEY') ?: '',
+    'ahasend_account_id' => getenv('AHASEND_ACCOUNT_ID') ?: '',
+    'mail_from_email'    => 'hello@sitemarket.co.il',
+    'mail_from_name'     => 'Семейный бюджет',
 ];

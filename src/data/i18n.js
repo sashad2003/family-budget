@@ -139,6 +139,57 @@ export const DICT = {
   'settings.noName': { ru: 'Без имени', en: 'No name', he: 'ללא שם' },
   'settings.signOut': { ru: 'Выйти', en: 'Sign out', he: 'התנתקות' },
   'settings.language': { ru: 'Язык', en: 'Language', he: 'שפה' },
+  'mail.title': { ru: 'Письмо всем', en: 'Email everyone', he: 'מייל לכולם' },
+  'mail.subjectPlaceholder': { ru: 'Тема письма', en: 'Subject', he: 'נושא' },
+  'mail.bodyPlaceholder': {
+    ru: 'Что нового в приложении. Пустая строка разделяет абзацы.',
+    en: 'What’s new in the app. A blank line separates paragraphs.',
+    he: 'מה חדש באפליקציה. שורה ריקה מפרידה בין פסקאות.',
+  },
+  'mail.send': { ru: 'Отправить', en: 'Send', he: 'שליחה' },
+  'mail.hint': {
+    ru: 'Уходит всем, кто не отписался, по одному письму на человека — чужих адресов в письме не видно. Ссылка «отписаться» ставится сама.',
+    en: 'Goes to everyone who has not opted out, one email per person — nobody sees anyone else’s address. The unsubscribe link is added automatically.',
+    he: 'נשלח לכל מי שלא ביטל, מייל אחד לכל אדם — אף אחד לא רואה כתובות של אחרים. קישור הסרה מתווסף מעצמו.',
+  },
+  'mail.confirm': {
+    ru: 'Отправить письмо {n} людям?',
+    en: 'Send the email to {n} people?',
+    he: 'לשלוח את המייל ל-{n} אנשים?',
+  },
+  'mail.progress': { ru: 'Отправлено {sent} из {total}…', en: 'Sent {sent} of {total}…', he: 'נשלחו {sent} מתוך {total}…' },
+  'mail.done': { ru: 'Отправлено писем: {sent}', en: 'Emails sent: {sent}', he: 'מיילים שנשלחו: {sent}' },
+  'mail.doneWithErrors': {
+    ru: 'Отправлено {sent}, не ушло {failed} — подробности в консоли',
+    en: 'Sent {sent}, {failed} failed — details in the console',
+    he: 'נשלחו {sent}, {failed} נכשלו — פרטים במסוף',
+  },
+  'mail.nobody': {
+    ru: 'Писать некому: все отписались',
+    en: 'Nobody to write to: everyone has opted out',
+    he: 'אין למי לכתוב: כולם ביטלו',
+  },
+  'mail.notAdmin': {
+    ru: 'Рассылка доступна только админу',
+    en: 'Only an admin can send the newsletter',
+    he: 'רק מנהל יכול לשלוח דיוור',
+  },
+  'mail.notConfigured': {
+    ru: 'Почта не настроена: в config.php нет ключа AhaSend или адреса отправителя',
+    en: 'Email is not configured: config.php has no AhaSend key or sender address',
+    he: 'הדוא״ל אינו מוגדר: ב-config.php חסר מפתח AhaSend או כתובת שולח',
+  },
+  'mail.subjectInvalid': { ru: 'Тема пустая или слишком длинная', en: 'The subject is empty or too long', he: 'הנושא ריק או ארוך מדי' },
+  'mail.bodyEmpty': { ru: 'Заполните тему и текст письма', en: 'Fill in the subject and the text', he: 'מלאו נושא וטקסט' },
+  'mail.bodyTooLarge': { ru: 'Письмо слишком длинное', en: 'The email is too long', he: 'המייל ארוך מדי' },
+  'mail.recipientsInvalid': { ru: 'Неверный список адресов', en: 'Invalid recipient list', he: 'רשימת הנמענים שגויה' },
+  'mail.footer': {
+    ru: 'Это письмо о новом в приложении «Семейный бюджет».',
+    en: 'This is an email about what’s new in the Family Budget app.',
+    he: 'זהו מייל על מה שחדש באפליקציית «תקציב משפחתי».',
+  },
+  'mail.unsubscribe': { ru: 'Отписаться', en: 'Unsubscribe', he: 'להסיר מהדיוור' },
+
   'settings.mail': { ru: 'Письма', en: 'Emails', he: 'דיוור' },
   'settings.mailTitle': {
     ru: 'Письма о новом в приложении',

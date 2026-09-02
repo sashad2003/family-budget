@@ -3,20 +3,20 @@
  * после сканирования каждое поле и каждая строка товара остаются редактируемыми.
  */
 
-import { el, render } from '../core/dom.js?v=98';
-import { state, currencyChoices } from '../core/store.js?v=98';
-import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=98';
-import { today } from '../core/dates.js?v=98';
-import { guessCategory } from '../data/categories.js?v=98';
-import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=98';
-import { tileStyle } from './list.js?v=98';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=98';
-import { toastOk, toastError } from '../ui/toast.js?v=98';
-import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=98';
-import { openQuickPick } from './quickPick.js?v=98';
-import { findDuplicates } from '../core/selectors.js?v=98';
-import { openDupCompare } from './dupCompare.js?v=98';
-import { t } from '../core/i18n.js?v=98';
+import { el, render } from '../core/dom.js?v=100';
+import { state, currencyChoices } from '../core/store.js?v=100';
+import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=100';
+import { today } from '../core/dates.js?v=100';
+import { guessCategory } from '../data/categories.js?v=100';
+import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=100';
+import { tileStyle } from './list.js?v=100';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=100';
+import { toastOk, toastError } from '../ui/toast.js?v=100';
+import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=100';
+import { openQuickPick } from './quickPick.js?v=100';
+import { findDuplicates } from '../core/selectors.js?v=100';
+import { openDupCompare } from './dupCompare.js?v=100';
+import { t } from '../core/i18n.js?v=100';
 
 /**
  * openTxForm({ tx })          — правка существующей операции

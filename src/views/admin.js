@@ -5,20 +5,24 @@
  * Firestore — спрятанной кнопки мало, чужие профили закрывает база.
  */
 
-import { el, render } from '../core/dom.js?v=98';
-import { state } from '../core/store.js?v=98';
-import { formatAmount } from '../core/money.js?v=98';
-import { listUsers, wantsMail } from '../services/account.js?v=98';
+import { el, render } from '../core/dom.js?v=100';
+import { state } from '../core/store.js?v=100';
+import { formatAmount } from '../core/money.js?v=100';
+import { listUsers, wantsMail } from '../services/account.js?v=100';
 import {
   loadPriceRows, summarizePrices, summarizeUsers,
   ownPriceRows, summarizeOwnSources, summarizeUsage,
-} from '../services/adminStats.js?v=98';
-import { loadUsage } from '../services/usage.js?v=98';
-import { toastError, toastOk } from '../ui/toast.js?v=98';
-import { section } from '../ui/section.js?v=98';
-import { t, plural, intlLocale } from '../core/i18n.js?v=98';
+} from '../services/adminStats.js?v=100';
+import { loadUsage } from '../services/usage.js?v=100';
+import { buildLetter, sendBatch, MAIL_BATCH } from '../services/mail.js?v=100';
+import { toastError, toastOk } from '../ui/toast.js?v=100';
+import { section } from '../ui/section.js?v=100';
+import { t, plural, intlLocale } from '../core/i18n.js?v=100';
 
 const cache = { users: null, query: '', prices: null, usage: null, tab: 'mine' };
+
+/** Черновик письма живёт до перезагрузки: набранное не должно теряться. */
+const letter = { subject: '', body: '', busy: false };
 
 /**
  * Админ-панель на два язычка.
@@ -49,6 +53,93 @@ export function renderAdmin() {
   return container;
 }
 
+/**
+ * Письмо всем, кто не отписался.
+ *
+ * Адреса берутся из уже загруженного списка людей, письма уходят порциями:
+ * прокси отправляет по одному сообщению на адрес, и сотня адресов за один
+ * запрос упёрлась бы в таймаут. После каждой порции счётчик обновляется — за
+ * молчащей кнопкой не понять, идёт рассылка или всё повисло.
+ */
+function mailer() {
+  const status = el('div', { class: 'hint', style: 'margin-top:10px' });
+
+  const subject = el('input', {
+    class: 'input',
+    placeholder: t('mail.subjectPlaceholder'),
+    value: letter.subject,
+    oninput: (e) => { letter.subject = e.target.value; },
+  });
+
+  const body = el('textarea', {
+    class: 'input textarea',
+    style: 'margin-top:10px;min-height:150px',
+    placeholder: t('mail.bodyPlaceholder'),
+    oninput: (e) => { letter.body = e.target.value; },
+  }, letter.body);
+
+  const send = el('button', {
+    class: 'btn btn--primary btn--wide',
+    style: 'margin-top:12px',
+    onclick: () => sendLetter(status, send),
+  }, t('mail.send'));
+
+  return section(t('mail.title'), [
+    el('div', { class: 'card' }, [subject, body, send, status]),
+    el('p', { class: 'hint' }, t('mail.hint')),
+  ]);
+}
+
+async function sendLetter(status, button) {
+  if (letter.busy) return;
+
+  const people = (cache.users || []).filter(wantsMail).filter((u) => u.email);
+  if (!letter.subject.trim() || !letter.body.trim()) {
+    toastError(t('mail.bodyEmpty'));
+    return;
+  }
+  if (!people.length) {
+    toastError(t('mail.nobody'));
+    return;
+  }
+
+  const ok = window.confirm(t('mail.confirm', { n: people.length }));
+  if (!ok) return;
+
+  letter.busy = true;
+  button.disabled = true;
+
+  const { html, text } = buildLetter(letter.subject.trim(), letter.body.trim());
+  let sent = 0;
+  const failed = [];
+
+  try {
+    for (let i = 0; i < people.length; i += MAIL_BATCH) {
+      const chunk = people.slice(i, i + MAIL_BATCH)
+        .map((u) => ({ email: u.email, name: u.name || '' }));
+
+      // eslint-disable-next-line no-await-in-loop -- порции идут по очереди намеренно
+      const result = await sendBatch({ subject: letter.subject.trim(), html, text, recipients: chunk });
+      sent += result.sent;
+      failed.push(...result.failed);
+      status.textContent = t('mail.progress', { sent, total: people.length });
+    }
+
+    status.textContent = failed.length
+      ? t('mail.doneWithErrors', { sent, failed: failed.length })
+      : t('mail.done', { sent });
+    if (failed.length) console.warn('Часть писем не ушла', failed);
+    toastOk(t('mail.done', { sent }));
+  } catch (error) {
+    console.error(error);
+    status.textContent = error.message;
+    toastError(error.message);
+  } finally {
+    letter.busy = false;
+    button.disabled = false;
+  }
+}
+
 /** Всё, что про остальных: активность, витрина цен, список людей. */
 function others() {
   const body = el('div');
@@ -68,6 +159,7 @@ function others() {
 
   return [
     activity,
+    mailer(),
     market,
     // Список людей — в самом низу: он длинный, и всё, ради чего сюда заходят,
     // должно быть видно раньше, чем начнётся перечисление подписчиков.
