@@ -5,19 +5,19 @@
  * Firestore — спрятанной кнопки мало, чужие профили закрывает база.
  */
 
-import { el, render } from '../core/dom.js?v=102';
-import { state } from '../core/store.js?v=102';
-import { formatAmount } from '../core/money.js?v=102';
-import { listUsers, wantsMail } from '../services/account.js?v=102';
+import { el, render } from '../core/dom.js?v=103';
+import { state } from '../core/store.js?v=103';
+import { formatAmount } from '../core/money.js?v=103';
+import { listUsers, wantsMail } from '../services/account.js?v=103';
 import {
   loadPriceRows, summarizePrices, summarizeUsers,
   ownPriceRows, summarizeOwnSources, summarizeUsage,
-} from '../services/adminStats.js?v=102';
-import { loadUsage } from '../services/usage.js?v=102';
-import { buildLetter, sendBatch, localeOf, MAIL_BATCH } from '../services/mail.js?v=102';
-import { toastError, toastOk } from '../ui/toast.js?v=102';
-import { section } from '../ui/section.js?v=102';
-import { t, plural, intlLocale, LOCALES } from '../core/i18n.js?v=102';
+} from '../services/adminStats.js?v=103';
+import { loadUsage } from '../services/usage.js?v=103';
+import { buildLetter, sendBatch, localeOf, MAIL_BATCH } from '../services/mail.js?v=103';
+import { toastError, toastOk } from '../ui/toast.js?v=103';
+import { section } from '../ui/section.js?v=103';
+import { t, plural, intlLocale, LOCALES } from '../core/i18n.js?v=103';
 
 const cache = { users: null, query: '', prices: null, usage: null, tab: 'mine' };
 
@@ -115,12 +115,65 @@ function mailer() {
     onclick: () => sendLetter(status, send),
   }, t('mail.send'));
 
+  /*
+   * Пробное письмо себе. Отправка настоящей рассылки — действие без обратного
+   * хода: разосланное не отзовёшь, а проверять хочется и настройки почты, и
+   * то, как письмо выглядит у человека. Поэтому рядом стоит кнопка, которая
+   * шлёт ровно один адрес — свой.
+   */
+  const test = el('button', {
+    class: 'btn btn--wide',
+    style: 'margin-top:8px',
+    onclick: () => sendTest(status, test),
+  }, t('mail.sendTest'));
+
   draw();
 
   return section(t('mail.title'), [
-    el('div', { class: 'card' }, [tabs, fields, send, status]),
+    el('div', { class: 'card' }, [tabs, fields, send, test, status]),
     el('p', { class: 'hint' }, t('mail.hint')),
   ]);
+}
+
+/** Письмо себе — на том языке, который открыт сейчас. */
+async function sendTest(status, button) {
+  if (letter.busy) return;
+
+  const draft = letter.drafts[letter.lang];
+  const email = state.user?.email;
+  if (!draft.subject.trim() || !draft.body.trim()) {
+    toastError(t('mail.bodyEmpty'));
+    return;
+  }
+  if (!email) return;
+
+  letter.busy = true;
+  button.disabled = true;
+  status.textContent = t('mail.testSending', { email });
+
+  try {
+    const subject = draft.subject.trim();
+    const { html, text } = buildLetter(subject, draft.body.trim(), letter.lang);
+    const result = await sendBatch({
+      subject, html, text, recipients: [{ email, name: state.profile?.name || '' }],
+    });
+
+    if (result.sent) {
+      status.textContent = t('mail.testSent', { email });
+      toastOk(t('mail.testSent', { email }));
+    } else {
+      const reason = result.failed?.[0]?.error || '';
+      status.textContent = t('mail.testFailed', { reason });
+      toastError(t('mail.testFailed', { reason }));
+    }
+  } catch (error) {
+    console.error(error);
+    status.textContent = error.message;
+    toastError(error.message);
+  } finally {
+    letter.busy = false;
+    button.disabled = false;
+  }
 }
 
 /** Кому уйдёт письмо на этом языке: не отписавшиеся, у кого он выбран. */

@@ -5,8 +5,8 @@
  * Отсчёт идёт от выбранного в шапке месяца: 3 месяца — это он и два до него.
  */
 
-import { monthRange, monthLabel, shiftMonth, today, monthOf } from './dates.js?v=102';
-import { t } from './i18n.js?v=102';
+import { monthRange, monthLabel, shiftMonth, today, monthOf } from './dates.js?v=103';
+import { t } from './i18n.js?v=103';
 
 export const PERIODS = [
   // Подписи берутся из словаря при отрисовке: набор периодов от языка не зависит.

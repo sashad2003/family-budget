@@ -146,7 +146,19 @@ export const DICT = {
     en: 'What’s new in the app. A blank line separates paragraphs.',
     he: 'מה חדש באפליקציה. שורה ריקה מפרידה בין פסקאות.',
   },
-  'mail.send': { ru: 'Отправить', en: 'Send', he: 'שליחה' },
+  'mail.send': { ru: 'Отправить всем', en: 'Send to everyone', he: 'שליחה לכולם' },
+  'mail.sendTest': { ru: 'Пробное письмо себе', en: 'Send a test to myself', he: 'מייל בדיקה לעצמי' },
+  'mail.testSending': { ru: 'Отправляем на {email}…', en: 'Sending to {email}…', he: 'שולחים אל {email}…' },
+  'mail.testSent': {
+    ru: 'Письмо ушло на {email} — проверьте почту и папку «Спам»',
+    en: 'Sent to {email} — check your inbox and the spam folder',
+    he: 'נשלח אל {email} — בדקו את הדואר ואת תיקיית הספאם',
+  },
+  'mail.testFailed': {
+    ru: 'Не отправилось: {reason}',
+    en: 'Not sent: {reason}',
+    he: 'לא נשלח: {reason}',
+  },
   'mail.hint': {
     ru: 'Каждому приходит письмо на его языке — том, что он выбрал в приложении. Языки с пустым текстом не отправляются. Уходит по одному письму на человека, чужих адресов в нём не видно, ссылка «отписаться» ставится сама.',
     en: 'Everyone gets the letter in their own language — the one they picked in the app. Languages left empty are not sent. One email per person, nobody sees anyone else’s address, and the unsubscribe link is added automatically.',
