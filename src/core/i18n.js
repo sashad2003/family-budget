@@ -10,7 +10,7 @@
  * где сторона задана жёстко (см. [dir="rtl"] в стилях).
  */
 
-import { DICT } from '../data/i18n.js?v=114';
+import { DICT } from '../data/i18n.js?v=115';
 
 /** short — метка на кнопке в шапке; для иврита привычнее IL, а не HE. */
 export const LOCALES = [

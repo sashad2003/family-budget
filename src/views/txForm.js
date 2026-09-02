@@ -3,20 +3,20 @@
  * после сканирования каждое поле и каждая строка товара остаются редактируемыми.
  */
 
-import { el, render } from '../core/dom.js?v=114';
-import { state, currencyChoices } from '../core/store.js?v=114';
-import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=114';
-import { today } from '../core/dates.js?v=114';
-import { guessCategory } from '../data/categories.js?v=114';
-import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=114';
-import { tileStyle } from './list.js?v=114';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=114';
-import { toastOk, toastError } from '../ui/toast.js?v=114';
-import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=114';
-import { openQuickPick } from './quickPick.js?v=114';
-import { findDuplicates } from '../core/selectors.js?v=114';
-import { openDupCompare } from './dupCompare.js?v=114';
-import { t } from '../core/i18n.js?v=114';
+import { el, render } from '../core/dom.js?v=115';
+import { state, currencyChoices } from '../core/store.js?v=115';
+import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=115';
+import { today } from '../core/dates.js?v=115';
+import { guessCategory } from '../data/categories.js?v=115';
+import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=115';
+import { tileStyle } from './list.js?v=115';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=115';
+import { toastOk, toastError } from '../ui/toast.js?v=115';
+import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=115';
+import { openQuickPick } from './quickPick.js?v=115';
+import { findDuplicates } from '../core/selectors.js?v=115';
+import { openDupCompare } from './dupCompare.js?v=115';
+import { t } from '../core/i18n.js?v=115';
 
 /**
  * openTxForm({ tx })          — правка существующей операции

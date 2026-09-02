@@ -5,21 +5,24 @@
  * Firestore — спрятанной кнопки мало, чужие профили закрывает база.
  */
 
-import { el, render } from '../core/dom.js?v=114';
-import { state } from '../core/store.js?v=114';
-import { formatAmount } from '../core/money.js?v=114';
-import { listUsers, wantsMail } from '../services/account.js?v=114';
+import { el, render } from '../core/dom.js?v=115';
+import { state } from '../core/store.js?v=115';
+import { formatAmount } from '../core/money.js?v=115';
+import { listUsers, wantsMail } from '../services/account.js?v=115';
 import {
   loadPriceRows, summarizePrices, summarizeUsers,
   ownPriceRows, summarizeOwnSources, summarizeUsage,
-} from '../services/adminStats.js?v=114';
-import { loadUsage } from '../services/usage.js?v=114';
+} from '../services/adminStats.js?v=115';
+import { loadUsage } from '../services/usage.js?v=115';
+import {
+  saveDraft, loadDraft, listTemplates, saveTemplate, deleteTemplate,
+} from '../services/mailTemplates.js?v=115';
 import {
   buildLetter, sendBatch, translateLetter, localeOf, mailError, MAIL_BATCH,
-} from '../services/mail.js?v=114';
-import { toastError, toastOk } from '../ui/toast.js?v=114';
-import { section } from '../ui/section.js?v=114';
-import { t, plural, intlLocale, LOCALES } from '../core/i18n.js?v=114';
+} from '../services/mail.js?v=115';
+import { toastError, toastOk } from '../ui/toast.js?v=115';
+import { section } from '../ui/section.js?v=115';
+import { t, plural, intlLocale, LOCALES } from '../core/i18n.js?v=115';
 
 const cache = { users: null, query: '', prices: null, usage: null, tab: 'mine' };
 
@@ -31,16 +34,21 @@ const cache = { users: null, query: '', prices: null, usage: null, tab: 'mine' }
  * Незаполненные языки просто не отправляются: пустое письмо хуже молчания.
  */
 const letter = {
-  drafts: {
+  drafts: loadDraft() || {
     ru: { subject: '', body: '' },
     en: { subject: '', body: '' },
     he: { subject: '', body: '' },
   },
   lang: 'ru',
-  /** 'text' — обычные абзацы, 'html' — своя разметка с картинками и кнопками */
-  format: 'text',
   busy: false,
+  /** Шаблоны из базы, подгружаются при первом открытии экрана */
+  templates: null,
 };
+
+/** Черновик пишется в браузер на каждой букве — перезагрузка его не стирает. */
+function keepDraft() {
+  saveDraft(letter.drafts);
+}
 
 /**
  * Админ-панель на два язычка.
@@ -94,15 +102,14 @@ function mailer() {
         placeholder: t('mail.subjectPlaceholder'),
         value: draft.subject,
         dir,
-        oninput: (e) => { draft.subject = e.target.value; },
+        oninput: (e) => { draft.subject = e.target.value; keepDraft(); },
       }),
       el('textarea', {
         class: 'input textarea',
-        style: `margin-top:10px;min-height:${letter.format === 'html' ? 220 : 150}px`
-          + (letter.format === 'html' ? ';font-family:var(--mono);font-size:13px' : ''),
-        placeholder: t(letter.format === 'html' ? 'mail.htmlPlaceholder' : 'mail.bodyPlaceholder'),
-        dir: letter.format === 'html' ? 'ltr' : dir,
-        oninput: (e) => { draft.body = e.target.value; },
+        style: 'margin-top:10px;min-height:220px;font-family:var(--mono);font-size:13px',
+        placeholder: t('mail.bodyPlaceholder'),
+        dir: 'ltr',
+        oninput: (e) => { draft.body = e.target.value; keepDraft(); },
       }, draft.body),
       el('div', { class: 'hint', style: 'margin-top:8px' },
         t('mail.forLang', { n: recipientsBy(letter.lang).length })),
@@ -123,18 +130,6 @@ function mailer() {
       button.classList.toggle('is-active', LOCALES[index].code === letter.lang);
     });
   };
-
-  // Вид письма: простые абзацы или своя разметка.
-  const formats = el('div', { class: 'segmented', style: 'margin-bottom:12px' },
-    [['text', t('mail.formatText')], ['html', t('mail.formatHtml')]].map(([key, label]) =>
-      el('button', {
-        class: letter.format === key ? 'is-active' : '',
-        onclick: () => {
-          letter.format = key;
-          [...formats.children].forEach((b, i) => b.classList.toggle('is-active', i === (key === 'text' ? 0 : 1)));
-          draw();
-        },
-      }, label)));
 
   const translate = el('button', {
     class: 'chip',
@@ -157,7 +152,7 @@ function mailer() {
     section(t('mail.title'), [
       el('div', { class: 'card' }, [
         tabs,
-        formats,
+        templateBar(draw),
         fields,
         // Проверочные действия стоят вместе и выглядят как второстепенные:
         // рядом с ними не должно быть кнопки, которая пишет сразу всем.
@@ -206,6 +201,90 @@ function mailer() {
   ];
 }
 
+/**
+ * Строка шаблонов: сохранить нынешнее письмо, открыть или удалить прежнее.
+ *
+ * Письмо пишется долго и на трёх языках, а до сих пор жило только в полях:
+ * перезагрузка — и всё заново. Черновик теперь пишется в браузер сам, а под
+ * именем письмо кладётся в базу и открывается с любого устройства.
+ */
+function templateBar(redraw) {
+  const box = el('div', { style: 'margin-bottom:12px' });
+
+  const draw = () => {
+    const list = letter.templates || [];
+
+    render(box, [
+      el('div', { class: 'chip-row' }, [
+        ...list.map((item) => el('button', {
+          class: 'chip',
+          onclick: () => {
+            letter.drafts = {
+              ru: { ...item.drafts?.ru }, en: { ...item.drafts?.en }, he: { ...item.drafts?.he },
+            };
+            keepDraft();
+            redraw();
+            toastOk(t('mail.templateLoaded', { name: item.name }));
+          },
+        }, item.name)),
+
+        el('button', {
+          class: 'chip',
+          onclick: () => saveCurrent(draw),
+        }, `💾 ${t('mail.saveTemplate')}`),
+
+        list.length ? el('button', {
+          class: 'chip',
+          onclick: () => removeTemplate(draw),
+        }, `🗑 ${t('mail.deleteTemplate')}`) : null,
+      ]),
+    ]);
+  };
+
+  if (letter.templates === null) {
+    letter.templates = [];
+    listTemplates()
+      .then((list) => { letter.templates = list; draw(); })
+      .catch((error) => console.error('Шаблоны не загрузились', error));
+  }
+
+  draw();
+  return box;
+}
+
+async function saveCurrent(redraw) {
+  const suggested = letter.drafts[letter.lang].subject.trim();
+  const name = window.prompt(t('mail.templateName'), suggested);
+  if (!name?.trim()) return;
+
+  try {
+    await saveTemplate(name, letter.drafts);
+    letter.templates = await listTemplates();
+    redraw();
+    toastOk(t('mail.templateSaved', { name: name.trim() }));
+  } catch (error) {
+    console.error(error);
+    toastError(t('mail.templateFailed'));
+  }
+}
+
+async function removeTemplate(redraw) {
+  const list = letter.templates || [];
+  const name = window.prompt(t('mail.templateDelete', { names: list.map((i) => i.name).join(', ') }));
+  const found = list.find((item) => item.name === name?.trim());
+  if (!found) return;
+
+  try {
+    await deleteTemplate(found.id);
+    letter.templates = await listTemplates();
+    redraw();
+    toastOk(t('mail.templateDeleted', { name: found.name }));
+  } catch (error) {
+    console.error(error);
+    toastError(t('mail.templateFailed'));
+  }
+}
+
 /** Как письмо выглядит у получателя — прямо на странице, в рамке. */
 function showPreview(node) {
   const draft = letter.drafts[letter.lang];
@@ -214,9 +293,7 @@ function showPreview(node) {
     return;
   }
 
-  const { html } = buildLetter(
-    draft.subject.trim(), draft.body.trim(), letter.lang, letter.format,
-  );
+  const { html } = buildLetter(draft.subject.trim(), draft.body.trim(), letter.lang);
 
   render(node, el('iframe', {
     // Предпросмотр в отдельном окне: стили письма не должны потечь на
@@ -255,6 +332,7 @@ async function translateDraft(status, button) {
       if (result[code]?.subject) letter.drafts[code].subject = result[code].subject;
       if (result[code]?.body) letter.drafts[code].body = result[code].body;
     }
+    keepDraft();
 
     status.textContent = t('mail.translated');
     toastOk(t('mail.translated'));
@@ -286,7 +364,7 @@ async function sendTest(status, button) {
 
   try {
     const subject = draft.subject.trim();
-    const { html, text } = buildLetter(subject, draft.body.trim(), letter.lang, letter.format);
+    const { html, text } = buildLetter(subject, draft.body.trim(), letter.lang);
     const result = await sendBatch({
       subject, html, text, recipients: [{ email, name: state.profile?.name || '' }],
     });
@@ -349,7 +427,7 @@ async function sendLetter(status, button) {
   try {
     for (const part of plan) {
       const subject = part.draft.subject.trim();
-      const { html, text } = buildLetter(subject, part.draft.body.trim(), part.locale, letter.format);
+      const { html, text } = buildLetter(subject, part.draft.body.trim(), part.locale);
 
       for (let i = 0; i < part.people.length; i += MAIL_BATCH) {
         const chunk = part.people.slice(i, i + MAIL_BATCH)

@@ -10,6 +10,7 @@ rules_version = '2';
 //     └─ meta/{docId}          (rates, settings)
 //   prices/{priceId}           общая база цен, читают все
 //   usage/{month}              обезличенный счётчик способов записи
+//   mailTemplates/{id}         тексты рассылок, только админу
 //
 // Доступ к бюджету: только участники семьи (uid в memberUids).
 // Присоединиться можно, только предъявив код из ссылки-приглашения.
@@ -177,6 +178,12 @@ service cloud.firestore {
         && request.resource.data.uid == request.auth.uid;
       allow delete: if request.auth != null
         && resource.data.uid == request.auth.uid;
+    }
+
+    // Шаблоны писем: тексты рассылок, которые пишет и правит только админ.
+    // Обычным пользователям они не нужны и не видны.
+    match /mailTemplates/{templateId} {
+      allow read, write: if isAdmin();
     }
 
     // Счётчик способов записи: usage/2026-09 с полями photo, qr, sms, bill,

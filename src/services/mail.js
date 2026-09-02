@@ -10,9 +10,9 @@
  * одному письму на адрес, чтобы получатели не видели чужих почт.
  */
 
-import { PROXY_URL, SUPPORT_WHATSAPP } from '../config.js?v=114';
-import { idToken } from './auth.js?v=114';
-import { t, tIn, LOCALES } from '../core/i18n.js?v=114';
+import { PROXY_URL, SUPPORT_WHATSAPP } from '../config.js?v=115';
+import { idToken } from './auth.js?v=115';
+import { t, tIn, LOCALES } from '../core/i18n.js?v=115';
 
 /** Столько же, сколько прокси принимает за раз. */
 export const MAIL_BATCH = 50;
@@ -52,30 +52,37 @@ export function localeOf(user) {
  * Направление тоже здесь — иврит читается справа налево, и без dir абзацы
  * разъезжаются.
  */
-export function buildLetter(title, body, locale = 'ru', format = 'text') {
+export function buildLetter(title, body, locale = 'ru') {
   const rtl = locale === 'he';
   const dir = rtl ? 'rtl' : 'ltr';
   const align = rtl ? 'right' : 'left';
 
-  const paragraphs = String(body || '')
+  /*
+   * Разметка это или просто текст, видно по самому тексту: письмо с тегами
+   * вставляем как есть, письмо без них разбиваем на абзацы и экранируем.
+   * Спрашивать об этом человека незачем — он и так видит, что написал.
+   */
+  const raw = String(body || '');
+  const isMarkup = /<[a-z][\s\S]*>/i.test(raw);
+
+  const paragraphs = raw
     .split(/\n{2,}/)
     .map((part) => part.trim())
     .filter(Boolean);
 
-  const content = format === 'html'
-    ? String(body || '')
+  const content = isMarkup
+    ? raw
     : paragraphs
         .map((p) => `<p style="margin:0 0 14px;font-size:15px;line-height:1.6">${esc(p).replace(/\n/g, '<br>')}</p>`)
         .join('\n    ');
 
   /*
-   * Подвал письма. Раньше подпись и ссылка отписки шли одной строкой и
-   * читались как одно предложение — «Это письмо о новом… Отписаться». Теперь
-   * это три разных вещи, разведённые по строкам и по весу: связаться,
-   * объяснение, отписка.
+   * Подвал письма. Подпись, ссылка отписки и приглашение написать — три разные
+   * вещи, разведённые по строкам и по весу: одной строкой они склеивались в
+   * предложение и читались неверно.
    *
-   * Кнопка в WhatsApp стоит в каждом письме: человек, которому что-то не
-   * работает, отвечает туда, где ему удобно, а не ищет адрес поддержки.
+   * Кнопка в WhatsApp стоит в каждом письме: человек, у которого что-то не
+   * работает, пишет туда, где ему удобно, а не ищет адрес поддержки.
    */
   const contact = SUPPORT_WHATSAPP ? `
     <p style="margin:26px 0 12px;font-size:15px;line-height:1.6">${esc(tIn(locale, 'mail.contactHint'))}</p>
@@ -107,7 +114,7 @@ export function buildLetter(title, body, locale = 'ru', format = 'text') {
    * заодно и антиспам-фильтры, читают именно её. Из разметки её получаем,
    * выкинув теги, — отдельно писать то же самое дважды никто не станет.
    */
-  const plain = format === 'html' ? stripTags(String(body || '')) : paragraphs.join('\n\n');
+  const plain = isMarkup ? stripTags(raw) : paragraphs.join('\n\n');
   const write = SUPPORT_WHATSAPP
     ? `\n\n${tIn(locale, 'mail.contactHint')} https://wa.me/${SUPPORT_WHATSAPP}`
     : '';
