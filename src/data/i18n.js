@@ -173,6 +173,15 @@ export const DICT = {
     he: 'כתובת התמונה. שימו את הקובץ ב-assets/img/ ליד האפליקציה — ממקומות אחרים תוכנות דואר לא יציגו תמונות.',
   },
 
+  'mail.templates': { ru: 'Сохранённые письма', en: 'Saved letters', he: 'מכתבים שמורים' },
+  'mail.previewLight': { ru: 'Обычный вид', en: 'Normal', he: 'תצוגה רגילה' },
+  'mail.previewDark': { ru: 'Ночная почта', en: 'Dark mail client', he: 'דואר במצב כהה' },
+  'mail.previewHint': {
+    ru: 'Ночной вид приблизительный: почтовые программы перекрашивают письмо каждая по-своему, и запретить им это нельзя. Смотрите на одно — не пропало ли что-нибудь совсем.',
+    en: 'The dark view is approximate: every mail client recolours letters its own way and cannot be told not to. Look for one thing — whether anything disappears entirely.',
+    he: 'התצוגה הכהה משוערת: כל תוכנת דואר צובעת מחדש בדרכה שלה ואי אפשר למנוע זאת. בדקו דבר אחד — אם משהו נעלם לגמרי.',
+  },
+
   'mail.saveTemplate': { ru: 'Сохранить письмо', en: 'Save letter', he: 'שמירת מכתב' },
   'mail.deleteTemplate': { ru: 'Удалить', en: 'Delete', he: 'מחיקה' },
   'mail.templateName': {

@@ -964,7 +964,17 @@ button { cursor: pointer; border: none; background: none; }
   border-color: rgba(17, 20, 45, 0.14);
   color-scheme: light;
 }
-.rich:focus { outline: none; border-color: var(--sel-edge); box-shadow: 0 0 0 3px var(--sel-ring); }
+/*
+ * Правило .input:focus красит поле в цвет выбора — для обычного поля это
+ * верно, а лист письма от нажатия темнеть не должен: в нём лежит письмо со
+ * своими тёмными буквами. Поэтому фон возвращаем, отмечая фокус рамкой.
+ */
+.rich:focus {
+  outline: none;
+  background: #ffffff;
+  border-color: var(--sel-edge);
+  box-shadow: 0 0 0 3px var(--sel-ring);
+}
 .rich img { max-width: 100%; height: auto; }
 .rich a { color: #3a63ff; }
 

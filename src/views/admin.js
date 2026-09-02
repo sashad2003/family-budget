@@ -5,25 +5,25 @@
  * Firestore — спрятанной кнопки мало, чужие профили закрывает база.
  */
 
-import { el, render } from '../core/dom.js?v=117';
-import { state } from '../core/store.js?v=117';
-import { formatAmount } from '../core/money.js?v=117';
-import { listUsers, wantsMail } from '../services/account.js?v=117';
+import { el, render } from '../core/dom.js?v=118';
+import { state } from '../core/store.js?v=118';
+import { formatAmount } from '../core/money.js?v=118';
+import { listUsers, wantsMail } from '../services/account.js?v=118';
 import {
   loadPriceRows, summarizePrices, summarizeUsers,
   ownPriceRows, summarizeOwnSources, summarizeUsage,
-} from '../services/adminStats.js?v=117';
-import { loadUsage } from '../services/usage.js?v=117';
+} from '../services/adminStats.js?v=118';
+import { loadUsage } from '../services/usage.js?v=118';
 import {
   saveDraft, loadDraft, listTemplates, saveTemplate, deleteTemplate,
-} from '../services/mailTemplates.js?v=117';
+} from '../services/mailTemplates.js?v=118';
 import {
   buildLetter, sendBatch, translateLetter, localeOf, mailError, MAIL_BATCH,
-} from '../services/mail.js?v=117';
-import { toastError, toastOk } from '../ui/toast.js?v=117';
-import { section } from '../ui/section.js?v=117';
-import { richText } from '../ui/richText.js?v=117';
-import { t, plural, intlLocale, LOCALES } from '../core/i18n.js?v=117';
+} from '../services/mail.js?v=118';
+import { toastError, toastOk } from '../ui/toast.js?v=118';
+import { section } from '../ui/section.js?v=118';
+import { richText } from '../ui/richText.js?v=118';
+import { t, plural, intlLocale, LOCALES } from '../core/i18n.js?v=118';
 
 const cache = { users: null, query: '', prices: null, usage: null, tab: 'mine' };
 
@@ -224,6 +224,7 @@ function templateBar(redraw) {
     const list = letter.templates || [];
 
     render(box, [
+      el('div', { class: 'tx-group__date', style: 'margin-bottom:6px' }, t('mail.templates')),
       el('div', { class: 'chip-row' }, [
         ...list.map((item) => el('button', {
           class: 'chip',
@@ -294,7 +295,18 @@ async function removeTemplate(redraw) {
   }
 }
 
-/** Как письмо выглядит у получателя — прямо на странице, в рамке. */
+/**
+ * Как письмо выглядит у получателя — прямо на странице, в рамке.
+ *
+ * Два вида. Обычный — то, что придёт большинству. Тёмный — как письмо
+ * перекрашивают почтовые программы с ночной темой: они инвертируют цвета
+ * сами, письмо на это повлиять не может, и посмотреть на результат заранее
+ * полезнее, чем узнать о нём от людей.
+ *
+ * Инверсия здесь приблизительная: у каждого клиента она своя, точной картины
+ * не даст никто. Она отвечает на один вопрос — не пропадёт ли что-нибудь
+ * совсем.
+ */
 function showPreview(node) {
   const draft = letter.drafts[letter.lang];
   if (!draft.subject.trim() && !draft.body.trim()) {
@@ -303,14 +315,34 @@ function showPreview(node) {
   }
 
   const { html } = buildLetter(draft.subject.trim(), draft.body.trim(), letter.lang);
+  let dark = false;
 
-  render(node, el('iframe', {
-    // Предпросмотр в отдельном окне: стили письма не должны потечь на
-    // страницу, а скрипты из него — выполниться.
+  const frame = el('iframe', {
+    // Отдельное окно: стили письма не текут на страницу, скрипты из него не
+    // выполняются.
     srcdoc: html,
     sandbox: '',
-    style: 'width:100%;height:420px;margin-top:14px;border:1px solid var(--edge);border-radius:12px;background:#fff',
-  }));
+    style: 'width:100%;height:460px;border:1px solid var(--edge);border-radius:12px;background:#fff',
+  });
+
+  const modes = el('div', { class: 'segmented', style: 'margin:14px 0 10px' },
+    [[false, t('mail.previewLight')], [true, t('mail.previewDark')]].map(([value, label]) =>
+      el('button', {
+        class: dark === value ? 'is-active' : '',
+        onclick: (e) => {
+          dark = value;
+          [...modes.children].forEach((b) => b.classList.remove('is-active'));
+          e.target.classList.add('is-active');
+          frame.style.filter = dark ? 'invert(1) hue-rotate(180deg)' : '';
+          frame.style.background = dark ? '#1b1b20' : '#fff';
+        },
+      }, label)));
+
+  render(node, [
+    modes,
+    frame,
+    el('p', { class: 'hint', style: 'margin-top:8px' }, t('mail.previewHint')),
+  ]);
 }
 
 /** Перевод черновика на остальные языки — той же моделью, что читает чеки. */

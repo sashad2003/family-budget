@@ -5,10 +5,10 @@
  * кнопка «Ещё» там скрыта и меню не используется.
  */
 
-import { el } from '../core/dom.js?v=117';
-import { state, set } from '../core/store.js?v=117';
-import { openSheet, closeSheet } from '../ui/sheet.js?v=117';
-import { t } from '../core/i18n.js?v=117';
+import { el } from '../core/dom.js?v=118';
+import { state, set } from '../core/store.js?v=118';
+import { openSheet, closeSheet } from '../ui/sheet.js?v=118';
+import { t } from '../core/i18n.js?v=118';
 
 /** Разделы дока, спрятанные под «Ещё». Порядок — от частого к редкому. */
 export const MORE_ROUTES = ['list', 'prices', 'charts', 'admin', 'settings'];
