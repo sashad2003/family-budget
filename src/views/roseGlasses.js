@@ -12,10 +12,10 @@
  * на минуту, а не настройка, о которой потом забудут и испугаются баланса.
  */
 
-import { $, el } from '../core/dom.js?v=87';
-import { state, set } from '../core/store.js?v=87';
-import { formatAmount } from '../core/money.js?v=87';
-import { t } from '../core/i18n.js?v=87';
+import { $, el } from '../core/dom.js?v=88';
+import { state, set } from '../core/store.js?v=88';
+import { formatAmount } from '../core/money.js?v=88';
+import { t } from '../core/i18n.js?v=88';
 
 /** Мечта считается в евро независимо от валюты сводок: миллиард так миллиард. */
 const DREAM = 1_000_000_000;
@@ -24,10 +24,19 @@ export function isRose() {
   return state.rose === true;
 }
 
-/** Включение и выключение: перерисовку сводки делает подписка на состояние. */
+/**
+ * Включение и выключение: перерисовку сводки делает подписка на состояние.
+ *
+ * Надевая очки, заодно уходим на обзор: миллиард нарисован там, а кнопка
+ * стоит в шапке, которая видна с любого экрана. Нажать её из списка операций
+ * и не увидеть ничего — половина шутки пропадала.
+ *
+ * Снимая, экран не меняем: человек уже смотрит на обзор, и уносить его
+ * куда-то ещё после возврата к настоящим цифрам незачем.
+ */
 export function setRose(on) {
   if (on === isRose()) return;
-  set({ rose: on });
+  set(on ? { rose: on, route: 'dashboard' } : { rose: on });
   if (on) startSky(); else stopSky();
   drawRoseButton();
 }
