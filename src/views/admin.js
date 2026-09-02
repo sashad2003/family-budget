@@ -5,18 +5,18 @@
  * Firestore — спрятанной кнопки мало, чужие профили закрывает база.
  */
 
-import { el, render } from '../core/dom.js?v=93';
-import { state } from '../core/store.js?v=93';
-import { formatAmount } from '../core/money.js?v=93';
-import { listUsers } from '../services/account.js?v=93';
+import { el, render } from '../core/dom.js?v=94';
+import { state } from '../core/store.js?v=94';
+import { formatAmount } from '../core/money.js?v=94';
+import { listUsers } from '../services/account.js?v=94';
 import {
   loadPriceRows, summarizePrices, summarizeUsers,
   ownPriceRows, summarizeOwnSources, summarizeUsage,
-} from '../services/adminStats.js?v=93';
-import { loadUsage } from '../services/usage.js?v=93';
-import { toastError, toastOk } from '../ui/toast.js?v=93';
-import { section } from '../ui/section.js?v=93';
-import { t, intlLocale } from '../core/i18n.js?v=93';
+} from '../services/adminStats.js?v=94';
+import { loadUsage } from '../services/usage.js?v=94';
+import { toastError, toastOk } from '../ui/toast.js?v=94';
+import { section } from '../ui/section.js?v=94';
+import { t, plural, intlLocale } from '../core/i18n.js?v=94';
 
 const cache = { users: null, query: '', prices: null, usage: null };
 
@@ -85,7 +85,7 @@ function mine() {
     stats.shops.length
       ? section(t('admin.myShops'), el('div', { class: 'card' },
           stats.shops.slice(0, 15).map((shop) => rankRow(shop.name, money(shop.total),
-            t('admin.shopMeta', { items: shop.items, rows: shop.count })))))
+            shopMeta(shop)))))
       : null,
   ];
 }
@@ -180,7 +180,7 @@ async function loadMarket(node, force = false) {
 
     section(t('admin.topShops'), [
       el('div', { class: 'card' }, stats.shops.slice(0, 20).map((shop) => rankRow(
-        shop.name, money(shop.total), t('admin.shopMeta', { items: shop.items, rows: shop.count }),
+        shop.name, money(shop.total), shopMeta(shop),
       ))),
     ]),
 
@@ -193,10 +193,25 @@ async function loadMarket(node, force = false) {
 
     section(t('admin.byMonth'), [
       el('div', { class: 'card' }, stats.months.slice(-12).reverse().map((row) => rankRow(
-        row.month, money(row.total), t('admin.rowsShort', { n: row.count }),
+        row.month, money(row.total), plural(row.count, ['покупка', 'покупки', 'покупок'], 'admin.rowsShort'),
       ))),
     ]),
   ]);
+}
+
+/**
+ * «32 названия · 36 покупок» — то, из чего сложилась сумма магазина.
+ *
+ * Раньше здесь стояли «32 тов. · 36 зап.»: сокращения коротко влезали, но
+ * прочесть их было нельзя — «зап.» ничего не значит. Записи в общей базе это
+ * позиции чеков, то есть покупки, а товары — сколько среди них разных
+ * названий.
+ */
+function shopMeta(shop) {
+  return t('admin.shopMeta', {
+    items: plural(shop.items, ['название', 'названия', 'названий'], 'admin.namesShort'),
+    rows: plural(shop.count, ['покупка', 'покупки', 'покупок'], 'admin.rowsShort'),
+  });
 }
 
 /** Строка «название — сумма — пояснение справа». */
@@ -212,7 +227,7 @@ function rankRow(name, value, meta) {
 
 /** «Цена от и до» — по ней видно разброс между магазинами. */
 function priceRange(item, money) {
-  if (!item.min && !item.max) return t('admin.rowsShort', { n: item.count });
+  if (!item.min && !item.max) return plural(item.count, ['покупка', 'покупки', 'покупок'], 'admin.rowsShort');
   if (item.min === item.max) return money(item.min);
   return `${money(item.min)} — ${money(item.max)}`;
 }
