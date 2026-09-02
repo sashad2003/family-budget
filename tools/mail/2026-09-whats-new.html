@@ -9,8 +9,10 @@
 
   Вёрстка нарочно простая: таблицы и стили прямо в тегах. Почтовые программы
   вырезают внешние таблицы стилей, а flex и grid половина из них не понимает.
-  Картинок нет намеренно: у многих они не загружаются по умолчанию, и письмо
-  должно читаться без них — поэтому сравнение цен нарисовано разметкой.
+
+  Картинка одна, лежит в assets/img/ рядом с приложением и берётся по прямой
+  ссылке. Всё, что она показывает, продублировано текстом ниже: у многих
+  картинки в письмах не загружаются, и письмо должно читаться без них.
 -->
 
 <p style="margin:0 0 18px;font-size:15px;line-height:1.6">За последний месяц в приложении появилось несколько вещей, ради которых стоит заглянуть.</p>
@@ -18,31 +20,21 @@
 <h2 style="margin:26px 0 8px;font-size:17px;font-weight:600;color:#14141f">Видно, где товар дешевле</h2>
 <p style="margin:0 0 12px;font-size:15px;line-height:1.6">Цены собираются из чеков — ваших и других пользователей. Наберите название товара на вкладке «Цены» и увидите, сколько он стоит в каждом магазине и когда там были в последний раз.</p>
 
-<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 12px;border-collapse:collapse;background:#f5f6fa;border-radius:12px">
-  <tr>
-    <td style="padding:14px 16px 6px;font-size:13px;color:#66667c">Помидоры, кг · 2 магазина</td>
-  </tr>
-  <tr>
-    <td style="padding:6px 16px">
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-        <tr>
-          <td style="font-size:15px;color:#14141f">Lidl<span style="color:#66667c">&nbsp;· 31 августа</span></td>
-          <td align="right" style="font-size:15px;font-weight:600;color:#197a4d;white-space:nowrap">109,99 дин</td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-  <tr>
-    <td style="padding:6px 16px 16px">
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-        <tr>
-          <td style="font-size:15px;color:#14141f">Maxi<span style="color:#66667c">&nbsp;· 26 августа</span></td>
-          <td align="right" style="font-size:15px;font-weight:600;color:#14141f;white-space:nowrap">169,99 дин <span style="color:#af3f3f;font-weight:400">+55%</span></td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-</table>
+<!--
+  Скриншот экрана «Цены». Ссылка прямая, на файл в самом приложении, — иначе
+  почтовые программы её не покажут.
+
+  Под картинкой стоит та же цифра словами. Картинки в письмах у многих не
+  загружаются по умолчанию, и без этой строки главное — что один и тот же
+  товар стоит в полтора раза дороже — просто пропало бы.
+-->
+<p style="margin:0 0 10px">
+  <img src="https://mybudget.sitemarket.co.il/assets/img/prices.jpg"
+       alt="Экран «Цены»: помидоры в Lidl 109,99 динара, в Maxi 169,99 динара"
+       width="468"
+       style="display:block;width:100%;max-width:468px;height:auto;border-radius:14px;border:1px solid #e2e4ee">
+</p>
+<p style="margin:0 0 12px;font-size:14px;line-height:1.6;color:#66667c">Помидоры в конце августа: <b style="color:#197a4d">109,99 дин</b> в Lidl и <b style="color:#14141f">169,99 дин</b> в Maxi — на 55% дороже за тот же килограмм.</p>
 
 <h2 style="margin:26px 0 8px;font-size:17px;font-weight:600;color:#14141f">Светлая тема</h2>
 <p style="margin:0 0 12px;font-size:15px;line-height:1.6">Ночная нравится не всем и не всегда удобна днём. В настройках теперь три варианта: светлая, тёмная и «как в системе» — тогда приложение переключается вместе с телефоном.</p>
