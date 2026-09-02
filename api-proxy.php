@@ -15,6 +15,7 @@ declare(strict_types=1);
  *   receipt_url    — распознать страницу чека по ссылке (QR с инвойса)
  *   send_mail      — письмо о новом в приложении, только админу
  *   translate_mail — перевод письма на другие языки, только админу
+ *   usage_stats    — расход на Claude и остаток на счету, только админу
  */
 
 ini_set('display_errors', '0');
@@ -149,6 +150,9 @@ switch ($action) {
 
     case 'translate_mail':
         respond(200, translateMail($config, $user, $req));
+
+    case 'usage_stats':
+        respond(200, usageStats($config, $user, $req));
 
     default:
         respond(400, ['error' => 'unknown_action']);
@@ -344,6 +348,7 @@ TXT;
         if (($block['type'] ?? '') === 'text') {
             $parsed = json_decode((string)$block['text'], true);
             if (is_array($parsed) && isset($parsed['items'])) {
+                costOf($resp['usage'] ?? [], 'translate');
                 return ['ok' => true, 'translation' => $parsed];
             }
         }
@@ -968,7 +973,7 @@ TXT;
  * Записываем в журнал сервера и отдаём клиенту: без реальных чисел нельзя
  * решить, окупается ли бесплатное пользование и сколько просить за подписку.
  */
-function costOf(array $usage): array
+function costOf(array $usage, string $kind = 'receipt'): array
 {
     $in  = (int)($usage['input_tokens'] ?? 0);
     $out = (int)($usage['output_tokens'] ?? 0);
@@ -978,7 +983,170 @@ function costOf(array $usage): array
 
     $cost = $in / 1000000 * PRICE_IN_PER_MTOK + $out / 1000000 * PRICE_OUT_PER_MTOK;
 
-    error_log(sprintf('budget receipt: in=%d out=%d cost=$%.4f', $in, $out, $cost));
+    error_log(sprintf('budget %s: in=%d out=%d cost=$%.4f', $kind, $in, $out, $cost));
+    recordSpend($kind, $in, $out, $cost);
 
     return ['input' => $in, 'output' => $out, 'cost_usd' => round($cost, 4)];
+}
+
+/**
+ * Журнал расхода на Claude.
+ *
+ * Anthropic не отдаёт остаток на счету никаким запросом — эту цифру видно
+ * только в личном кабинете. Поэтому остаток считаем сами: админ раз в
+ * какое-то время вписывает, сколько там лежит сейчас, а сервер вычитает из
+ * этого всё, что потрачено с того момента.
+ *
+ * Журнал лежит файлом рядом с прокси: базы у сервера нет, а терять счёт
+ * нельзя — деньги кончатся молча, и люди перестанут сканировать чеки,
+ * не понимая почему.
+ */
+function spendFile(): string
+{
+    $dir = __DIR__ . '/data';
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0750, true);
+        // Журнал лежит в папке сайта, и без запрета его можно было бы
+        // открыть по прямой ссылке. Внутри нет ключей, но и показывать
+        // посторонним, сколько потрачено, незачем.
+        @file_put_contents($dir . '/.htaccess', "Require all denied\nDeny from all\n");
+    }
+    return $dir . '/claude-spend.json';
+}
+
+function readSpend(): array
+{
+    $file = spendFile();
+    if (!is_file($file)) {
+        return ['months' => [], 'spent' => 0.0, 'calls' => 0, 'balance' => null];
+    }
+    $data = json_decode((string)@file_get_contents($file), true);
+    if (!is_array($data)) {
+        return ['months' => [], 'spent' => 0.0, 'calls' => 0, 'balance' => null];
+    }
+    $data['months'] = is_array($data['months'] ?? null) ? $data['months'] : [];
+    $data['spent'] = (float)($data['spent'] ?? 0);
+    $data['calls'] = (int)($data['calls'] ?? 0);
+    return $data;
+}
+
+/**
+ * Прибавляет один вызов к журналу.
+ *
+ * Запись под замком: два человека могут сканировать чеки в одну секунду, и
+ * без блокировки один вызов затёр бы другой.
+ */
+function recordSpend(string $kind, int $in, int $out, float $cost): void
+{
+    $file = spendFile();
+    $handle = @fopen($file, 'c+');
+    if (!$handle) {
+        error_log('budget spend: журнал недоступен, ' . $file);
+        return;
+    }
+
+    if (flock($handle, LOCK_EX)) {
+        $raw = (string)stream_get_contents($handle);
+        $data = json_decode($raw, true);
+        if (!is_array($data)) {
+            $data = ['months' => [], 'spent' => 0.0, 'calls' => 0, 'balance' => null];
+        }
+
+        $month = gmdate('Y-m');
+        $row = $data['months'][$month] ?? ['calls' => 0, 'input' => 0, 'output' => 0, 'cost' => 0.0, 'kinds' => []];
+        $row['calls'] = (int)$row['calls'] + 1;
+        $row['input'] = (int)$row['input'] + $in;
+        $row['output'] = (int)$row['output'] + $out;
+        $row['cost'] = round((float)$row['cost'] + $cost, 6);
+        $row['kinds'][$kind] = (int)($row['kinds'][$kind] ?? 0) + 1;
+
+        $data['months'][$month] = $row;
+        $data['spent'] = round((float)($data['spent'] ?? 0) + $cost, 6);
+        $data['calls'] = (int)($data['calls'] ?? 0) + 1;
+        // Журнал храним за два года: дальше он никому не нужен, а файл растёт.
+        if (count($data['months']) > 24) {
+            ksort($data['months']);
+            $data['months'] = array_slice($data['months'], -24, null, true);
+        }
+
+        ftruncate($handle, 0);
+        rewind($handle);
+        fwrite($handle, json_encode($data, JSON_UNESCAPED_UNICODE));
+        fflush($handle);
+        flock($handle, LOCK_UN);
+    }
+    fclose($handle);
+}
+
+/**
+ * Что показать админу: расход по месяцам и остаток.
+ *
+ * Остаток — не из Anthropic: такого запроса у них нет. Считается от цифры,
+ * которую админ переписал из кабинета, минус всё, что потрачено после.
+ */
+function usageStats(array $config, array $user, array $req): array
+{
+    requireAdmin($config, $user);
+
+    // Админ переписал остаток из кабинета — запоминаем вместе с тем, сколько
+    // к этому моменту насчитал наш собственный журнал.
+    if (isset($req['balance_usd'])) {
+        $amount = (float)$req['balance_usd'];
+        if ($amount < 0 || $amount > 100000) {
+            respond(400, ['error' => 'balance_invalid']);
+        }
+        $handle = @fopen(spendFile(), 'c+');
+        if ($handle && flock($handle, LOCK_EX)) {
+            $data = json_decode((string)stream_get_contents($handle), true);
+            if (!is_array($data)) {
+                $data = ['months' => [], 'spent' => 0.0, 'calls' => 0];
+            }
+            $data['balance'] = [
+                'usd' => round($amount, 2),
+                'at' => time(),
+                'spent_at' => round((float)($data['spent'] ?? 0), 6),
+            ];
+            ftruncate($handle, 0);
+            rewind($handle);
+            fwrite($handle, json_encode($data, JSON_UNESCAPED_UNICODE));
+            fflush($handle);
+            flock($handle, LOCK_UN);
+        }
+        if ($handle) {
+            fclose($handle);
+        }
+    }
+
+    $data = readSpend();
+    $balance = $data['balance'] ?? null;
+
+    $left = null;
+    if (is_array($balance)) {
+        $left = round((float)$balance['usd'] - ((float)$data['spent'] - (float)($balance['spent_at'] ?? 0)), 4);
+    }
+
+    ksort($data['months']);
+
+    return [
+        'ok' => true,
+        'months' => $data['months'],
+        'spent' => round((float)$data['spent'], 4),
+        'calls' => (int)$data['calls'],
+        'balance' => $balance,
+        'left_usd' => $left,
+        'model' => (string)($config['model'] ?? ''),
+        'price_in' => PRICE_IN_PER_MTOK,
+        'price_out' => PRICE_OUT_PER_MTOK,
+        // Журнал начали вести не с первого дня: до него расход не считался.
+        'writable' => is_writable(dirname(spendFile())) || is_writable(spendFile()),
+    ];
+}
+
+/** Действия только для админа: список почт лежит в config.php рядом с ключами. */
+function requireAdmin(array $config, array $user): void
+{
+    $admins = array_map('strtolower', $config['admin_emails'] ?? []);
+    if ($admins === [] || !in_array($user['email'], $admins, true)) {
+        respond(403, ['error' => 'not_admin']);
+    }
 }

@@ -5,28 +5,29 @@
  * Firestore — спрятанной кнопки мало, чужие профили закрывает база.
  */
 
-import { el, render } from '../core/dom.js?v=123';
-import { state } from '../core/store.js?v=123';
-import { formatAmount } from '../core/money.js?v=123';
-import { listUsers, wantsMail } from '../services/account.js?v=123';
+import { el, render } from '../core/dom.js?v=124';
+import { state } from '../core/store.js?v=124';
+import { formatAmount } from '../core/money.js?v=124';
+import { listUsers, wantsMail } from '../services/account.js?v=124';
 import {
   loadPriceRows, summarizePrices, summarizeUsers,
   ownPriceRows, summarizeOwnSources, summarizeUsage,
-} from '../services/adminStats.js?v=123';
-import { loadUsage } from '../services/usage.js?v=123';
+} from '../services/adminStats.js?v=124';
+import { loadUsage } from '../services/usage.js?v=124';
+import { loadSpend, summarizeSpend, LOW_BALANCE_USD } from '../services/spend.js?v=124';
 import {
   saveDraft, loadDraft, listTemplates, saveTemplate, deleteTemplate,
-} from '../services/mailTemplates.js?v=123';
+} from '../services/mailTemplates.js?v=124';
 import {
   buildLetter, sendBatch, translateLetter, letterTexts, applyLetterTexts,
   localeOf, mailError, MAIL_BATCH,
-} from '../services/mail.js?v=123';
-import { toastError, toastOk } from '../ui/toast.js?v=123';
-import { section } from '../ui/section.js?v=123';
-import { richText } from '../ui/richText.js?v=123';
-import { t, plural, intlLocale, LOCALES } from '../core/i18n.js?v=123';
+} from '../services/mail.js?v=124';
+import { toastError, toastOk } from '../ui/toast.js?v=124';
+import { section } from '../ui/section.js?v=124';
+import { richText } from '../ui/richText.js?v=124';
+import { t, plural, intlLocale, LOCALES } from '../core/i18n.js?v=124';
 
-const cache = { users: null, query: '', prices: null, usage: null, tab: 'mine' };
+const cache = { users: null, query: '', prices: null, usage: null, spend: null, tab: 'mine' };
 
 /**
  * Черновик письма живёт до перезагрузки: набранное не должно теряться.
@@ -499,10 +500,16 @@ function others() {
     oninput: (e) => { cache.query = e.target.value; draw(body); },
   });
 
+  const spend = el('div');
+
   load(body, false, activity);
   loadMarket(market);
+  loadSpendCard(spend);
 
   return [
+    // Деньги на распознавание — первым делом: кончатся они молча, и чеки
+    // перестанут сканироваться у всех сразу.
+    spend,
     activity,
     mailer(),
     market,
@@ -718,6 +725,119 @@ function priceRange(item, money) {
   if (!item.min && !item.max) return plural(item.count, ['покупка', 'покупки', 'покупок'], 'admin.rowsShort');
   if (item.min === item.max) return money(item.min);
   return `${money(item.min)} — ${money(item.max)}`;
+}
+
+/**
+ * Деньги на распознавание чеков.
+ *
+ * Расход считает сервер по каждому ответу модели — браузер видит только свои
+ * обращения, а платим мы за все. Остаток же Anthropic по запросу не отдаёт:
+ * его переписывают из кабинета руками, и дальше приложение само вычитает.
+ */
+async function loadSpendCard(node, force = false) {
+  if (!cache.spend || force) {
+    render(node, el('div', { class: 'empty' }, el('div', { class: 'spinner' })));
+
+    try {
+      cache.spend = summarizeSpend(await loadSpend());
+    } catch (error) {
+      console.error('Расход на Claude недоступен', error);
+      render(node, section(t('spend.title'),
+        el('div', { class: 'card' }, el('div', { class: 'hint' }, t('spend.failed')))));
+      return;
+    }
+  }
+
+  drawSpend(node);
+}
+
+function drawSpend(node) {
+  const data = cache.spend;
+  const usd = (value) => `$${value.toFixed(value < 1 ? 4 : 2)}`;
+  const num = (value) => value.toLocaleString(intlLocale());
+
+  const field = el('input', {
+    class: 'input',
+    type: 'number',
+    step: '0.01',
+    min: '0',
+    inputmode: 'decimal',
+    placeholder: t('spend.balanceLabel'),
+    value: data.left === null ? '' : String(data.left),
+  });
+
+  const save = el('button', {
+    class: 'chip',
+    onclick: async () => {
+      const amount = Number(field.value);
+      if (!Number.isFinite(amount) || amount < 0) return;
+
+      save.disabled = true;
+      try {
+        cache.spend = summarizeSpend(await loadSpend(amount));
+        toastOk(t('spend.balanceSaved'));
+        drawSpend(node);
+      } catch (error) {
+        console.error(error);
+        toastError(t('spend.failed'));
+        save.disabled = false;
+      }
+    },
+  }, t('spend.balanceSave'));
+
+  const rows = [
+    statRow(t('spend.left'), data.left === null ? t('spend.leftUnknown') : usd(data.left)),
+  ];
+
+  // «На сколько хватит» имеет смысл, только когда известны и остаток, и
+  // средняя цена чека: без одного из них это гадание.
+  if (data.scansLeft !== null) {
+    rows.push(statRow(t('spend.scansLeft'), t('spend.scans', { n: num(data.scansLeft) })));
+  }
+  if (data.thisMonth) {
+    rows.push(statRow(t('spend.spentMonth'), usd(data.thisMonth.cost)));
+  }
+  rows.push(statRow(t('spend.spentAll'), usd(data.spent)));
+  rows.push(statRow(t('spend.calls'), num(data.calls)));
+  if (data.calls) {
+    rows.push(statRow(t('spend.avg'), usd(data.avg)));
+  }
+
+  const warn = data.left !== null && data.left < LOW_BALANCE_USD
+    ? el('p', { class: 'hint', style: 'color:var(--expense)' }, t('spend.low'))
+    : null;
+
+  const byMonth = data.months.length > 1
+    ? [
+        el('div', { class: 'tx-group__date' }, t('spend.byMonth')),
+        el('div', { class: 'card' }, data.months.slice(0, 12).map((row) => rankRow(
+          row.month,
+          usd(row.cost),
+          t('spend.tokens', { in: num(row.input), out: num(row.output) }),
+        ))),
+      ]
+    : [];
+
+  render(node, section(t('spend.title'), [
+    el('div', { class: 'card' }, rows),
+    warn,
+    ...byMonth,
+    el('div', { class: 'card' }, [
+      el('label', { class: 'field__label' }, t('spend.balanceLabel')),
+      field,
+      el('div', { class: 'chip-row', style: 'margin-top:10px' }, [
+        save,
+        data.balanceAt
+          ? el('span', { class: 'hint' }, t('spend.balanceAt', {
+              date: data.balanceAt.toLocaleDateString(intlLocale()),
+            }))
+          : null,
+      ]),
+      el('p', { class: 'hint' }, t('spend.hint')),
+      data.writable ? null : el('p', { class: 'hint', style: 'color:var(--expense)' }, t('spend.notWritable')),
+      el('p', { class: 'hint' }, t('spend.since')),
+    ]),
+  ], el('button', { class: 'chip', onclick: () => loadSpendCard(node, true) }, t('common.refresh'))));
 }
 
 function statRow(label, value) {
