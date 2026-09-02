@@ -40,9 +40,9 @@ import {
   limit,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=101';
-import { ADMIN_EMAILS, LEGACY_FAMILY_ID, TRIAL_DAYS } from '../config.js?v=101';
-import { t } from '../core/i18n.js?v=101';
+import { db } from '../core/firebase.js?v=102';
+import { ADMIN_EMAILS, LEGACY_FAMILY_ID, TRIAL_DAYS } from '../config.js?v=102';
+import { t, getLocale } from '../core/i18n.js?v=102';
 
 const userRef = (uid) => doc(db, 'users', uid);
 const codeRef = (code) => doc(db, 'inviteCodes', String(code));
@@ -105,6 +105,8 @@ async function createProfile(user, { familyId, name, phone, marketing }) {
     marketing: Boolean(marketing),
     /** Явный отказ. Пустая галочка в анкете — тоже ответ, и он записывается. */
     mailOptOut: !marketing,
+    /** Язык, на котором человек завёл бюджет: на нём и будем ему писать. */
+    locale: getLocale(),
     createdAt: serverTimestamp(),
     trialEndsAt: trialEndsAt.toISOString().slice(0, 10),
     subscription: 'trial',
@@ -144,6 +146,17 @@ async function createFamily(user, name) {
  */
 export async function setMarketing(uid, agreed) {
   await updateDoc(userRef(uid), { marketing: Boolean(agreed), mailOptOut: !agreed });
+}
+
+/**
+ * Язык человека — в его профиле.
+ *
+ * Выбор языка живёт в браузере, и о нём знает только само устройство. Письма
+ * пишутся с другого: чтобы прислать их на понятном языке, выбор надо где-то
+ * держать общим — здесь.
+ */
+export async function setProfileLocale(uid, locale) {
+  await updateDoc(userRef(uid), { locale: String(locale || '') });
 }
 
 /**

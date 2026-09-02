@@ -10,7 +10,7 @@
  * где сторона задана жёстко (см. [dir="rtl"] в стилях).
  */
 
-import { DICT } from '../data/i18n.js?v=101';
+import { DICT } from '../data/i18n.js?v=102';
 
 /** short — метка на кнопке в шапке; для иврита привычнее IL, а не HE. */
 export const LOCALES = [
@@ -73,10 +73,21 @@ export function applyDocumentLocale() {
  * в отличие от пустой строки, и понятно, что именно не переведено.
  */
 export function t(key, params = null) {
+  return tIn(locale, key, params);
+}
+
+/**
+ * То же, но на заданном языке.
+ *
+ * Нужно письмам: они пишутся не тому, кто сейчас смотрит в экран, а другому
+ * человеку, и подпись под письмом должна быть на его языке, а не на языке
+ * отправителя.
+ */
+export function tIn(code, key, params = null) {
   const entry = DICT[key];
   if (!entry) return key;
 
-  let text = entry[locale] ?? entry[DEFAULT] ?? key;
+  let text = entry[code] ?? entry[DEFAULT] ?? key;
   if (params) {
     for (const [name, value] of Object.entries(params)) {
       text = text.replaceAll(`{${name}}`, String(value));

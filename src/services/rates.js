@@ -11,10 +11,10 @@
 
 import { doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=101';
-import { FALLBACK_RATES, PROXY_URL } from '../config.js?v=101';
-import { getFamilyId } from '../core/session.js?v=101';
-import { idToken } from './auth.js?v=101';
+import { db } from '../core/firebase.js?v=102';
+import { FALLBACK_RATES, PROXY_URL } from '../config.js?v=102';
+import { getFamilyId } from '../core/session.js?v=102';
+import { idToken } from './auth.js?v=102';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const ratesRef = () => doc(db, 'families', getFamilyId(), 'meta', 'rates');

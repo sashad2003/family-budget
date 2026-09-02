@@ -148,9 +148,19 @@ export const DICT = {
   },
   'mail.send': { ru: 'Отправить', en: 'Send', he: 'שליחה' },
   'mail.hint': {
-    ru: 'Уходит всем, кто не отписался, по одному письму на человека — чужих адресов в письме не видно. Ссылка «отписаться» ставится сама.',
-    en: 'Goes to everyone who has not opted out, one email per person — nobody sees anyone else’s address. The unsubscribe link is added automatically.',
-    he: 'נשלח לכל מי שלא ביטל, מייל אחד לכל אדם — אף אחד לא רואה כתובות של אחרים. קישור הסרה מתווסף מעצמו.',
+    ru: 'Каждому приходит письмо на его языке — том, что он выбрал в приложении. Языки с пустым текстом не отправляются. Уходит по одному письму на человека, чужих адресов в нём не видно, ссылка «отписаться» ставится сама.',
+    en: 'Everyone gets the letter in their own language — the one they picked in the app. Languages left empty are not sent. One email per person, nobody sees anyone else’s address, and the unsubscribe link is added automatically.',
+    he: 'כל אחד מקבל את המכתב בשפה שלו — זו שבחר באפליקציה. שפות שנשארו ריקות לא נשלחות. מייל אחד לכל אדם, אף אחד לא רואה כתובות של אחרים, וקישור ההסרה מתווסף מעצמו.',
+  },
+  'mail.forLang': {
+    ru: 'На этом языке приложение у {n} человек',
+    en: '{n} people use the app in this language',
+    he: '{n} אנשים משתמשים באפליקציה בשפה הזו',
+  },
+  'mail.nothingToSend': {
+    ru: 'Нечего отправлять: заполните тему и текст хотя бы для одного языка, на котором есть люди',
+    en: 'Nothing to send: fill in the subject and text for at least one language that has people',
+    he: 'אין מה לשלוח: מלאו נושא וטקסט לפחות בשפה אחת שיש בה אנשים',
   },
   'mail.confirm': {
     ru: 'Отправить письмо {n} людям?',

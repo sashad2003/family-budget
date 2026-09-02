@@ -5,24 +5,30 @@
  * Firestore — спрятанной кнопки мало, чужие профили закрывает база.
  */
 
-import { el, render } from '../core/dom.js?v=101';
-import { state } from '../core/store.js?v=101';
-import { formatAmount } from '../core/money.js?v=101';
-import { listUsers, wantsMail } from '../services/account.js?v=101';
+import { el, render } from '../core/dom.js?v=102';
+import { state } from '../core/store.js?v=102';
+import { formatAmount } from '../core/money.js?v=102';
+import { listUsers, wantsMail } from '../services/account.js?v=102';
 import {
   loadPriceRows, summarizePrices, summarizeUsers,
   ownPriceRows, summarizeOwnSources, summarizeUsage,
-} from '../services/adminStats.js?v=101';
-import { loadUsage } from '../services/usage.js?v=101';
-import { buildLetter, sendBatch, MAIL_BATCH } from '../services/mail.js?v=101';
-import { toastError, toastOk } from '../ui/toast.js?v=101';
-import { section } from '../ui/section.js?v=101';
-import { t, plural, intlLocale } from '../core/i18n.js?v=101';
+} from '../services/adminStats.js?v=102';
+import { loadUsage } from '../services/usage.js?v=102';
+import { buildLetter, sendBatch, localeOf, MAIL_BATCH } from '../services/mail.js?v=102';
+import { toastError, toastOk } from '../ui/toast.js?v=102';
+import { section } from '../ui/section.js?v=102';
+import { t, plural, intlLocale, LOCALES } from '../core/i18n.js?v=102';
 
 const cache = { users: null, query: '', prices: null, usage: null, tab: 'mine' };
 
-/** Черновик письма живёт до перезагрузки: набранное не должно теряться. */
-const letter = { subject: '', body: '', busy: false };
+/**
+ * Черновик письма живёт до перезагрузки: набранное не должно теряться.
+ *
+ * Текст пишется на каждом языке отдельно — переводить некому, а прислать
+ * человеку письмо на языке, которого он не знает, значит не написать вовсе.
+ * Незаполненные языки просто не отправляются: пустое письмо хуже молчания.
+ */
+const letter = { drafts: { ru: { subject: '', body: '' }, en: { subject: '', body: '' }, he: { subject: '', body: '' } }, lang: 'ru', busy: false };
 
 /**
  * Админ-панель на два язычка.
@@ -63,20 +69,45 @@ export function renderAdmin() {
  */
 function mailer() {
   const status = el('div', { class: 'hint', style: 'margin-top:10px' });
+  const fields = el('div');
 
-  const subject = el('input', {
-    class: 'input',
-    placeholder: t('mail.subjectPlaceholder'),
-    value: letter.subject,
-    oninput: (e) => { letter.subject = e.target.value; },
-  });
+  const draw = () => {
+    const draft = letter.drafts[letter.lang];
+    const people = recipientsBy(letter.lang);
 
-  const body = el('textarea', {
-    class: 'input textarea',
-    style: 'margin-top:10px;min-height:150px',
-    placeholder: t('mail.bodyPlaceholder'),
-    oninput: (e) => { letter.body = e.target.value; },
-  }, letter.body);
+    render(fields, [
+      el('input', {
+        class: 'input',
+        placeholder: t('mail.subjectPlaceholder'),
+        value: draft.subject,
+        dir: letter.lang === 'he' ? 'rtl' : 'ltr',
+        oninput: (e) => { draft.subject = e.target.value; },
+      }),
+      el('textarea', {
+        class: 'input textarea',
+        style: 'margin-top:10px;min-height:150px',
+        placeholder: t('mail.bodyPlaceholder'),
+        dir: letter.lang === 'he' ? 'rtl' : 'ltr',
+        oninput: (e) => { draft.body = e.target.value; },
+      }, draft.body),
+      el('div', { class: 'hint', style: 'margin-top:8px' },
+        t('mail.forLang', { n: people.length })),
+    ]);
+  };
+
+  // Язычки языков: у каждого свой текст, и рядом видно, скольким он уйдёт.
+  const tabs = el('div', { class: 'segmented', style: 'margin-bottom:12px' },
+    LOCALES.map((lang) => el('button', {
+      class: letter.lang === lang.code ? 'is-active' : '',
+      lang: lang.code,
+      onclick: () => { letter.lang = lang.code; drawTabs(); draw(); },
+    }, `${lang.name} · ${recipientsBy(lang.code).length}`)));
+
+  const drawTabs = () => {
+    [...tabs.children].forEach((button, index) => {
+      button.classList.toggle('is-active', LOCALES[index].code === letter.lang);
+    });
+  };
 
   const send = el('button', {
     class: 'btn btn--primary btn--wide',
@@ -84,45 +115,65 @@ function mailer() {
     onclick: () => sendLetter(status, send),
   }, t('mail.send'));
 
+  draw();
+
   return section(t('mail.title'), [
-    el('div', { class: 'card' }, [subject, body, send, status]),
+    el('div', { class: 'card' }, [tabs, fields, send, status]),
     el('p', { class: 'hint' }, t('mail.hint')),
   ]);
 }
 
+/** Кому уйдёт письмо на этом языке: не отписавшиеся, у кого он выбран. */
+function recipientsBy(locale) {
+  return (cache.users || [])
+    .filter((u) => u.email && wantsMail(u) && localeOf(u) === locale);
+}
+
+/**
+ * Отправка. Каждый язык уходит своим письмом, порциями: прокси шлёт по одному
+ * сообщению на адрес, и сотня адресов за раз упёрлась бы в таймаут.
+ */
 async function sendLetter(status, button) {
   if (letter.busy) return;
 
-  const people = (cache.users || []).filter(wantsMail).filter((u) => u.email);
-  if (!letter.subject.trim() || !letter.body.trim()) {
-    toastError(t('mail.bodyEmpty'));
-    return;
-  }
-  if (!people.length) {
-    toastError(t('mail.nobody'));
+  const plan = LOCALES
+    .map((lang) => ({
+      locale: lang.code,
+      draft: letter.drafts[lang.code],
+      people: recipientsBy(lang.code),
+    }))
+    .filter((part) => part.people.length
+      && part.draft.subject.trim() && part.draft.body.trim());
+
+  if (!plan.length) {
+    toastError(t('mail.nothingToSend'));
     return;
   }
 
-  const ok = window.confirm(t('mail.confirm', { n: people.length }));
-  if (!ok) return;
+  const total = plan.reduce((sum, part) => sum + part.people.length, 0);
+  if (!window.confirm(t('mail.confirm', { n: total }))) return;
 
   letter.busy = true;
   button.disabled = true;
 
-  const { html, text } = buildLetter(letter.subject.trim(), letter.body.trim());
   let sent = 0;
   const failed = [];
 
   try {
-    for (let i = 0; i < people.length; i += MAIL_BATCH) {
-      const chunk = people.slice(i, i + MAIL_BATCH)
-        .map((u) => ({ email: u.email, name: u.name || '' }));
+    for (const part of plan) {
+      const subject = part.draft.subject.trim();
+      const { html, text } = buildLetter(subject, part.draft.body.trim(), part.locale);
 
-      // eslint-disable-next-line no-await-in-loop -- порции идут по очереди намеренно
-      const result = await sendBatch({ subject: letter.subject.trim(), html, text, recipients: chunk });
-      sent += result.sent;
-      failed.push(...result.failed);
-      status.textContent = t('mail.progress', { sent, total: people.length });
+      for (let i = 0; i < part.people.length; i += MAIL_BATCH) {
+        const chunk = part.people.slice(i, i + MAIL_BATCH)
+          .map((u) => ({ email: u.email, name: u.name || '' }));
+
+        // eslint-disable-next-line no-await-in-loop -- порции идут по очереди намеренно
+        const result = await sendBatch({ subject, html, text, recipients: chunk });
+        sent += result.sent;
+        failed.push(...result.failed);
+        status.textContent = t('mail.progress', { sent, total });
+      }
     }
 
     status.textContent = failed.length

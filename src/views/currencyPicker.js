@@ -7,14 +7,15 @@
  * надписи вокруг. Названия языков поэтому написаны каждое на себе самом.
  */
 
-import { el } from '../core/dom.js?v=101';
-import { state, set } from '../core/store.js?v=101';
-import { CURRENCIES } from '../config.js?v=101';
-import { formatAmount, convert } from '../core/money.js?v=101';
-import { openSheet, closeSheet } from '../ui/sheet.js?v=101';
+import { el } from '../core/dom.js?v=102';
+import { state, set } from '../core/store.js?v=102';
+import { setProfileLocale } from '../services/account.js?v=102';
+import { CURRENCIES } from '../config.js?v=102';
+import { formatAmount, convert } from '../core/money.js?v=102';
+import { openSheet, closeSheet } from '../ui/sheet.js?v=102';
 import {
   t, LOCALES, getLocale, setLocale, translateDocument,
-} from '../core/i18n.js?v=101';
+} from '../core/i18n.js?v=102';
 
 export function openBaseCurrencyPicker() {
   openSheet({
@@ -30,6 +31,7 @@ export function openBaseCurrencyPicker() {
             translateDocument();
             set({});
             openBaseCurrencyPicker();
+            rememberLocale(lang.code);
           },
         }, lang.name),
       )),
@@ -51,6 +53,20 @@ export function openBaseCurrencyPicker() {
         t('currency.hint')),
     ],
   });
+}
+
+/**
+ * Запоминаем язык в профиле — на нём человеку придут письма о новом.
+ *
+ * Молча и без ожидания: выбор языка должен срабатывать мгновенно, а не ждать
+ * сети. Не записалось — не беда, письмо просто придёт на языке по умолчанию.
+ */
+function rememberLocale(code) {
+  const uid = state.user?.uid;
+  if (!uid || !state.profile) return;
+
+  set({ profile: { ...state.profile, locale: code } });
+  setProfileLocale(uid, code).catch((error) => console.error('Язык не сохранился', error));
 }
 
 /** Сколько это в текущей базовой валюте — чтобы курс был понятен без счёта в уме. */
