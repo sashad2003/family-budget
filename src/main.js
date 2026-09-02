@@ -2,47 +2,47 @@
  * Точка входа: авторизация → загрузка семьи → подписки на данные → роутинг.
  */
 
-import { $, render } from './core/dom.js?v=107';
+import { $, el, render } from './core/dom.js?v=108';
 import {
   t, localeInfo, isRTL, applyDocumentLocale, translateDocument,
-} from './core/i18n.js?v=107';
-import { state, set, subscribe } from './core/store.js?v=107';
-import { applyTheme } from './core/theme.js?v=107';
-import { SUPPORT_WHATSAPP } from './config.js?v=107';
-import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=107';
-import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=107';
-import { unpaidBills } from './core/selectors.js?v=107';
+} from './core/i18n.js?v=108';
+import { state, set, subscribe } from './core/store.js?v=108';
+import { applyTheme } from './core/theme.js?v=108';
+import { SUPPORT_WHATSAPP } from './config.js?v=108';
+import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=108';
+import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=108';
+import { unpaidBills } from './core/selectors.js?v=108';
 
-import { watchAuth, signIn } from './services/auth.js?v=107';
+import { watchAuth, signIn } from './services/auth.js?v=108';
 import {
   loadAccount, isAdmin, joinByCode, listFamilies, watchFamily, setMarketing,
-} from './services/account.js?v=107';
-import { setFamilyId } from './core/session.js?v=107';
-import { askProfile } from './views/signup.js?v=107';
+} from './services/account.js?v=108';
+import { setFamilyId } from './core/session.js?v=108';
+import { askProfile } from './views/signup.js?v=108';
 import {
   watchTransactions,
   watchCategories,
   seedCategoriesIfEmpty,
   syncNewCategories,
   retireTealColor,
-} from './services/transactions.js?v=107';
-import { watchBills } from './services/bills.js?v=107';
-import { runAutoBills } from './services/autoBills.js?v=107';
-import { loadRates } from './services/rates.js?v=107';
+} from './services/transactions.js?v=108';
+import { watchBills } from './services/bills.js?v=108';
+import { runAutoBills } from './services/autoBills.js?v=108';
+import { loadRates } from './services/rates.js?v=108';
 
-import { renderDashboard } from './views/dashboard.js?v=107';
-import { renderList } from './views/list.js?v=107';
-import { renderBills } from './views/bills.js?v=107';
-import { renderPrices } from './views/prices.js?v=107';
-import { renderAdmin } from './views/admin.js?v=107';
-import { openBudgetMenu, budgetName } from './views/budgetMenu.js?v=107';
-import { renderCharts, destroyCharts } from './views/charts.js?v=107';
-import { renderSettings } from './views/settings.js?v=107';
-import { openTxForm } from './views/txForm.js?v=107';
-import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=107';
-import { initRoseButton, drawRoseButton, resetRose } from './views/roseGlasses.js?v=107';
-import { closeSheet } from './ui/sheet.js?v=107';
-import { toastError, toastOk } from './ui/toast.js?v=107';
+import { renderDashboard } from './views/dashboard.js?v=108';
+import { renderList } from './views/list.js?v=108';
+import { renderBills } from './views/bills.js?v=108';
+import { renderPrices } from './views/prices.js?v=108';
+import { renderAdmin } from './views/admin.js?v=108';
+import { openBudgetMenu, budgetName } from './views/budgetMenu.js?v=108';
+import { renderCharts, destroyCharts } from './views/charts.js?v=108';
+import { renderSettings } from './views/settings.js?v=108';
+import { openTxForm } from './views/txForm.js?v=108';
+import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=108';
+import { initRoseButton, drawRoseButton, resetRose } from './views/roseGlasses.js?v=108';
+import { openSheet, closeSheet } from './ui/sheet.js?v=108';
+import { toastError, toastOk } from './ui/toast.js?v=108';
 
 // Язык ставим до первой отрисовки: иначе видно, как надписи меняются на ходу.
 applyDocumentLocale();
@@ -282,7 +282,7 @@ function shareOldPrices(transactions) {
   if (backfillStarted || !state.user || !transactions.length) return;
   backfillStarted = true;
 
-  import('./services/prices.js?v=107')
+  import('./services/prices.js?v=108')
     .then(({ backfillPrices }) => backfillPrices(transactions, state.user.uid))
     .catch((error) => console.error('Не удалось перенести историю цен', error));
 }
@@ -487,11 +487,46 @@ async function handleUnsubscribe() {
   try {
     await setMarketing(state.user.uid, false);
     set({ profile: { ...state.profile, marketing: false, mailOptOut: true } });
-    toastOk(t('settings.mailOff'));
+    confirmUnsubscribed();
   } catch (error) {
     console.error(error);
     toastError(t('settings.mailFailed'));
   }
+}
+
+/**
+ * Подтверждение отписки.
+ *
+ * Уведомления мало: человек пришёл сюда из письма ради одного действия и
+ * должен увидеть, что оно сделано, а не поймать всплывшую и погасшую строку.
+ * Тут же кнопка вернуть — отписаться можно и по ошибке, а искать переключатель
+ * в настройках после этого никто не станет.
+ */
+function confirmUnsubscribed() {
+  openSheet({
+    title: t('unsub.title'),
+    body: [
+      el('p', { style: 'margin:0 0 6px' }, t('unsub.text')),
+      el('p', { class: 'hint' }, t('unsub.keeps')),
+    ],
+    footer: [
+      el('button', {
+        class: 'btn btn--wide',
+        onclick: async () => {
+          try {
+            await setMarketing(state.user.uid, true);
+            set({ profile: { ...state.profile, marketing: true, mailOptOut: false } });
+            toastOk(t('settings.mailOn'));
+          } catch (error) {
+            console.error(error);
+            toastError(t('settings.mailFailed'));
+          }
+          closeSheet();
+        },
+      }, t('unsub.undo')),
+      el('button', { class: 'btn btn--primary btn--wide', onclick: () => closeSheet() }, t('common.close')),
+    ],
+  });
 }
 
 window.addEventListener('theme-change', () => {

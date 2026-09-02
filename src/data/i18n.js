@@ -277,6 +277,19 @@ export const DICT = {
   'mail.bodyEmpty': { ru: 'Заполните тему и текст письма', en: 'Fill in the subject and the text', he: 'מלאו נושא וטקסט' },
   'mail.bodyTooLarge': { ru: 'Письмо слишком длинное', en: 'The email is too long', he: 'המייל ארוך מדי' },
   'mail.recipientsInvalid': { ru: 'Неверный список адресов', en: 'Invalid recipient list', he: 'רשימת הנמענים שגויה' },
+  'unsub.title': { ru: 'Письма отключены', en: 'Emails turned off', he: 'הדיוור כובה' },
+  'unsub.text': {
+    ru: 'Больше не будем писать вам о новом в приложении.',
+    en: 'We will not email you about what’s new any more.',
+    he: 'לא נשלח לכם יותר עדכונים על מה שחדש.',
+  },
+  'unsub.keeps': {
+    ru: 'Приложением это никак не мешает пользоваться, а вернуть письма можно в настройках в любой момент.',
+    en: 'This does not affect the app itself, and you can turn the emails back on in settings at any time.',
+    he: 'זה לא משפיע על השימוש באפליקציה, ואפשר להחזיר את הדיוור בהגדרות בכל רגע.',
+  },
+  'unsub.undo': { ru: 'Я случайно, верните письма', en: 'That was a mistake, keep them', he: 'זו הייתה טעות, השאירו' },
+
   'mail.footer': {
     ru: 'Это письмо о новом в приложении «Семейный бюджет».',
     en: 'This is an email about what’s new in the Family Budget app.',

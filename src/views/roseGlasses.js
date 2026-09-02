@@ -12,10 +12,10 @@
  * на минуту, а не настройка, о которой потом забудут и испугаются баланса.
  */
 
-import { $, el } from '../core/dom.js?v=107';
-import { state, set } from '../core/store.js?v=107';
-import { formatAmount } from '../core/money.js?v=107';
-import { t } from '../core/i18n.js?v=107';
+import { $, el } from '../core/dom.js?v=108';
+import { state, set } from '../core/store.js?v=108';
+import { formatAmount } from '../core/money.js?v=108';
+import { t } from '../core/i18n.js?v=108';
 
 /** Мечта считается в евро независимо от валюты сводок: миллиард так миллиард. */
 const DREAM = 1_000_000_000;

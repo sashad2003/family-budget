@@ -512,9 +512,17 @@ function buildMimeMessage(array $letter): string
         'MIME-Version: 1.0',
         'Content-Type: multipart/alternative; boundary="' . $boundary . '"',
     ];
+    /*
+     * List-Unsubscribe: по нему почтовая программа рисует свою кнопку отписки,
+     * и письмо с ней реже принимают за спам.
+     *
+     * Заголовка List-Unsubscribe-Post здесь намеренно нет. С ним почтовик
+     * отписывает сам, послав POST на этот адрес, — а по адресу лежит страница
+     * приложения, которая такой запрос не обработает. Человек нажал бы кнопку,
+     * увидел «готово» и остался бы в рассылке.
+     */
     if ($letter['unsubscribe'] !== '') {
         $headers[] = 'List-Unsubscribe: <' . $letter['unsubscribe'] . '>';
-        $headers[] = 'List-Unsubscribe-Post: List-Unsubscribe=One-Click';
     }
 
     $part = static function (string $type, string $content) use ($boundary): string {
