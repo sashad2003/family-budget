@@ -3,20 +3,20 @@
  * оплаченные отмечены галочкой, забытые горят красным.
  */
 
-import { el, render } from '../core/dom.js?v=81';
-import { state, set, currencyChoices } from '../core/store.js?v=81';
-import { formatAmount, parseAmount, currencyInfo, convert } from '../core/money.js?v=81';
-import { monthLabel, monthKey, today } from '../core/dates.js?v=81';
-import { billsForMonth } from '../core/selectors.js?v=81';
-import { createBill, updateBill, deleteBill } from '../services/bills.js?v=81';
-import { autoStartMark } from '../services/autoBills.js?v=81';
-import { createTransaction, deleteTransaction } from '../services/transactions.js?v=81';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=81';
-import { toastOk, toastError } from '../ui/toast.js?v=81';
-import { openTxForm } from './txForm.js?v=81';
-import { tileGradient } from './list.js?v=81';
-import { section } from '../ui/section.js?v=81';
-import { t } from '../core/i18n.js?v=81';
+import { el, render } from '../core/dom.js?v=82';
+import { state, set, currencyChoices } from '../core/store.js?v=82';
+import { formatAmount, parseAmount, currencyInfo, convert } from '../core/money.js?v=82';
+import { monthLabel, monthKey, today } from '../core/dates.js?v=82';
+import { billsForMonth } from '../core/selectors.js?v=82';
+import { createBill, updateBill, deleteBill } from '../services/bills.js?v=82';
+import { autoStartMark } from '../services/autoBills.js?v=82';
+import { createTransaction, deleteTransaction } from '../services/transactions.js?v=82';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=82';
+import { toastOk, toastError } from '../ui/toast.js?v=82';
+import { openTxForm } from './txForm.js?v=82';
+import { tileStyle } from './list.js?v=82';
+import { section } from '../ui/section.js?v=82';
+import { t } from '../core/i18n.js?v=82';
 
 export function renderBills() {
   const rows = billsForMonth(state);
@@ -102,7 +102,7 @@ function billRow({ bill, tx, paid, expected, tracked }) {
     }, [
       el('span', {
         class: 'bill__ico',
-        style: `background:${tileGradient(category?.color || '#5b9fff')}`,
+        style: tileStyle(category?.color || '#5b9fff'),
       }, paid ? '✓' : category?.icon || '•'),
 
       el('span', { class: 'bill__body' }, [
@@ -333,7 +333,7 @@ function buildBillBody(model, rerender) {
           style: model.categoryId === cat.id ? `--tint:${cat.color}` : '',
           onclick: () => { model.categoryId = cat.id; rerender(); },
         }, [
-          el('span', { class: 'cat__ico', style: `background:${tileGradient(cat.color)}` },
+          el('span', { class: 'cat__ico', style: tileStyle(cat.color) },
             cat.icon || '•'),
           el('span', {}, cat.name),
         ]),

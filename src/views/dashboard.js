@@ -1,16 +1,16 @@
 /** Обзор: баланс месяца, доходы/расходы, разбивка по категориям, последние операции. */
 
-import { el, render } from '../core/dom.js?v=81';
-import { state } from '../core/store.js?v=81';
-import { formatAmount } from '../core/money.js?v=81';
-import { monthTransactions, totals, byCategory, unpaidBills } from '../core/selectors.js?v=81';
-import { set } from '../core/store.js?v=81';
-import { txRow, tileGradient, openCategoryList } from './list.js?v=81';
-import { openTxForm } from './txForm.js?v=81';
-import { openScanSheet } from './scan.js?v=81';
-import { section } from '../ui/section.js?v=81';
-import { t } from '../core/i18n.js?v=81';
-import { isRose, roseBalance } from './roseGlasses.js?v=81';
+import { el, render } from '../core/dom.js?v=82';
+import { state } from '../core/store.js?v=82';
+import { formatAmount } from '../core/money.js?v=82';
+import { monthTransactions, totals, byCategory, unpaidBills } from '../core/selectors.js?v=82';
+import { set } from '../core/store.js?v=82';
+import { txRow, tileStyle, tileColor, openCategoryList } from './list.js?v=82';
+import { openTxForm } from './txForm.js?v=82';
+import { openScanSheet } from './scan.js?v=82';
+import { section } from '../ui/section.js?v=82';
+import { t } from '../core/i18n.js?v=82';
+import { isRose, roseBalance } from './roseGlasses.js?v=82';
 
 export function renderDashboard() {
   const list = monthTransactions(state);
@@ -211,7 +211,7 @@ function categoryRow(row, type) {
     el('div', { class: 'legend-row' }, [
       el('span', {
         class: 'tx__ico',
-        style: `flex:0 0 30px;height:30px;border-radius:9px;font-size:14px;background:${tileGradient(row.color)}`,
+        style: `flex:0 0 30px;height:30px;border-radius:9px;font-size:17px;${tileStyle(row.color)}`,
       }, row.icon),
       el('span', { class: 'legend-name' }, row.name),
       el('span', { class: 'legend-val' }, formatAmount(row.total, state.base)),
@@ -220,7 +220,8 @@ function categoryRow(row, type) {
       }, `${row.share}%`),
     ]),
     el('div', { class: 'legend-bar' }, el('i', {
-      style: `width:${Math.max(row.share, 2)}%;background:${tileGradient(row.color)}`,
+      // Полоска доли остаётся сплошным цветом: она сама по себе и есть цвет.
+      style: `width:${Math.max(row.share, 2)}%;background:${tileColor(row.color)}`,
     })),
   ];
 

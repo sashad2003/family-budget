@@ -1,13 +1,14 @@
 /** Список операций с фильтрами по типу, категории и тексту. */
 
-import { el, render } from '../core/dom.js?v=81';
-import { state } from '../core/store.js?v=81';
-import { formatAmount, txAmountIn } from '../core/money.js?v=81';
-import { dayLabel } from '../core/dates.js?v=81';
-import { monthTransactions, groupByDate, totals } from '../core/selectors.js?v=81';
-import { openTxForm } from './txForm.js?v=81';
-import { section } from '../ui/section.js?v=81';
-import { t, getLocale } from '../core/i18n.js?v=81';
+import { el, render } from '../core/dom.js?v=82';
+import { state } from '../core/store.js?v=82';
+import { formatAmount, txAmountIn } from '../core/money.js?v=82';
+import { dayLabel } from '../core/dates.js?v=82';
+import { monthTransactions, groupByDate, totals } from '../core/selectors.js?v=82';
+import { openTxForm } from './txForm.js?v=82';
+import { section } from '../ui/section.js?v=82';
+import { t, getLocale } from '../core/i18n.js?v=82';
+import { activeTheme } from '../core/theme.js?v=82';
 
 /** Фильтры живут вне state: они локальны для экрана и не влияют на другие. */
 const filters = { type: 'all', categoryId: null, query: '' };
@@ -129,10 +130,7 @@ export function txRow(tx, onClick) {
   const foreign = tx.currency !== state.base;
 
   return el('button', { class: 'tx', onclick: onClick }, [
-    el('div', {
-      class: 'tx__ico',
-      style: `background:${tileGradient(cat?.color)}`,
-    }, cat?.icon || '•'),
+    el('div', { class: 'tx__ico', style: tileStyle(cat?.color) }, cat?.icon || '•'),
 
     el('div', { class: 'tx__body' }, [
       el('div', { class: 'tx__title' }, title),
@@ -167,19 +165,44 @@ export function txRow(tx, onClick) {
 }
 
 /**
- * Насыщенная плитка под иконку категории: цвет категории с уходом в тень,
- * как цветные квадраты в референсе.
+ * Плитка под значок категории: мягкая подложка её цветом.
+ *
+ * Раньше плитка заливалась насыщенным градиентом того же цвета. Рядом друг с
+ * другом такие квадраты спорят между собой и с эмодзи внутри: цвета много, а
+ * значка почти не видно. Теперь цвет только намечен — он по-прежнему
+ * различает категории с одного взгляда, но не перекрикивает содержимое, а
+ * сам значок стал крупнее.
+ *
+ * Цвет отдаём и текстом: у «Прочего» вместо эмодзи точка, и на бледной
+ * подложке белая точка исчезла бы.
+ *
+ * Плотность подложки зависит от темы: на светлом фоне тот же процент цвета
+ * выглядит заметно гуще, чем на тёмном.
  */
-export function tileGradient(hex) {
+export function tileStyle(hex) {
   const value = String(hex || '').replace('#', '');
-  if (value.length !== 6) return 'linear-gradient(150deg, #3a3a52, #23233a)';
+  const color = value.length === 6 ? `#${value}` : '#8a8a94';
+  const rgb = [0, 2, 4].map((i) => Number.parseInt(color.slice(1 + i, 3 + i), 16));
 
-  const rgb = [0, 2, 4].map((i) => Number.parseInt(value.slice(i, i + 2), 16));
-  const darker = rgb
-    .map((c) => Math.round(c * 0.62).toString(16).padStart(2, '0'))
-    .join('');
+  const light = activeTheme() === 'light';
+  const alpha = light ? 0.16 : 0.26;
 
-  return `linear-gradient(150deg, #${value}, #${darker})`;
+  /*
+   * На светлой теме знак пишем затемнённым цветом: сам цвет категории на
+   * своей же бледной подложке даёт около двух к одному, и точка «Прочего»
+   * терялась. Затемнение до 60% даёт от 4.2:1 на всей палитре.
+   */
+  const ink = light
+    ? `#${rgb.map((c) => Math.round(c * 0.6).toString(16).padStart(2, '0')).join('')}`
+    : color;
+
+  return `background:rgba(${rgb.join(', ')}, ${alpha});color:${ink}`;
+}
+
+/** Сплошной цвет категории — для полосок доли и точек. */
+export function tileColor(hex) {
+  const value = String(hex || '').replace('#', '');
+  return value.length === 6 ? `#${value}` : '#8a8a94';
 }
 
 /**

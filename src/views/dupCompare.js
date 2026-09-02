@@ -11,15 +11,15 @@
  * или вернуться назад.
  */
 
-import { el } from '../core/dom.js?v=81';
-import { state } from '../core/store.js?v=81';
-import { formatAmount } from '../core/money.js?v=81';
-import { dayLabel, monthLabel, monthOf } from '../core/dates.js?v=81';
-import { duplicateMatch, sameMoment } from '../core/selectors.js?v=81';
-import { openSheet, closeSheet } from '../ui/sheet.js?v=81';
-import { toastOk, toastError } from '../ui/toast.js?v=81';
-import { updateTransaction } from '../services/transactions.js?v=81';
-import { t } from '../core/i18n.js?v=81';
+import { el } from '../core/dom.js?v=82';
+import { state } from '../core/store.js?v=82';
+import { formatAmount } from '../core/money.js?v=82';
+import { dayLabel, monthLabel, monthOf } from '../core/dates.js?v=82';
+import { duplicateMatch, sameMoment } from '../core/selectors.js?v=82';
+import { openSheet, closeSheet } from '../ui/sheet.js?v=82';
+import { toastOk, toastError } from '../ui/toast.js?v=82';
+import { updateTransaction } from '../services/transactions.js?v=82';
+import { t } from '../core/i18n.js?v=82';
 
 const DASH = '—';
 
@@ -249,7 +249,7 @@ function compareRows(tx, candidate, match) {
  * кнопка возврата к тому, что человек вводил.
  */
 async function openTwin(tx, backToNew) {
-  const { openTxForm } = await import('./txForm.js?v=81');
+  const { openTxForm } = await import('./txForm.js?v=82');
   closeSheet();
   openTxForm({ tx, backTo: backToNew });
 }
