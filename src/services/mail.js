@@ -10,9 +10,9 @@
  * одному письму на адрес, чтобы получатели не видели чужих почт.
  */
 
-import { PROXY_URL, SUPPORT_WHATSAPP } from '../config.js?v=111';
-import { idToken } from './auth.js?v=111';
-import { t, tIn, LOCALES } from '../core/i18n.js?v=111';
+import { PROXY_URL, SUPPORT_WHATSAPP } from '../config.js?v=112';
+import { idToken } from './auth.js?v=112';
+import { t, tIn, LOCALES } from '../core/i18n.js?v=112';
 
 /** Столько же, сколько прокси принимает за раз. */
 export const MAIL_BATCH = 50;
@@ -78,14 +78,14 @@ export function buildLetter(title, body, locale = 'ru', format = 'text') {
    * работает, отвечает туда, где ему удобно, а не ищет адрес поддержки.
    */
   const contact = SUPPORT_WHATSAPP ? `
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:26px 0 0">
+    <p style="margin:26px 0 12px;font-size:15px;line-height:1.6">${esc(tIn(locale, 'mail.contactHint'))}</p>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0">
       <tr>
         <td style="border-radius:12px;background:#25d366">
           <a href="https://wa.me/${SUPPORT_WHATSAPP}" style="display:inline-block;padding:12px 22px;font-size:15px;font-weight:500;color:#ffffff;text-decoration:none">${esc(tIn(locale, 'mail.contact'))}</a>
         </td>
       </tr>
-    </table>
-    <p style="margin:8px 0 0;font-size:13.5px;line-height:1.6;color:#66667c">${esc(tIn(locale, 'mail.contactHint'))}</p>` : '';
+    </table>` : '';
 
   const html = `
 <div dir="${dir}" style="margin:0;padding:24px;background:#eceef6;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;text-align:${align}">

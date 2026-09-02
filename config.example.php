@@ -51,6 +51,11 @@ return [
     'mail_from_email' => 'mybudget@sitemarket.co.il',
     'mail_from_name'  => 'Семейный бюджет',
 
+    // Куда придёт ответ на письмо. В письме прямо предлагается ответить, а
+    // ящик приложения обычно никто не читает — ставьте сюда свою рабочую
+    // почту. Пусто — ответы уйдут на mail_from_email.
+    'mail_reply_to' => 'sashad2003@gmail.com',
+
     // SMTP. Порт 465 — шифрование сразу, 587 — STARTTLS после приветствия.
     //   Hostinger: smtp.hostinger.com, логин — сам почтовый адрес
     //   Gmail:     smtp.gmail.com, пароль приложения (обычный не подойдёт),

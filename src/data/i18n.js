@@ -292,9 +292,9 @@ export const DICT = {
 
   'mail.contact': { ru: 'Написать в WhatsApp', en: 'Message me on WhatsApp', he: 'לכתוב לי בוואטסאפ' },
   'mail.contactHint': {
-    ru: 'Что-то не работает, неудобно или есть идея — напишите, я отвечаю сам.',
-    en: 'Something broken, awkward, or an idea — write to me, I answer myself.',
-    he: 'משהו לא עובד, לא נוח או שיש רעיון — כתבו לי, אני עונה בעצמי.',
+    ru: 'Если что-то не работает, неудобно или есть идея, как сделать приложение лучше, — просто ответьте на это письмо или напишите мне в WhatsApp.',
+    en: 'If something is broken, awkward, or you have an idea for making the app better — just reply to this email or message me on WhatsApp.',
+    he: 'אם משהו לא עובד, לא נוח, או שיש לכם רעיון לשפר את האפליקציה — פשוט השיבו למייל הזה או כתבו לי בוואטסאפ.',
   },
   'mail.footer': {
     ru: 'Вы получили это письмо, потому что пользуетесь приложением «Семейный бюджет».',

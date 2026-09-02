@@ -30,7 +30,8 @@ const MAX_TOKENS      = 8000;
 
 // Рассылка. Письма уходят по одному на адрес — получатели не должны видеть
 // друг друга, — поэтому порция ограничена: длинный запрос упрётся в таймаут
-// PHP раньше, чем разошлётся.
+// PHP раньше, чем разошлётся. Пятьдесят укладывается и в предел AhaSend
+// (сто адресов на запрос), и в минуту работы скрипта.
 const MAX_MAIL_BATCH   = 50;
 const MAX_MAIL_SUBJECT = 200;
 const MAX_MAIL_BYTES   = 100 * 1024;
@@ -220,6 +221,13 @@ function sendMail(array $config, array $user, array $req): array
             'to_name'    => $name,
             'from_email' => $fromEmail,
             'from_name'  => (string)($config['mail_from_name'] ?? 'Бюджет'),
+            /*
+             * Куда придёт ответ. Письмо уходит с почтового ящика приложения,
+             * а читают ответы в обычной почте — в письме прямо сказано «просто
+             * ответьте», и ответ не должен уехать в ящик, куда никто не
+             * заглядывает. Пусто — отвечать будут на адрес отправителя.
+             */
+            'reply_to'   => (string)($config['mail_reply_to'] ?? ''),
             'subject'    => $subject,
             'text'       => $text,
             'html'       => $html,
@@ -368,6 +376,9 @@ function sendViaAhaSend(array $config, array $letter): ?string
     ];
     if ($letter['text'] !== '') $payload['text_content'] = $letter['text'];
     if ($letter['html'] !== '') $payload['html_content'] = $letter['html'];
+    if (($letter['reply_to'] ?? '') !== '') {
+        $payload['reply_to'] = ['email' => $letter['reply_to']];
+    }
 
     $result = httpPostJson(
         sprintf(AHASEND_API, rawurlencode((string)$config['ahasend_account_id'])),
@@ -512,6 +523,9 @@ function buildMimeMessage(array $letter): string
         'MIME-Version: 1.0',
         'Content-Type: multipart/alternative; boundary="' . $boundary . '"',
     ];
+    if (($letter['reply_to'] ?? '') !== '') {
+        $headers[] = 'Reply-To: ' . $letter['reply_to'];
+    }
     /*
      * List-Unsubscribe: по нему почтовая программа рисует свою кнопку отписки,
      * и письмо с ней реже принимают за спам.

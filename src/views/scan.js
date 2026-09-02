@@ -4,15 +4,15 @@
  * открывается в редактируемой форме.
  */
 
-import { el, render } from '../core/dom.js?v=111';
-import { openSheet, closeSheet } from '../ui/sheet.js?v=111';
-import { toastError } from '../ui/toast.js?v=111';
-import { state } from '../core/store.js?v=111';
-import { findDuplicates } from '../core/selectors.js?v=111';
-import { guessCategory } from '../data/categories.js?v=111';
-import { openDupCompare } from './dupCompare.js?v=111';
-import { scanReceiptImages, scanReceiptUrl, scanSmsText, MAX_RECEIPT_IMAGES } from '../services/receipts.js?v=111';
-import { t } from '../core/i18n.js?v=111';
+import { el, render } from '../core/dom.js?v=112';
+import { openSheet, closeSheet } from '../ui/sheet.js?v=112';
+import { toastError } from '../ui/toast.js?v=112';
+import { state } from '../core/store.js?v=112';
+import { findDuplicates } from '../core/selectors.js?v=112';
+import { guessCategory } from '../data/categories.js?v=112';
+import { openDupCompare } from './dupCompare.js?v=112';
+import { scanReceiptImages, scanReceiptUrl, scanSmsText, MAX_RECEIPT_IMAGES } from '../services/receipts.js?v=112';
+import { t } from '../core/i18n.js?v=112';
 
 /** Шторка «распознаём…» — на время запроса заменяет собой форму. */
 function showBusy(text) {
