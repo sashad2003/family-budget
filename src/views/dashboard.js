@@ -1,16 +1,16 @@
 /** Обзор: баланс месяца, доходы/расходы, разбивка по категориям, последние операции. */
 
-import { el, render } from '../core/dom.js?v=100';
-import { state } from '../core/store.js?v=100';
-import { formatAmount } from '../core/money.js?v=100';
-import { monthTransactions, totals, byCategory, unpaidBills } from '../core/selectors.js?v=100';
-import { set } from '../core/store.js?v=100';
-import { txRow, tileStyle, tileColor, openCategoryList } from './list.js?v=100';
-import { openTxForm } from './txForm.js?v=100';
-import { openScanSheet } from './scan.js?v=100';
-import { section } from '../ui/section.js?v=100';
-import { t } from '../core/i18n.js?v=100';
-import { isRose, roseBalance } from './roseGlasses.js?v=100';
+import { el, render } from '../core/dom.js?v=101';
+import { state } from '../core/store.js?v=101';
+import { formatAmount } from '../core/money.js?v=101';
+import { monthTransactions, totals, byCategory, unpaidBills } from '../core/selectors.js?v=101';
+import { set } from '../core/store.js?v=101';
+import { txRow, tileStyle, tileColor, openCategoryList } from './list.js?v=101';
+import { openTxForm } from './txForm.js?v=101';
+import { openScanSheet } from './scan.js?v=101';
+import { section } from '../ui/section.js?v=101';
+import { t } from '../core/i18n.js?v=101';
+import { isRose, roseBalance } from './roseGlasses.js?v=101';
 
 export function renderDashboard() {
   const list = monthTransactions(state);

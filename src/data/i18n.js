@@ -179,6 +179,16 @@ export const DICT = {
     en: 'Email is not configured: config.php has no AhaSend key or sender address',
     he: 'הדוא״ל אינו מוגדר: ב-config.php חסר מפתח AhaSend או כתובת שולח',
   },
+  'mail.smtpAuth': {
+    ru: 'Почтовый сервер не принял логин или пароль. У Gmail нужен пароль приложения, обычный не подойдёт.',
+    en: 'The mail server rejected the login or password. Gmail needs an app password, the normal one will not do.',
+    he: 'שרת הדואר דחה את שם המשתמש או הסיסמה. ב-Gmail נדרשת סיסמת אפליקציה, הרגילה לא תעבוד.',
+  },
+  'mail.smtpConnect': {
+    ru: 'Не удалось связаться с почтовым сервером — проверьте адрес и порт в config.php',
+    en: 'Could not reach the mail server — check the host and port in config.php',
+    he: 'לא הצלחנו להתחבר לשרת הדואר — בדקו כתובת ופורט ב-config.php',
+  },
   'mail.subjectInvalid': { ru: 'Тема пустая или слишком длинная', en: 'The subject is empty or too long', he: 'הנושא ריק או ארוך מדי' },
   'mail.bodyEmpty': { ru: 'Заполните тему и текст письма', en: 'Fill in the subject and the text', he: 'מלאו נושא וטקסט' },
   'mail.bodyTooLarge': { ru: 'Письмо слишком длинное', en: 'The email is too long', he: 'המייל ארוך מדי' },

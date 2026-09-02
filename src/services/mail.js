@@ -10,9 +10,9 @@
  * одному письму на адрес, чтобы получатели не видели чужих почт.
  */
 
-import { PROXY_URL } from '../config.js?v=100';
-import { idToken } from './auth.js?v=100';
-import { t } from '../core/i18n.js?v=100';
+import { PROXY_URL } from '../config.js?v=101';
+import { idToken } from './auth.js?v=101';
+import { t } from '../core/i18n.js?v=101';
 
 /** Столько же, сколько прокси принимает за раз. */
 export const MAIL_BATCH = 50;
@@ -72,7 +72,11 @@ export async function sendBatch({ subject, html, text, recipients }) {
   const response = await fetch(PROXY_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ action: 'send_mail', subject, html, text, recipients }),
+    body: JSON.stringify({
+      action: 'send_mail', subject, html, text, recipients,
+      // По этому адресу почтовая программа рисует собственную кнопку отписки.
+      unsubscribe_url: UNSUBSCRIBE_URL,
+    }),
   });
 
   const data = await response.json().catch(() => null);
@@ -84,6 +88,8 @@ export async function sendBatch({ subject, html, text, recipients }) {
 function mailError(code, status) {
   const messages = {
     not_admin: t('mail.notAdmin'),
+    smtp_auth_failed: t('mail.smtpAuth'),
+    smtp_connect_failed: t('mail.smtpConnect'),
     mail_not_configured: t('mail.notConfigured'),
     mail_subject_invalid: t('mail.subjectInvalid'),
     mail_body_empty: t('mail.bodyEmpty'),

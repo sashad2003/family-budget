@@ -169,10 +169,16 @@ function sendMail(array $config, array $user, array $req): array
         respond(403, ['error' => 'not_admin']);
     }
 
-    $key = (string)($config['ahasend_key'] ?? '');
-    $account = (string)($config['ahasend_account_id'] ?? '');
+    $transport = (string)($config['mail_transport'] ?? 'smtp');
     $fromEmail = (string)($config['mail_from_email'] ?? '');
-    if ($key === '' || $account === '' || $fromEmail === '') {
+    if ($fromEmail === '') {
+        respond(500, ['error' => 'mail_not_configured']);
+    }
+    if ($transport === 'ahasend'
+        && ((string)($config['ahasend_key'] ?? '') === '' || (string)($config['ahasend_account_id'] ?? '') === '')) {
+        respond(500, ['error' => 'mail_not_configured']);
+    }
+    if ($transport === 'smtp' && (string)($config['smtp_host'] ?? '') === '') {
         respond(500, ['error' => 'mail_not_configured']);
     }
 
@@ -205,35 +211,215 @@ function sendMail(array $config, array $user, array $req): array
             continue;
         }
 
-        $payload = [
-            'from' => ['email' => $fromEmail, 'name' => (string)($config['mail_from_name'] ?? 'Бюджет')],
-            'recipients' => [array_filter(['email' => $email, 'name' => $name])],
-            'subject' => $subject,
+        $letter = [
+            'to_email'   => $email,
+            'to_name'    => $name,
+            'from_email' => $fromEmail,
+            'from_name'  => (string)($config['mail_from_name'] ?? 'Бюджет'),
+            'subject'    => $subject,
+            'text'       => $text,
+            'html'       => $html,
+            'unsubscribe' => (string)($req['unsubscribe_url'] ?? ''),
         ];
-        if ($text !== '') $payload['text_content'] = $text;
-        if ($html !== '') $payload['html_content'] = $html;
 
-        $result = httpPostJson(
-            sprintf(AHASEND_API, rawurlencode($account)),
-            $payload,
-            20,
-            [
-                'Authorization: Bearer ' . $key,
-                'Content-Type: application/json',
-                // Ключ идемпотентности: повторная отправка того же письма тому
-                // же человеку в тот же день не удвоится, если рука дрогнула.
-                'Idempotency-Key: ' . substr(hash('sha256', $email . '|' . $subject . '|' . date('Y-m-d')), 0, 40),
-            ],
-        );
+        $error = $transport === 'smtp'
+            ? sendViaSmtp($config, $letter)
+            : sendViaAhaSend($config, $letter);
 
-        if ($result['status'] >= 200 && $result['status'] < 300) {
+        if ($error === null) {
             $sent += 1;
         } else {
-            $failed[] = ['email' => $email, 'error' => 'send_failed', 'status' => $result['status']];
+            $failed[] = ['email' => $email, 'error' => $error];
         }
     }
 
     return ['sent' => $sent, 'failed' => $failed];
+}
+
+/**
+ * AhaSend, HTTP API v2. Возвращает null при успехе или код ошибки строкой.
+ *
+ * Ключ идемпотентности собран из адреса, темы и даты: повторное нажатие в тот
+ * же день не удвоит письмо, если рука дрогнула.
+ */
+function sendViaAhaSend(array $config, array $letter): ?string
+{
+    $payload = [
+        'from' => ['email' => $letter['from_email'], 'name' => $letter['from_name']],
+        'recipients' => [array_filter([
+            'email' => $letter['to_email'],
+            'name' => $letter['to_name'],
+        ])],
+        'subject' => $letter['subject'],
+    ];
+    if ($letter['text'] !== '') $payload['text_content'] = $letter['text'];
+    if ($letter['html'] !== '') $payload['html_content'] = $letter['html'];
+
+    $result = httpPostJson(
+        sprintf(AHASEND_API, rawurlencode((string)$config['ahasend_account_id'])),
+        $payload,
+        20,
+        [
+            'Authorization: Bearer ' . (string)$config['ahasend_key'],
+            'Content-Type: application/json',
+            'Idempotency-Key: ' . substr(
+                hash('sha256', $letter['to_email'] . '|' . $letter['subject'] . '|' . date('Y-m-d')),
+                0,
+                40,
+            ),
+        ],
+    );
+
+    return ($result['status'] >= 200 && $result['status'] < 300)
+        ? null
+        : 'send_failed_' . $result['status'];
+}
+
+/**
+ * Обычный SMTP — почта хостинга или Gmail, стороннего сервиса не нужно.
+ *
+ * Клиент написан здесь, а не взят библиотекой: приложение сознательно живёт
+ * без зависимостей, а нужного тут — десяток команд протокола.
+ *
+ * Шифрование обязательно: ssl:// сразу (порт 465) или STARTTLS после
+ * приветствия (порт 587). Пароль уходит по сети, и открытым текстом ему
+ * ходить нельзя. TLS 1.0 и 1.1 почтовики уже не принимают, поэтому версию не
+ * понижаем ни при каких условиях.
+ */
+function sendViaSmtp(array $config, array $letter): ?string
+{
+    $host = (string)$config['smtp_host'];
+    $port = (int)($config['smtp_port'] ?? 587);
+    $user = (string)($config['smtp_user'] ?? '');
+    $pass = (string)($config['smtp_pass'] ?? '');
+
+    $address = ($port === 465 ? 'ssl://' : 'tcp://') . $host . ':' . $port;
+    $context = stream_context_create(['ssl' => ['crypto_method' => STREAM_CRYPTO_METHOD_TLS_CLIENT]]);
+
+    $socket = @stream_socket_client($address, $errno, $errstr, 20, STREAM_CLIENT_CONNECT, $context);
+    if (!$socket) {
+        return 'smtp_connect_failed';
+    }
+    stream_set_timeout($socket, 20);
+
+    $expect = static function ($socket, string $codes) {
+        $line = '';
+        // Многострочный ответ: «250-РАСШИРЕНИЕ» продолжается, «250 » завершает.
+        do {
+            $line = fgets($socket, 1024);
+            if ($line === false) return false;
+        } while (isset($line[3]) && $line[3] === '-');
+
+        return in_array(substr($line, 0, 3), explode(',', $codes), true);
+    };
+    $say = static function ($socket, string $line) {
+        fwrite($socket, $line . "\r\n");
+    };
+
+    $fail = static function ($socket, string $code): string {
+        fclose($socket);
+        return $code;
+    };
+
+    if (!$expect($socket, '220')) return $fail($socket, 'smtp_greeting_failed');
+
+    $ehlo = 'budget.' . parse_url((string)($config['allowed_origins'][0] ?? 'localhost'), PHP_URL_HOST);
+    $say($socket, 'EHLO ' . $ehlo);
+    if (!$expect($socket, '250')) return $fail($socket, 'smtp_ehlo_failed');
+
+    if ($port !== 465) {
+        $say($socket, 'STARTTLS');
+        if (!$expect($socket, '220')) return $fail($socket, 'smtp_starttls_refused');
+        if (!stream_socket_enable_crypto($socket, true, STREAM_CRYPTO_METHOD_TLS_CLIENT)) {
+            return $fail($socket, 'smtp_tls_failed');
+        }
+        // После включения шифрования разговор начинается заново.
+        $say($socket, 'EHLO ' . $ehlo);
+        if (!$expect($socket, '250')) return $fail($socket, 'smtp_ehlo_failed');
+    }
+
+    if ($user !== '') {
+        $say($socket, 'AUTH LOGIN');
+        if (!$expect($socket, '334')) return $fail($socket, 'smtp_auth_unsupported');
+        $say($socket, base64_encode($user));
+        if (!$expect($socket, '334')) return $fail($socket, 'smtp_auth_failed');
+        $say($socket, base64_encode($pass));
+        if (!$expect($socket, '235')) return $fail($socket, 'smtp_auth_failed');
+    }
+
+    $say($socket, 'MAIL FROM:<' . $letter['from_email'] . '>');
+    if (!$expect($socket, '250')) return $fail($socket, 'smtp_from_refused');
+
+    $say($socket, 'RCPT TO:<' . $letter['to_email'] . '>');
+    if (!$expect($socket, '250,251')) return $fail($socket, 'smtp_recipient_refused');
+
+    $say($socket, 'DATA');
+    if (!$expect($socket, '354')) return $fail($socket, 'smtp_data_refused');
+
+    fwrite($socket, buildMimeMessage($letter));
+    $say($socket, '.');
+    if (!$expect($socket, '250')) return $fail($socket, 'smtp_send_failed');
+
+    $say($socket, 'QUIT');
+    fclose($socket);
+    return null;
+}
+
+/**
+ * Само письмо: заголовки и две части — текст и разметка.
+ *
+ * Заголовки с русскими буквами кодируются по RFC 2047, иначе почтовик
+ * покажет вместо темы кашу. List-Unsubscribe ставим рядом со ссылкой в теле:
+ * почтовые программы рисуют по нему собственную кнопку отписки, и письмо с
+ * ней реже принимают за спам.
+ */
+function buildMimeMessage(array $letter): string
+{
+    $encode = static fn (string $value): string => preg_match('/[\x80-\xFF]/', $value)
+        ? '=?UTF-8?B?' . base64_encode($value) . '?='
+        : $value;
+
+    $boundary = 'b' . bin2hex(random_bytes(12));
+    $from = $letter['from_name'] !== ''
+        ? $encode($letter['from_name']) . ' <' . $letter['from_email'] . '>'
+        : $letter['from_email'];
+    $to = $letter['to_name'] !== ''
+        ? $encode($letter['to_name']) . ' <' . $letter['to_email'] . '>'
+        : $letter['to_email'];
+
+    $headers = [
+        'From: ' . $from,
+        'To: ' . $to,
+        'Subject: ' . $encode($letter['subject']),
+        'Date: ' . date('r'),
+        'Message-ID: <' . bin2hex(random_bytes(10)) . '@' . substr(strrchr($letter['from_email'], '@') ?: '@localhost', 1) . '>',
+        'MIME-Version: 1.0',
+        'Content-Type: multipart/alternative; boundary="' . $boundary . '"',
+    ];
+    if ($letter['unsubscribe'] !== '') {
+        $headers[] = 'List-Unsubscribe: <' . $letter['unsubscribe'] . '>';
+        $headers[] = 'List-Unsubscribe-Post: List-Unsubscribe=One-Click';
+    }
+
+    $part = static function (string $type, string $content) use ($boundary): string {
+        return "--$boundary\r\n"
+            . "Content-Type: $type; charset=UTF-8\r\n"
+            . "Content-Transfer-Encoding: base64\r\n\r\n"
+            . chunk_split(base64_encode($content), 76, "\r\n");
+    };
+
+    $body = '';
+    if ($letter['text'] !== '') $body .= $part('text/plain', $letter['text']);
+    if ($letter['html'] !== '') $body .= $part('text/html', $letter['html']);
+    $body .= "--$boundary--\r\n";
+
+    /*
+     * Точка в начале строки в протоколе означает конец письма — её удваивают.
+     * Тело у нас в base64, точек там не бывает, но правило соблюдаем: однажды
+     * формат письма поменяется, а про это забудут.
+     */
+    $message = implode("\r\n", $headers) . "\r\n\r\n" . $body;
+    return preg_replace('/^\./m', '..', $message);
 }
 
 /** POST с JSON-телом. Ответ отдаём как есть: разбирает его вызывающий. */
