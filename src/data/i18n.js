@@ -333,6 +333,33 @@ export const DICT = {
   'quick.none': { ru: 'Ничего не выбрано', en: 'Nothing selected', he: 'לא נבחר דבר' },
 
   // ---------------------------------------------------------------- админ-панель
+  'admin.mine': { ru: 'Моя статистика', en: 'My statistics', he: 'הסטטיסטיקה שלי' },
+  'admin.mineHint': {
+    ru: 'По операциям вашей семьи — целиком, с товарами и магазинами. Ниже, в общей части, ваших записей уже нет.',
+    en: 'From your own family’s transactions — in full, with items and shops. The shared part below excludes your entries.',
+    he: 'לפי התנועות של המשפחה שלכם — במלואן, עם מוצרים וחנויות. בחלק המשותף שלמטה הרשומות שלכם כבר לא נכללות.',
+  },
+  'admin.myTx': { ru: 'Операций', en: 'Transactions', he: 'תנועות' },
+  'admin.myPhoto': { ru: 'Сфотографировано чеков', en: 'Receipts photographed', he: 'קבלות שצולמו' },
+  'admin.myQr': { ru: 'Считано по QR-коду', en: 'Scanned by QR code', he: 'נסרקו בקוד QR' },
+  'admin.mySms': { ru: 'Из SMS банка', en: 'From bank SMS', he: 'מ-SMS של הבנק' },
+  'admin.myManual': { ru: 'Записано вручную', en: 'Entered by hand', he: 'הוזנו ידנית' },
+  'admin.myItems': { ru: 'Строк с товарами', en: 'Item entries', he: 'שורות מוצרים' },
+  'admin.myItemsTop': { ru: 'Что покупаю', en: 'What I buy', he: 'מה אני קונה' },
+  'admin.myShops': { ru: 'Где покупаю', en: 'Where I buy', he: 'איפה אני קונה' },
+
+  'admin.howEntered': { ru: 'Как заводят операции', en: 'How transactions are entered', he: 'איך מזינים תנועות' },
+  'admin.usageTotal': { ru: 'Всего записей', en: 'Entries total', he: 'סה״כ רשומות' },
+  'admin.usagePhoto': { ru: 'Сфотографировано чеков', en: 'Receipts photographed', he: 'קבלות שצולמו' },
+  'admin.usageQr': { ru: 'Считано по QR-коду', en: 'Scanned by QR code', he: 'נסרקו בקוד QR' },
+  'admin.usageSms': { ru: 'Из SMS банка', en: 'From bank SMS', he: 'מ-SMS של הבנק' },
+  'admin.usageManual': { ru: 'Записано вручную', en: 'Entered by hand', he: 'הוזנו ידנית' },
+  'admin.usageHint': {
+    ru: 'Счётчик по месяцам, в нём только числа: ни номера аккаунта, ни сумм, ни названий. Он начал считать с появления этого раздела, поэтому прежние записи в него не попали.',
+    en: 'A per-month counter holding numbers only: no account id, no amounts, no names. It started counting when this section appeared, so earlier entries are not in it.',
+    he: 'מונה חודשי שמכיל מספרים בלבד: בלי מזהה חשבון, בלי סכומים ובלי שמות. הוא התחיל לספור עם הופעת החלק הזה, ולכן רשומות קודמות אינן נכללות.',
+  },
+
   'admin.activity': { ru: 'Активность', en: 'Activity', he: 'פעילות' },
   'admin.usersTotal': { ru: 'Всего людей', en: 'People total', he: 'סה״כ אנשים' },
   'admin.usersMonth': { ru: 'Пришли за месяц', en: 'Joined this month', he: 'הצטרפו בחודש' },
@@ -341,11 +368,11 @@ export const DICT = {
   'admin.subsTrial': { ru: 'На пробном', en: 'On trial', he: 'בתקופת ניסיון' },
   'admin.subsExpired': { ru: 'Подписка истекла', en: 'Expired', he: 'המנוי פג' },
 
-  'admin.market': { ru: 'Цены и магазины', en: 'Prices and shops', he: 'מחירים וחנויות' },
+  'admin.market': { ru: 'Все пользователи', en: 'All users', he: 'כל המשתמשים' },
   'admin.marketHint': {
-    ru: 'Считается по общей базе цен — той самой, что видна всем пользователям. Кто именно что купил, здесь не показывается: в записях нет ни имени, ни почты.',
-    en: 'Calculated from the shared price database — the one every user can see. Who bought what is not shown here: the entries carry no name and no email.',
-    he: 'מחושב מתוך מאגר המחירים המשותף — זה שגלוי לכל המשתמשים. מי קנה מה לא מוצג כאן: ברשומות אין שם ואין דוא״ל.',
+    ru: 'Считается по общей базе цен — той самой, что видна всем пользователям, — и без ваших собственных записей. Кто именно что купил, здесь не показывается: ни имени, ни почты в этих записях нет.',
+    en: 'Calculated from the shared price database — the one every user can see — with your own entries left out. Who bought what is not shown here: the entries carry no name and no email.',
+    he: 'מחושב מתוך מאגר המחירים המשותף — זה שגלוי לכל המשתמשים — ובלי הרשומות שלכם. מי קנה מה לא מוצג כאן: ברשומות אין שם ואין דוא״ל.',
   },
   'admin.marketEmpty': {
     ru: 'В общей базе цен пока пусто',
@@ -358,13 +385,13 @@ export const DICT = {
   'admin.shopsCount': { ru: 'Магазинов', en: 'Shops', he: 'חנויות' },
   'admin.turnover': { ru: 'Сумма покупок', en: 'Purchases total', he: 'סכום הקניות' },
   'admin.period': { ru: 'Период', en: 'Period', he: 'תקופה' },
-  'admin.topItems': { ru: 'Что покупают', en: 'What people buy', he: 'מה קונים' },
+  'admin.topItems': { ru: 'Что покупают остальные', en: 'What other people buy', he: 'מה אחרים קונים' },
   'admin.topItemsHint': {
     ru: 'Справа — цена от самой низкой до самой высокой среди всех магазинов, по сегодняшнему курсу.',
     en: 'On the right — the price from lowest to highest across all shops, at today’s rate.',
     he: 'מימין — המחיר מהנמוך לגבוה בכל החנויות, לפי שער היום.',
   },
-  'admin.topShops': { ru: 'Где покупают', en: 'Where people buy', he: 'איפה קונים' },
+  'admin.topShops': { ru: 'Где покупают остальные', en: 'Where other people buy', he: 'איפה אחרים קונים' },
   'admin.shopMeta': { ru: '{items} тов. · {rows} зап.', en: '{items} items · {rows} entries', he: '{items} מוצרים · {rows} רשומות' },
   'admin.byMonth': { ru: 'По месяцам', en: 'By month', he: 'לפי חודשים' },
 

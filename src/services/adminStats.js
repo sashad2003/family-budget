@@ -19,9 +19,9 @@ import {
   collection, getDocs, query, orderBy, limit,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=90';
-import { convert } from '../core/money.js?v=90';
-import { monthOf } from '../core/dates.js?v=90';
+import { db } from '../core/firebase.js?v=92';
+import { convert } from '../core/money.js?v=92';
+import { monthOf } from '../core/dates.js?v=92';
 
 /**
  * Сколько строк тянем. Считаем на телефоне, поэтому берём свежие записи, а не
@@ -30,6 +30,53 @@ import { monthOf } from '../core/dates.js?v=90';
  * не надо.
  */
 const ROW_LIMIT = 4000;
+
+/**
+ * Строки собственных операций в том же виде, что и записи общей базы.
+ *
+ * Личная статистика считается по своим же данным, которые и так лежат на
+ * устройстве: ходить за ними в базу незачем, а вид один и тот же — значит
+ * и считаются оба разреза одной функцией.
+ */
+export function ownPriceRows(transactions, uid) {
+  const rows = [];
+
+  for (const tx of transactions || []) {
+    for (const item of tx.items || []) {
+      const qty = Number(item.qty) || 1;
+      const total = Number(item.total) || 0;
+      rows.push({
+        uid,
+        txId: tx.id,
+        name: item.name,
+        norm: item.norm,
+        merchant: tx.merchant,
+        shop: String(tx.merchant || '').trim().toLowerCase(),
+        price: Number(item.price) || (qty ? total / qty : 0),
+        qty,
+        total: total || (Number(item.price) || 0) * qty,
+        currency: tx.currency,
+        date: tx.date,
+      });
+    }
+  }
+
+  return rows;
+}
+
+/**
+ * Способы записи собственных операций — то же, что общий счётчик, только про
+ * себя и по настоящим операциям, а не по числам в usage.
+ */
+export function summarizeOwnSources(transactions) {
+  const counts = { photo: 0, qr: 0, sms: 0, bill: 0, manual: 0 };
+  const map = {
+    'receipt-photo': 'photo', 'receipt-url': 'qr', sms: 'sms', bill: 'bill', manual: 'manual',
+  };
+
+  for (const tx of transactions || []) counts[map[tx.source] || 'manual'] += 1;
+  return counts;
+}
 
 export async function loadPriceRows(max = ROW_LIMIT) {
   const snap = await getDocs(query(
@@ -121,6 +168,24 @@ export function summarizePrices(rows, base, rates) {
 
     months: [...months.values()].sort((a, b) => a.month.localeCompare(b.month)),
   };
+}
+
+/**
+ * Складывает месяцы счётчика в один набор чисел.
+ *
+ * В документах может не быть части полей — их просто ни разу не увеличивали,
+ * и это не то же самое, что ноль в базе.
+ */
+export function summarizeUsage(months) {
+  const counts = { photo: 0, qr: 0, sms: 0, bill: 0, manual: 0 };
+
+  for (const month of months || []) {
+    for (const kind of Object.keys(counts)) counts[kind] += Number(month[kind]) || 0;
+  }
+
+  counts.total = Object.values(counts).reduce((sum, value) => sum + value, 0);
+  counts.receipts = counts.photo + counts.qr;
+  return counts;
 }
 
 /**

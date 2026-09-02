@@ -9,6 +9,7 @@ rules_version = '2';
 //     ├─ bills/{billId}        (регулярные платежи)
 //     └─ meta/{docId}          (rates, settings)
 //   prices/{priceId}           общая база цен, читают все
+//   usage/{month}              обезличенный счётчик способов записи
 //
 // Доступ к бюджету: только участники семьи (uid в memberUids).
 // Присоединиться можно, только предъявив код из ссылки-приглашения.
@@ -42,6 +43,19 @@ service cloud.firestore {
       return request.resource.data.memberUids.hasAll(
         resource.data.memberUids.removeAll([request.auth.uid])
       );
+    }
+
+    /**
+     * Счётчик способов записи умеет только расти на единицу.
+     *
+     * Без этого любой вошедший мог бы обнулить чужой месяц или выставить
+     * себе миллион сканов: документ общий, и пишет в него каждое устройство,
+     * которое завело операцию.
+     */
+    function counterStep(field) {
+      let before = (resource != null && field in resource.data) ? resource.data[field] : 0;
+      let after = (field in request.resource.data) ? request.resource.data[field] : 0;
+      return after == before || after == before + 1;
     }
 
     function myEmail() {
@@ -163,6 +177,23 @@ service cloud.firestore {
         && request.resource.data.uid == request.auth.uid;
       allow delete: if request.auth != null
         && resource.data.uid == request.auth.uid;
+    }
+
+    // Счётчик способов записи: usage/2026-09 с полями photo, qr, sms, bill,
+    // manual. Внутри только числа — ни uid, ни сумм, ни названий, поэтому по
+    // нему нельзя узнать, кто и что заводил.
+    //
+    // Пишет любой вошедший: счётчик обновляет то же устройство, что завело
+    // операцию. Разрешены только известные поля и только рост на единицу —
+    // обнулить чужой месяц или дописать в документ постороннее нельзя.
+    match /usage/{month} {
+      // Читает только админ-панель: числа безобидные, но и показывать их
+      // всем незачем. Запись их не читает — merge дописывает поле вслепую.
+      allow read: if isAdmin();
+      allow write: if request.auth != null
+        && request.resource.data.keys().hasOnly(['photo', 'qr', 'sms', 'bill', 'manual'])
+        && counterStep('photo') && counterStep('qr') && counterStep('sms')
+        && counterStep('bill') && counterStep('manual');
     }
   }
 }

@@ -5,16 +5,20 @@
  * Firestore — спрятанной кнопки мало, чужие профили закрывает база.
  */
 
-import { el, render } from '../core/dom.js?v=90';
-import { state } from '../core/store.js?v=90';
-import { formatAmount } from '../core/money.js?v=90';
-import { listUsers } from '../services/account.js?v=90';
-import { loadPriceRows, summarizePrices, summarizeUsers } from '../services/adminStats.js?v=90';
-import { toastError, toastOk } from '../ui/toast.js?v=90';
-import { section } from '../ui/section.js?v=90';
-import { t, intlLocale } from '../core/i18n.js?v=90';
+import { el, render } from '../core/dom.js?v=92';
+import { state } from '../core/store.js?v=92';
+import { formatAmount } from '../core/money.js?v=92';
+import { listUsers } from '../services/account.js?v=92';
+import {
+  loadPriceRows, summarizePrices, summarizeUsers,
+  ownPriceRows, summarizeOwnSources, summarizeUsage,
+} from '../services/adminStats.js?v=92';
+import { loadUsage } from '../services/usage.js?v=92';
+import { toastError, toastOk } from '../ui/toast.js?v=92';
+import { section } from '../ui/section.js?v=92';
+import { t, intlLocale } from '../core/i18n.js?v=92';
 
-const cache = { users: null, query: '', prices: null };
+const cache = { users: null, query: '', prices: null, usage: null };
 
 export function renderAdmin() {
   const container = el('div');
@@ -32,6 +36,7 @@ export function renderAdmin() {
   const market = el('div');
 
   render(container, [
+    mine(),
     activity,
     section(t('admin.title'), [
       search,
@@ -43,6 +48,46 @@ export function renderAdmin() {
   load(body, false, activity);
   loadMarket(market);
   return container;
+}
+
+/**
+ * Своя статистика — подробная, с товарами и магазинами.
+ *
+ * Считается по операциям своей же семьи, которые и так лежат на устройстве.
+ * Это единственное место, где видно, кто именно что купил, — и видит это
+ * человек про себя.
+ */
+function mine() {
+  const rows = ownPriceRows(state.transactions, state.user?.uid);
+  const stats = summarizePrices(rows, state.base, state.rates);
+  const sources = summarizeOwnSources(state.transactions);
+  const money = (value) => formatAmount(value, state.base, { whole: true });
+
+  return [
+    section(t('admin.mine'), [
+      el('div', { class: 'card' }, [
+        statRow(t('admin.myTx'), String((state.transactions || []).length)),
+        statRow(t('admin.myPhoto'), String(sources.photo)),
+        statRow(t('admin.myQr'), String(sources.qr)),
+        statRow(t('admin.mySms'), String(sources.sms)),
+        statRow(t('admin.myManual'), String(sources.manual + sources.bill)),
+        statRow(t('admin.myItems'), String(stats.rows)),
+      ]),
+      el('p', { class: 'hint' }, t('admin.mineHint')),
+    ]),
+
+    stats.items.length
+      ? section(t('admin.myItemsTop'), el('div', { class: 'card' },
+          stats.items.slice(0, 15).map((item) => rankRow(item.name, money(item.total),
+            priceRange(item, money)))))
+      : null,
+
+    stats.shops.length
+      ? section(t('admin.myShops'), el('div', { class: 'card' },
+          stats.shops.slice(0, 15).map((shop) => rankRow(shop.name, money(shop.total),
+            t('admin.shopMeta', { items: shop.items, rows: shop.count })))))
+      : null,
+  ];
 }
 
 async function load(body, force = false, activity = null) {
@@ -91,7 +136,7 @@ async function loadMarket(node, force = false) {
   if (!cache.prices || force) {
     render(node, el('div', { class: 'empty' }, el('div', { class: 'spinner' })));
     try {
-      cache.prices = await loadPriceRows();
+      [cache.prices, cache.usage] = await Promise.all([loadPriceRows(), loadUsage()]);
     } catch (error) {
       console.error(error);
       render(node, el('div', { class: 'empty' }, t('admin.loadFailed')));
@@ -99,7 +144,11 @@ async function loadMarket(node, force = false) {
     }
   }
 
-  const stats = summarizePrices(cache.prices, state.base, state.rates);
+  // Свои строки из общей витрины убираем: они уже показаны выше и подробнее,
+  // а здесь интересно, что делают остальные.
+  const others = cache.prices.filter((row) => row.uid !== state.user?.uid);
+  const stats = summarizePrices(others, state.base, state.rates);
+  const usage = summarizeUsage(cache.usage);
   const money = (value) => formatAmount(value, state.base, { whole: true });
 
   if (!stats.rows) {
@@ -117,38 +166,47 @@ async function loadMarket(node, force = false) {
         statRow(t('admin.period'), `${stats.earliest || '—'} — ${stats.latest || '—'}`),
       ]),
       el('p', { class: 'hint' }, t('admin.marketHint')),
+
+      el('div', { class: 'tx-group__date' }, t('admin.howEntered')),
+      el('div', { class: 'card' }, [
+        statRow(t('admin.usageTotal'), String(usage.total)),
+        statRow(t('admin.usagePhoto'), String(usage.photo)),
+        statRow(t('admin.usageQr'), String(usage.qr)),
+        statRow(t('admin.usageSms'), String(usage.sms)),
+        statRow(t('admin.usageManual'), String(usage.manual + usage.bill)),
+      ]),
+      el('p', { class: 'hint' }, t('admin.usageHint')),
     ], el('button', { class: 'chip', onclick: () => loadMarket(node, true) }, t('common.refresh'))),
 
+    section(t('admin.topShops'), [
+      el('div', { class: 'card' }, stats.shops.slice(0, 20).map((shop) => rankRow(
+        shop.name, money(shop.total), t('admin.shopMeta', { items: shop.items, rows: shop.count }),
+      ))),
+    ]),
+
     section(t('admin.topItems'), [
-      el('div', { class: 'card' }, stats.items.slice(0, 20).map((item) => el('div', { class: 'legend-row' }, [
-        el('span', { class: 'legend-name' }, item.name),
-        el('span', { class: 'legend-val num' }, money(item.total)),
-        el('span', {
-          style: 'width:96px;text-align:right;color:var(--fg-2);font-size:12.5px',
-        }, priceRange(item, money)),
-      ]))),
+      el('div', { class: 'card' }, stats.items.slice(0, 20).map((item) => rankRow(
+        item.name, money(item.total), priceRange(item, money),
+      ))),
       el('p', { class: 'hint' }, t('admin.topItemsHint')),
     ]),
 
-    section(t('admin.topShops'), [
-      el('div', { class: 'card' }, stats.shops.slice(0, 20).map((shop) => el('div', { class: 'legend-row' }, [
-        el('span', { class: 'legend-name' }, shop.name),
-        el('span', { class: 'legend-val num' }, money(shop.total)),
-        el('span', {
-          style: 'width:96px;text-align:right;color:var(--fg-2);font-size:12.5px',
-        }, t('admin.shopMeta', { items: shop.items, rows: shop.count })),
-      ]))),
-    ]),
-
     section(t('admin.byMonth'), [
-      el('div', { class: 'card' }, stats.months.slice(-12).reverse().map((row) => el('div', { class: 'legend-row' }, [
-        el('span', { class: 'legend-name num' }, row.month),
-        el('span', { class: 'legend-val num' }, money(row.total)),
-        el('span', {
-          style: 'width:96px;text-align:right;color:var(--fg-2);font-size:12.5px',
-        }, t('admin.rowsShort', { n: row.count })),
-      ]))),
+      el('div', { class: 'card' }, stats.months.slice(-12).reverse().map((row) => rankRow(
+        row.month, money(row.total), t('admin.rowsShort', { n: row.count }),
+      ))),
     ]),
+  ]);
+}
+
+/** Строка «название — сумма — пояснение справа». */
+function rankRow(name, value, meta) {
+  return el('div', { class: 'legend-row' }, [
+    el('span', { class: 'legend-name' }, name),
+    el('span', { class: 'legend-val num' }, value),
+    el('span', {
+      style: 'width:104px;text-align:right;color:var(--fg-2);font-size:12.5px',
+    }, meta),
   ]);
 }
 
