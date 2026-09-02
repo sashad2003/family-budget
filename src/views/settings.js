@@ -1,20 +1,20 @@
 /** Настройки: профиль, участники, валюта, курсы, категории. */
 
-import { el, render } from '../core/dom.js?v=97';
-import { state, set } from '../core/store.js?v=97';
-import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=97';
-import { formatAmount, convert } from '../core/money.js?v=97';
-import { logout } from '../services/auth.js?v=97';
+import { el, render } from '../core/dom.js?v=98';
+import { state, set } from '../core/store.js?v=98';
+import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=98';
+import { formatAmount, convert } from '../core/money.js?v=98';
+import { logout } from '../services/auth.js?v=98';
 import {
-  inviteLink, resetInviteLink, removeMember, leaveFamily, isOwner, setMarketing,
-} from '../services/account.js?v=97';
-import { refreshRates } from '../services/rates.js?v=97';
-import { saveCategory, deleteCategory, reorderCategories } from '../services/transactions.js?v=97';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=97';
-import { section } from '../ui/section.js?v=97';
-import { t, intlLocale } from '../core/i18n.js?v=97';
-import { THEMES, getTheme, setTheme } from '../core/theme.js?v=97';
-import { toastOk, toastError } from '../ui/toast.js?v=97';
+  inviteLink, resetInviteLink, removeMember, leaveFamily, isOwner, setMarketing, wantsMail,
+} from '../services/account.js?v=98';
+import { refreshRates } from '../services/rates.js?v=98';
+import { saveCategory, deleteCategory, reorderCategories } from '../services/transactions.js?v=98';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=98';
+import { section } from '../ui/section.js?v=98';
+import { t, intlLocale } from '../core/i18n.js?v=98';
+import { THEMES, getTheme, setTheme } from '../core/theme.js?v=98';
+import { toastOk, toastError } from '../ui/toast.js?v=98';
 
 const PALETTE = ['#2dd98a', '#ff5b5b', '#5b9fff', '#ffb347', '#ff7eb3', '#38b6f5', '#8a8a94'];
 
@@ -49,7 +49,7 @@ function build(draw) {
        * что и даётся, и сразу — обещать «отпишем в течение недели» нечестно.
        */
       el('button', {
-        class: `toggle ${state.profile?.marketing ? 'is-on' : ''}`,
+        class: `toggle ${wantsMail(state.profile) ? 'is-on' : ''}`,
         onclick: () => toggleMarketing(draw),
       }, [
         el('span', {}, [
@@ -175,8 +175,8 @@ async function toggleMarketing(draw) {
   const uid = state.user?.uid;
   if (!uid || !state.profile) return;
 
-  const next = !state.profile.marketing;
-  set({ profile: { ...state.profile, marketing: next } });
+  const next = !wantsMail(state.profile);
+  set({ profile: { ...state.profile, marketing: next, mailOptOut: !next } });
   draw();
 
   try {
@@ -184,7 +184,7 @@ async function toggleMarketing(draw) {
     toastOk(t(next ? 'settings.mailOn' : 'settings.mailOff'));
   } catch (error) {
     console.error(error);
-    set({ profile: { ...state.profile, marketing: !next } });
+    set({ profile: { ...state.profile, marketing: !next, mailOptOut: next } });
     draw();
     toastError(t('settings.mailFailed'));
   }
@@ -389,7 +389,7 @@ function openCategoryEditor(cat, onDone) {
   // потому что на остальных экранах он не нужен.
   const pickerBox = el('div', {}, el('p', { class: 'hint' }, t('cat.iconLoading')));
 
-  import('../ui/emojiPicker.js?v=97')
+  import('../ui/emojiPicker.js?v=98')
     .then(({ emojiPicker }) => render(pickerBox, emojiPicker({
       value: model.icon,
       onPick: (glyph) => { model.icon = glyph; preview.textContent = glyph; },

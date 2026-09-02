@@ -451,11 +451,11 @@ export const DICT = {
   'admin.subActive': { ru: 'подписка', en: 'subscribed', he: 'מנוי' },
   'admin.subTrial': { ru: 'пробный до {date}', en: 'trial until {date}', he: 'ניסיון עד {date}' },
   'admin.subExpired': { ru: 'истекла', en: 'expired', he: 'פג' },
-  'admin.agreedMail': { ru: 'согласен на письма', en: 'agreed to emails', he: 'הסכים לקבל דיוור' },
+  'admin.optedOut': { ru: 'отписался от писем', en: 'opted out of emails', he: 'ביטל את הדיוור' },
   'admin.noneAgreed': {
-    ru: 'Среди них никто не согласился на письма',
-    en: 'None of them agreed to emails',
-    he: 'איש מהם לא הסכים לקבל דיוור',
+    ru: 'Все они отписались от писем',
+    en: 'All of them have opted out of emails',
+    he: 'כולם ביטלו את הדיוור',
   },
   'admin.copied': { ru: 'Скопировано {n} адресов', en: 'Copied {n} addresses', he: 'הועתקו {n} כתובות' },
   'admin.clipboardDenied': {

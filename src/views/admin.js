@@ -5,18 +5,18 @@
  * Firestore — спрятанной кнопки мало, чужие профили закрывает база.
  */
 
-import { el, render } from '../core/dom.js?v=97';
-import { state } from '../core/store.js?v=97';
-import { formatAmount } from '../core/money.js?v=97';
-import { listUsers } from '../services/account.js?v=97';
+import { el, render } from '../core/dom.js?v=98';
+import { state } from '../core/store.js?v=98';
+import { formatAmount } from '../core/money.js?v=98';
+import { listUsers, wantsMail } from '../services/account.js?v=98';
 import {
   loadPriceRows, summarizePrices, summarizeUsers,
   ownPriceRows, summarizeOwnSources, summarizeUsage,
-} from '../services/adminStats.js?v=97';
-import { loadUsage } from '../services/usage.js?v=97';
-import { toastError, toastOk } from '../ui/toast.js?v=97';
-import { section } from '../ui/section.js?v=97';
-import { t, plural, intlLocale } from '../core/i18n.js?v=97';
+} from '../services/adminStats.js?v=98';
+import { loadUsage } from '../services/usage.js?v=98';
+import { toastError, toastOk } from '../ui/toast.js?v=98';
+import { section } from '../ui/section.js?v=98';
+import { t, plural, intlLocale } from '../core/i18n.js?v=98';
 
 const cache = { users: null, query: '', prices: null, usage: null, tab: 'mine' };
 
@@ -316,7 +316,7 @@ function userRow(user) {
 
   const meta = [user.email];
   if (user.phone) meta.push(user.phone);
-  if (user.marketing) meta.push(t('admin.agreedMail'));
+  if (!wantsMail(user)) meta.push(t('admin.optedOut'));
 
   return el('div', { class: 'tx' }, [
     el('div', { class: 'tx__body' }, [
@@ -337,11 +337,14 @@ function dateOf(value) {
 }
 
 /**
- * Почты в буфер обмена — для рассылки берём только тех, кто на неё согласился.
- * Остальным писать нельзя, и выгружать их адреса тоже незачем.
+ * Почты в буфер обмена — все, кроме отписавшихся.
+ *
+ * Пока приложение бесплатное и тестовое, письма о новом получают все, кто не
+ * сказал «не пишите». Отписка исключает человека сразу и навсегда: поле
+ * mailOptOut ставит он сам, и обратно его ставит тоже только он.
  */
 async function copyEmails(list) {
-  const emails = list.filter((u) => u.marketing).map((u) => u.email);
+  const emails = list.filter(wantsMail).map((u) => u.email);
   if (!emails.length) {
     toastError(t('admin.noneAgreed'));
     return;

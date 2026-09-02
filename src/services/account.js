@@ -40,9 +40,9 @@ import {
   limit,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=97';
-import { ADMIN_EMAILS, LEGACY_FAMILY_ID, TRIAL_DAYS } from '../config.js?v=97';
-import { t } from '../core/i18n.js?v=97';
+import { db } from '../core/firebase.js?v=98';
+import { ADMIN_EMAILS, LEGACY_FAMILY_ID, TRIAL_DAYS } from '../config.js?v=98';
+import { t } from '../core/i18n.js?v=98';
 
 const userRef = (uid) => doc(db, 'users', uid);
 const codeRef = (code) => doc(db, 'inviteCodes', String(code));
@@ -103,6 +103,8 @@ async function createProfile(user, { familyId, name, phone, marketing }) {
     familyId,
     familyIds: [familyId],
     marketing: Boolean(marketing),
+    /** Явный отказ. Пустая галочка в анкете — тоже ответ, и он записывается. */
+    mailOptOut: !marketing,
     createdAt: serverTimestamp(),
     trialEndsAt: trialEndsAt.toISOString().slice(0, 10),
     subscription: 'trial',
@@ -128,15 +130,30 @@ async function createFamily(user, name) {
 /**
  * Согласие на письма о новом.
  *
- * Спрашивается один раз, в анкете при регистрации, — и до сих пор там же и
- * оставалось: передумать было негде. Согласие должно отзываться так же легко,
- * как даётся, поэтому тот же переключатель стоит в настройках.
+ * Пишутся два поля. marketing — что человек ответил, mailOptOut — что он
+ * отказался явно. Второе и решает, попадёт ли он в рассылку.
  *
- * Правила Firestore позволяют человеку менять у себя имя, телефон и это поле;
- * состояние подписки и почту они трогать не дают.
+ * Разделение нужно из-за тех, кто завёлся раньше этого переключателя: у них
+ * в базе стоит marketing: false, но выбирали они его в анкете, где галочка
+ * просто не была нажата. Отличить «отказался» от «не тронул» по одному полю
+ * невозможно, а отписка должна оставаться отпиской — поэтому явный отказ
+ * записывается отдельно и только этим переключателем.
+ *
+ * Правила Firestore позволяют человеку менять у себя имя, телефон и эти поля;
+ * почту и состояние подписки они трогать не дают.
  */
 export async function setMarketing(uid, agreed) {
-  await updateDoc(userRef(uid), { marketing: Boolean(agreed) });
+  await updateDoc(userRef(uid), { marketing: Boolean(agreed), mailOptOut: !agreed });
+}
+
+/**
+ * Писать этому человеку или нет.
+ *
+ * Пока приложение бесплатное и тестовое, письма о новом получают все, кто не
+ * отписался. Явный отказ — единственное, что из этого выводит.
+ */
+export function wantsMail(user) {
+  return user?.mailOptOut !== true;
 }
 
 export async function inviteByCode(code) {
