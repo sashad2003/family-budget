@@ -147,7 +147,33 @@ export const DICT = {
     he: 'מה חדש באפליקציה. שורה ריקה מפרידה בין פסקאות.',
   },
   'mail.send': { ru: 'Отправить всем', en: 'Send to everyone', he: 'שליחה לכולם' },
-  'mail.sendTest': { ru: 'Пробное письмо себе', en: 'Send a test to myself', he: 'מייל בדיקה לעצמי' },
+  'mail.sendTest': { ru: 'Пробное себе', en: 'Test to myself', he: 'בדיקה לעצמי' },
+  'mail.preview': { ru: 'Посмотреть', en: 'Preview', he: 'תצוגה מקדימה' },
+  'mail.translate': { ru: 'Перевести на остальные', en: 'Translate to the rest', he: 'לתרגם לשאר' },
+  'mail.translating': { ru: 'Переводим…', en: 'Translating…', he: 'מתרגמים…' },
+  'mail.translated': {
+    ru: 'Переведено — проверьте текст на других язычках',
+    en: 'Translated — check the text on the other tabs',
+    he: 'תורגם — בדקו את הטקסט בלשוניות האחרות',
+  },
+  'mail.formatText': { ru: 'Простой текст', en: 'Plain text', he: 'טקסט פשוט' },
+  'mail.formatHtml': { ru: 'Своя разметка', en: 'Custom HTML', he: 'HTML משלכם' },
+  'mail.htmlPlaceholder': {
+    ru: 'Разметка письма: <p>, <h2>, <a>, <img>, таблицы. Рамка и подпись со ссылкой отписки добавятся сами.',
+    en: 'Letter markup: <p>, <h2>, <a>, <img>, tables. The frame and the footer with the unsubscribe link are added automatically.',
+    he: 'קוד המכתב: <p>, <h2>, <a>, <img>, טבלאות. המסגרת והחתימה עם קישור ההסרה יתווספו מעצמן.',
+  },
+  'mail.sendTitle': { ru: 'Отправка всем', en: 'Send to everyone', he: 'שליחה לכולם' },
+  'mail.sendWarning': {
+    ru: 'Письмо уйдёт всем, кто не отписался, на языке каждого. Отозвать отправленное нельзя — сначала проверьте пробным письмом себе.',
+    en: 'The letter goes to everyone who has not opted out, each in their own language. Sent mail cannot be recalled — check it with a test to yourself first.',
+    he: 'המכתב יישלח לכל מי שלא ביטל, כל אחד בשפתו. אי אפשר לבטל שליחה — בדקו קודם עם מייל בדיקה לעצמכם.',
+  },
+  'mail.translateFailed': {
+    ru: 'Перевод не получился',
+    en: 'Translation failed',
+    he: 'התרגום נכשל',
+  },
   'mail.testSending': { ru: 'Отправляем на {email}…', en: 'Sending to {email}…', he: 'שולחים אל {email}…' },
   'mail.testSent': {
     ru: 'Письмо ушло на {email} — проверьте почту и папку «Спам»',
@@ -158,6 +184,11 @@ export const DICT = {
     ru: 'Не отправилось: {reason}',
     en: 'Not sent: {reason}',
     he: 'לא נשלח: {reason}',
+  },
+  'mail.hintHtml': {
+    ru: 'В своей разметке доступны обычные теги письма: заголовки, абзацы, ссылки, картинки по прямым адресам и таблицы для колонок. Скрипты и внешние стили почтовые программы всё равно вырезают.',
+    en: 'Custom markup supports the usual email tags: headings, paragraphs, links, images by direct URL and tables for columns. Scripts and external stylesheets are stripped by mail clients anyway.',
+    he: 'בקוד משלכם אפשר להשתמש בתגיות הרגילות של מייל: כותרות, פסקאות, קישורים, תמונות בכתובת ישירה וטבלאות לעמודות. סקריפטים וגיליונות סגנון חיצוניים ממילא מוסרים על ידי תוכנות הדואר.',
   },
   'mail.hint': {
     ru: 'Каждому приходит письмо на его языке — том, что он выбрал в приложении. Языки с пустым текстом не отправляются. Уходит по одному письму на человека, чужих адресов в нём не видно, ссылка «отписаться» ставится сама.',

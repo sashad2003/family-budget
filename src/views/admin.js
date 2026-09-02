@@ -5,21 +5,21 @@
  * Firestore — спрятанной кнопки мало, чужие профили закрывает база.
  */
 
-import { el, render } from '../core/dom.js?v=106';
-import { state } from '../core/store.js?v=106';
-import { formatAmount } from '../core/money.js?v=106';
-import { listUsers, wantsMail } from '../services/account.js?v=106';
+import { el, render } from '../core/dom.js?v=107';
+import { state } from '../core/store.js?v=107';
+import { formatAmount } from '../core/money.js?v=107';
+import { listUsers, wantsMail } from '../services/account.js?v=107';
 import {
   loadPriceRows, summarizePrices, summarizeUsers,
   ownPriceRows, summarizeOwnSources, summarizeUsage,
-} from '../services/adminStats.js?v=106';
-import { loadUsage } from '../services/usage.js?v=106';
+} from '../services/adminStats.js?v=107';
+import { loadUsage } from '../services/usage.js?v=107';
 import {
-  buildLetter, sendBatch, localeOf, mailError, MAIL_BATCH,
-} from '../services/mail.js?v=106';
-import { toastError, toastOk } from '../ui/toast.js?v=106';
-import { section } from '../ui/section.js?v=106';
-import { t, plural, intlLocale, LOCALES } from '../core/i18n.js?v=106';
+  buildLetter, sendBatch, translateLetter, localeOf, mailError, MAIL_BATCH,
+} from '../services/mail.js?v=107';
+import { toastError, toastOk } from '../ui/toast.js?v=107';
+import { section } from '../ui/section.js?v=107';
+import { t, plural, intlLocale, LOCALES } from '../core/i18n.js?v=107';
 
 const cache = { users: null, query: '', prices: null, usage: null, tab: 'mine' };
 
@@ -30,7 +30,17 @@ const cache = { users: null, query: '', prices: null, usage: null, tab: 'mine' }
  * человеку письмо на языке, которого он не знает, значит не написать вовсе.
  * Незаполненные языки просто не отправляются: пустое письмо хуже молчания.
  */
-const letter = { drafts: { ru: { subject: '', body: '' }, en: { subject: '', body: '' }, he: { subject: '', body: '' } }, lang: 'ru', busy: false };
+const letter = {
+  drafts: {
+    ru: { subject: '', body: '' },
+    en: { subject: '', body: '' },
+    he: { subject: '', body: '' },
+  },
+  lang: 'ru',
+  /** 'text' — обычные абзацы, 'html' — своя разметка с картинками и кнопками */
+  format: 'text',
+  busy: false,
+};
 
 /**
  * Админ-панель на два язычка.
@@ -72,32 +82,35 @@ export function renderAdmin() {
 function mailer() {
   const status = el('div', { class: 'hint', style: 'margin-top:10px' });
   const fields = el('div');
+  const preview = el('div');
 
   const draw = () => {
     const draft = letter.drafts[letter.lang];
-    const people = recipientsBy(letter.lang);
+    const dir = letter.lang === 'he' ? 'rtl' : 'ltr';
 
     render(fields, [
       el('input', {
         class: 'input',
         placeholder: t('mail.subjectPlaceholder'),
         value: draft.subject,
-        dir: letter.lang === 'he' ? 'rtl' : 'ltr',
+        dir,
         oninput: (e) => { draft.subject = e.target.value; },
       }),
       el('textarea', {
         class: 'input textarea',
-        style: 'margin-top:10px;min-height:150px',
-        placeholder: t('mail.bodyPlaceholder'),
-        dir: letter.lang === 'he' ? 'rtl' : 'ltr',
+        style: `margin-top:10px;min-height:${letter.format === 'html' ? 220 : 150}px`
+          + (letter.format === 'html' ? ';font-family:var(--mono);font-size:13px' : ''),
+        placeholder: t(letter.format === 'html' ? 'mail.htmlPlaceholder' : 'mail.bodyPlaceholder'),
+        dir: letter.format === 'html' ? 'ltr' : dir,
         oninput: (e) => { draft.body = e.target.value; },
       }, draft.body),
       el('div', { class: 'hint', style: 'margin-top:8px' },
-        t('mail.forLang', { n: people.length })),
+        t('mail.forLang', { n: recipientsBy(letter.lang).length })),
     ]);
+
+    render(preview, []);
   };
 
-  // Язычки языков: у каждого свой текст, и рядом видно, скольким он уйдёт.
   const tabs = el('div', { class: 'segmented', style: 'margin-bottom:12px' },
     LOCALES.map((lang) => el('button', {
       class: letter.lang === lang.code ? 'is-active' : '',
@@ -111,30 +124,129 @@ function mailer() {
     });
   };
 
-  const send = el('button', {
-    class: 'btn btn--primary btn--wide',
-    style: 'margin-top:12px',
-    onclick: () => sendLetter(status, send),
-  }, t('mail.send'));
+  // Вид письма: простые абзацы или своя разметка.
+  const formats = el('div', { class: 'segmented', style: 'margin-bottom:12px' },
+    [['text', t('mail.formatText')], ['html', t('mail.formatHtml')]].map(([key, label]) =>
+      el('button', {
+        class: letter.format === key ? 'is-active' : '',
+        onclick: () => {
+          letter.format = key;
+          [...formats.children].forEach((b, i) => b.classList.toggle('is-active', i === (key === 'text' ? 0 : 1)));
+          draw();
+        },
+      }, label)));
 
-  /*
-   * Пробное письмо себе. Отправка настоящей рассылки — действие без обратного
-   * хода: разосланное не отзовёшь, а проверять хочется и настройки почты, и
-   * то, как письмо выглядит у человека. Поэтому рядом стоит кнопка, которая
-   * шлёт ровно один адрес — свой.
-   */
+  const translate = el('button', {
+    class: 'chip',
+    onclick: () => translateDraft(status, translate),
+  }, `✨ ${t('mail.translate')}`);
+
+  const show = el('button', {
+    class: 'chip',
+    onclick: () => showPreview(preview),
+  }, `👁 ${t('mail.preview')}`);
+
   const test = el('button', {
-    class: 'btn btn--wide',
-    style: 'margin-top:8px',
+    class: 'chip',
     onclick: () => sendTest(status, test),
-  }, t('mail.sendTest'));
+  }, `✉️ ${t('mail.sendTest')}`);
 
   draw();
 
-  return section(t('mail.title'), [
-    el('div', { class: 'card' }, [tabs, fields, send, test, status]),
-    el('p', { class: 'hint' }, t('mail.hint')),
-  ]);
+  return [
+    section(t('mail.title'), [
+      el('div', { class: 'card' }, [
+        tabs,
+        formats,
+        fields,
+        // Проверочные действия стоят вместе и выглядят как второстепенные:
+        // рядом с ними не должно быть кнопки, которая пишет сразу всем.
+        el('div', { class: 'chip-row', style: 'margin-top:12px' }, [translate, show, test]),
+        status,
+        preview,
+      ]),
+      el('p', { class: 'hint' }, t('mail.hint')),
+    ]),
+
+    /*
+     * Отправка всем — отдельным разделом и внизу.
+     *
+     * Раньше она стояла кнопка в кнопку с пробным письмом: два действия, одно
+     * из которых отзывается, а другое нет, не должны находиться на расстоянии
+     * промаха мышью.
+     */
+    section(t('mail.sendTitle'), [
+      el('div', { class: 'card' }, [
+        el('p', { style: 'margin:0 0 12px;font-size:14.5px' }, t('mail.sendWarning')),
+        el('button', {
+          class: 'btn btn--primary btn--wide',
+          onclick: (e) => sendLetter(status, e.target),
+        }, t('mail.send')),
+      ]),
+    ]),
+  ];
+}
+
+/** Как письмо выглядит у получателя — прямо на странице, в рамке. */
+function showPreview(node) {
+  const draft = letter.drafts[letter.lang];
+  if (!draft.subject.trim() && !draft.body.trim()) {
+    toastError(t('mail.bodyEmpty'));
+    return;
+  }
+
+  const { html } = buildLetter(
+    draft.subject.trim(), draft.body.trim(), letter.lang, letter.format,
+  );
+
+  render(node, el('iframe', {
+    // Предпросмотр в отдельном окне: стили письма не должны потечь на
+    // страницу, а скрипты из него — выполниться.
+    srcdoc: html,
+    sandbox: '',
+    style: 'width:100%;height:420px;margin-top:14px;border:1px solid var(--edge);border-radius:12px;background:#fff',
+  }));
+}
+
+/** Перевод черновика на остальные языки — той же моделью, что читает чеки. */
+async function translateDraft(status, button) {
+  if (letter.busy) return;
+
+  const draft = letter.drafts[letter.lang];
+  if (!draft.subject.trim() || !draft.body.trim()) {
+    toastError(t('mail.bodyEmpty'));
+    return;
+  }
+
+  const targets = LOCALES.map((l) => l.code).filter((code) => code !== letter.lang);
+
+  letter.busy = true;
+  button.disabled = true;
+  status.textContent = t('mail.translating');
+
+  try {
+    const result = await translateLetter({
+      subject: draft.subject.trim(),
+      body: draft.body.trim(),
+      from: letter.lang,
+      targets,
+    });
+
+    for (const code of targets) {
+      if (result[code]?.subject) letter.drafts[code].subject = result[code].subject;
+      if (result[code]?.body) letter.drafts[code].body = result[code].body;
+    }
+
+    status.textContent = t('mail.translated');
+    toastOk(t('mail.translated'));
+  } catch (error) {
+    console.error(error);
+    status.textContent = error.message;
+    toastError(error.message);
+  } finally {
+    letter.busy = false;
+    button.disabled = false;
+  }
 }
 
 /** Письмо себе — на том языке, который открыт сейчас. */
@@ -155,7 +267,7 @@ async function sendTest(status, button) {
 
   try {
     const subject = draft.subject.trim();
-    const { html, text } = buildLetter(subject, draft.body.trim(), letter.lang);
+    const { html, text } = buildLetter(subject, draft.body.trim(), letter.lang, letter.format);
     const result = await sendBatch({
       subject, html, text, recipients: [{ email, name: state.profile?.name || '' }],
     });
@@ -218,7 +330,7 @@ async function sendLetter(status, button) {
   try {
     for (const part of plan) {
       const subject = part.draft.subject.trim();
-      const { html, text } = buildLetter(subject, part.draft.body.trim(), part.locale);
+      const { html, text } = buildLetter(subject, part.draft.body.trim(), part.locale, letter.format);
 
       for (let i = 0; i < part.people.length; i += MAIL_BATCH) {
         const chunk = part.people.slice(i, i + MAIL_BATCH)

@@ -14,6 +14,7 @@ declare(strict_types=1);
  *   receipt_image  — распознать фото чека
  *   receipt_url    — распознать страницу чека по ссылке (QR с инвойса)
  *   send_mail      — письмо о новом в приложении, только админу
+ *   translate_mail — перевод письма на другие языки, только админу
  */
 
 ini_set('display_errors', '0');
@@ -142,6 +143,9 @@ switch ($action) {
     case 'send_mail':
         respond(200, sendMail($config, $user, $req));
 
+    case 'translate_mail':
+        respond(200, translateMail($config, $user, $req));
+
     default:
         respond(400, ['error' => 'unknown_action']);
 }
@@ -234,6 +238,116 @@ function sendMail(array $config, array $user, array $req): array
     }
 
     return ['sent' => $sent, 'failed' => $failed];
+}
+
+/**
+ * Перевод письма на остальные языки приложения.
+ *
+ * Письмо пишется на одном языке, а получают его люди с тремя разными. Перевод
+ * делает та же модель, что разбирает чеки: отдельного сервиса ради трёх
+ * абзацев заводить незачем.
+ *
+ * Разметку письма модель обязана сохранить — если админ прислал HTML, теги
+ * должны остаться теми же, переводится только текст между ними.
+ */
+function translateMail(array $config, array $user, array $req): array
+{
+    $admins = array_map('strtolower', $config['admin_emails'] ?? []);
+    if ($admins === [] || !in_array($user['email'], $admins, true)) {
+        respond(403, ['error' => 'not_admin']);
+    }
+
+    $subject = trim((string)($req['subject'] ?? ''));
+    $body = (string)($req['body'] ?? '');
+    $from = (string)($req['from'] ?? 'ru');
+    $targets = array_values(array_filter(
+        is_array($req['targets'] ?? null) ? $req['targets'] : [],
+        static fn ($code) => in_array($code, ['ru', 'en', 'he'], true),
+    ));
+
+    if ($subject === '' || $body === '' || $targets === []) {
+        respond(400, ['error' => 'translate_input_invalid']);
+    }
+    if (strlen($subject) + strlen($body) > MAX_MAIL_BYTES) {
+        respond(400, ['error' => 'mail_body_too_large']);
+    }
+
+    $names = ['ru' => 'русский', 'en' => 'английский', 'he' => 'иврит'];
+    $properties = [];
+    foreach ($targets as $code) {
+        $properties[$code] = [
+            'type' => 'object',
+            'properties' => [
+                'subject' => ['type' => 'string'],
+                'body'    => ['type' => 'string'],
+            ],
+            'required' => ['subject', 'body'],
+            'additionalProperties' => false,
+        ];
+    }
+
+    $schema = [
+        'type' => 'object',
+        'properties' => $properties,
+        'required' => $targets,
+        'additionalProperties' => false,
+    ];
+
+    $system = <<<'TXT'
+Ты переводишь письмо пользователям приложения для семейного бюджета.
+Переводи так, как пишут людям, а не как переводят документы: тем же тоном,
+той же длины, без канцелярита и без добавленных от себя любезностей.
+Названия приложения и валют не переводи. Разметку сохраняй в точности:
+если в тексте есть HTML-теги, они должны остаться теми же и на тех же местах,
+переводится только текст между ними. Пустые строки между абзацами сохраняй.
+TXT;
+
+    $list = implode(', ', array_map(static fn ($c) => $names[$c] ?? $c, $targets));
+    $prompt = "Исходный язык: {$names[$from]}. Переведи на: {$list}.\n\n"
+        . "Тема: {$subject}\n\nТекст:\n{$body}";
+
+    $payload = [
+        'model'      => $config['model'],
+        'max_tokens' => MAX_TOKENS,
+        'system'     => $system,
+        'messages'   => [['role' => 'user', 'content' => [['type' => 'text', 'text' => $prompt]]]],
+        'output_config' => [
+            'effort' => 'medium',
+            'format' => ['type' => 'json_schema', 'schema' => $schema],
+        ],
+    ];
+
+    $ch = curl_init('https://api.anthropic.com/v1/messages');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => json_encode($payload, JSON_UNESCAPED_UNICODE),
+        CURLOPT_TIMEOUT        => 120,
+        CURLOPT_HTTPHEADER     => [
+            'Content-Type: application/json',
+            'x-api-key: ' . $config['anthropic_key'],
+            'anthropic-version: 2023-06-01',
+        ],
+    ]);
+    $body_raw = curl_exec($ch);
+    $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    $resp = json_decode((string)$body_raw, true);
+    if ($code !== 200 || !is_array($resp)) {
+        respond(502, ['error' => 'claude_error', 'status' => $code]);
+    }
+
+    foreach ($resp['content'] ?? [] as $block) {
+        if (($block['type'] ?? '') === 'text') {
+            $parsed = json_decode((string)$block['text'], true);
+            if (is_array($parsed)) {
+                return ['ok' => true, 'translations' => $parsed];
+            }
+        }
+    }
+
+    respond(502, ['error' => 'claude_unparsable']);
 }
 
 /**

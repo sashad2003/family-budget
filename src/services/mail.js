@@ -10,9 +10,9 @@
  * одному письму на адрес, чтобы получатели не видели чужих почт.
  */
 
-import { PROXY_URL } from '../config.js?v=106';
-import { idToken } from './auth.js?v=106';
-import { t, tIn, LOCALES } from '../core/i18n.js?v=106';
+import { PROXY_URL } from '../config.js?v=107';
+import { idToken } from './auth.js?v=107';
+import { t, tIn, LOCALES } from '../core/i18n.js?v=107';
 
 /** Столько же, сколько прокси принимает за раз. */
 export const MAIL_BATCH = 50;
@@ -39,26 +39,40 @@ export function localeOf(user) {
 /**
  * Письмо целиком, на языке получателя.
  *
- * Разметка простая и с проставленными стилями: почтовые программы вырезают
- * внешние таблицы стилей, а половина из них ещё и не понимает современных
- * правил. Направление письма тоже задаётся здесь — иврит читается справа
- * налево, и без dir абзацы разъезжаются.
+ * Тело приходит в одном из двух видов. Простой текст разбивается на абзацы по
+ * пустой строке и экранируется — так пишут обычные письма. Разметка
+ * вставляется как есть: её пишут, когда нужно письмо с картинками, кнопками и
+ * заголовками, и ломать её экранированием нельзя.
+ *
+ * Общая рамка — светлый фон, белый лист, подпись со ссылкой отписки — остаётся
+ * в обоих случаях: она и делает письмо письмом приложения, а не куском текста.
+ *
+ * Стили проставлены прямо в тегах: почтовые программы вырезают внешние
+ * таблицы стилей, а половина из них не понимает и современных правил.
+ * Направление тоже здесь — иврит читается справа налево, и без dir абзацы
+ * разъезжаются.
  */
-export function buildLetter(title, body, locale = 'ru') {
+export function buildLetter(title, body, locale = 'ru', format = 'text') {
+  const rtl = locale === 'he';
+  const dir = rtl ? 'rtl' : 'ltr';
+  const align = rtl ? 'right' : 'left';
+
   const paragraphs = String(body || '')
     .split(/\n{2,}/)
     .map((part) => part.trim())
     .filter(Boolean);
 
-  const rtl = locale === 'he';
-  const dir = rtl ? 'rtl' : 'ltr';
-  const align = rtl ? 'right' : 'left';
+  const content = format === 'html'
+    ? String(body || '')
+    : paragraphs
+        .map((p) => `<p style="margin:0 0 14px;font-size:15px;line-height:1.6">${esc(p).replace(/\n/g, '<br>')}</p>`)
+        .join('\n    ');
 
   const html = `
 <div dir="${dir}" style="margin:0;padding:24px;background:#eceef6;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;text-align:${align}">
   <div style="max-width:560px;margin:0 auto;padding:28px;background:#ffffff;border-radius:18px;color:#14141f">
     <h1 style="margin:0 0 18px;font-size:22px;font-weight:600">${esc(title)}</h1>
-    ${paragraphs.map((p) => `<p style="margin:0 0 14px;font-size:15px;line-height:1.6">${esc(p).replace(/\n/g, '<br>')}</p>`).join('\n    ')}
+    ${content}
     <p style="margin:26px 0 0;font-size:13px;line-height:1.6;color:#66667c">
       ${esc(tIn(locale, 'mail.footer'))}
       <a href="${UNSUBSCRIBE_URL}" style="color:#3a63ff">${esc(tIn(locale, 'mail.unsubscribe'))}</a>
@@ -66,10 +80,52 @@ export function buildLetter(title, body, locale = 'ru') {
   </div>
 </div>`.trim();
 
-  const text = `${title}\n\n${paragraphs.join('\n\n')}\n\n`
-    + `${tIn(locale, 'mail.footer')} ${UNSUBSCRIBE_URL}`;
+  /*
+   * Текстовая часть письма нужна всегда: почтовые программы без разметки, а
+   * заодно и антиспам-фильтры, читают именно её. Из разметки её получаем,
+   * выкинув теги, — отдельно писать то же самое дважды никто не станет.
+   */
+  const plain = format === 'html' ? stripTags(String(body || '')) : paragraphs.join('\n\n');
+  const text = `${title}\n\n${plain}\n\n${tIn(locale, 'mail.footer')} ${UNSUBSCRIBE_URL}`;
 
   return { html, text };
+}
+
+/** Разметка → читаемый текст: переносы там, где были блоки. */
+function stripTags(html) {
+  return html
+    .replace(/<(script|style)[\s\S]*?<\/\1>/gi, '')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|h[1-6]|li|tr)>/gi, '\n\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+/**
+ * Перевод письма на остальные языки — той же моделью, что разбирает чеки.
+ * Разметку она сохраняет, переводится только текст между тегами.
+ */
+export async function translateLetter({ subject, body, from, targets }) {
+  const token = await idToken();
+  if (!token) throw new Error(t('receipt.signInAgain'));
+
+  const response = await fetch(PROXY_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ action: 'translate_mail', subject, body, from, targets }),
+  });
+
+  const data = await response.json().catch(() => null);
+  if (!response.ok || !data?.translations) {
+    throw new Error(mailError(data?.error, response.status));
+  }
+
+  return data.translations;
 }
 
 function esc(value) {
@@ -122,6 +178,9 @@ export function mailError(code, status = 0) {
     mail_body_too_large: 'mail.bodyTooLarge',
     mail_recipients_invalid: 'mail.recipientsInvalid',
     invalid_email: 'mail.badAddress',
+    translate_input_invalid: 'mail.bodyEmpty',
+    claude_error: 'mail.translateFailed',
+    claude_unparsable: 'mail.translateFailed',
 
     smtp_connect_failed: 'mail.smtpConnect',
     smtp_greeting_failed: 'mail.smtpConnect',
