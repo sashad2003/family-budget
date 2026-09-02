@@ -1,14 +1,14 @@
 /** Список операций с фильтрами по типу, категории и тексту. */
 
-import { el, render } from '../core/dom.js?v=83';
-import { state } from '../core/store.js?v=83';
-import { formatAmount, txAmountIn } from '../core/money.js?v=83';
-import { dayLabel } from '../core/dates.js?v=83';
-import { monthTransactions, groupByDate, totals } from '../core/selectors.js?v=83';
-import { openTxForm } from './txForm.js?v=83';
-import { section } from '../ui/section.js?v=83';
-import { t, getLocale } from '../core/i18n.js?v=83';
-import { activeTheme } from '../core/theme.js?v=83';
+import { el, render } from '../core/dom.js?v=84';
+import { state } from '../core/store.js?v=84';
+import { formatAmount, txAmountIn } from '../core/money.js?v=84';
+import { dayLabel } from '../core/dates.js?v=84';
+import { monthTransactions, groupByDate, totals } from '../core/selectors.js?v=84';
+import { openTxForm } from './txForm.js?v=84';
+import { section } from '../ui/section.js?v=84';
+import { t, getLocale } from '../core/i18n.js?v=84';
+import { activeTheme } from '../core/theme.js?v=84';
 
 /** Фильтры живут вне state: они локальны для экрана и не влияют на другие. */
 const filters = { type: 'all', categoryId: null, query: '' };
@@ -102,7 +102,9 @@ function drawChips(node, draw) {
         filters.categoryId = filters.categoryId === cat.id ? null : cat.id;
         draw();
       },
-    }, `${cat.icon} ${cat.name}`),
+      // Значок и название — отдельными узлами: пробелом между эмодзи и
+      // словом браузер распоряжается по-своему, и они слипались.
+    }, [el('span', { class: 'chip__ico' }, cat.icon), cat.name]),
   );
 
   render(node, [

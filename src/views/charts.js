@@ -7,14 +7,14 @@
  * Chart.js грузится с CDN по требованию — на других экранах он не нужен.
  */
 
-import { el, render } from '../core/dom.js?v=83';
-import { state, set } from '../core/store.js?v=83';
-import { formatAmount } from '../core/money.js?v=83';
-import { monthLabel } from '../core/dates.js?v=83';
-import { PERIODS, resolvePeriod } from '../core/period.js?v=83';
-import { rangeTransactions, byCategory, totals, seriesForMonths } from '../core/selectors.js?v=83';
-import { t, getLocale } from '../core/i18n.js?v=83';
-import { themeColor } from '../core/theme.js?v=83';
+import { el, render } from '../core/dom.js?v=84';
+import { state, set } from '../core/store.js?v=84';
+import { formatAmount } from '../core/money.js?v=84';
+import { monthLabel } from '../core/dates.js?v=84';
+import { PERIODS, resolvePeriod } from '../core/period.js?v=84';
+import { rangeTransactions, byCategory, totals, seriesForMonths } from '../core/selectors.js?v=84';
+import { t, getLocale } from '../core/i18n.js?v=84';
+import { themeColor } from '../core/theme.js?v=84';
 
 const CHART_JS = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.7/+esm';
 
@@ -79,7 +79,9 @@ export function renderCharts() {
         el('div', { class: 'bar-legend', style: 'margin-top:16px' }, cats.map((row) =>
           el('div', { class: 'legend-row' }, [
             el('span', { class: 'legend-dot', style: `background:${row.color}` }),
-            el('span', { class: 'legend-name' }, `${row.icon} ${row.name}`),
+            el('span', { class: 'legend-name' }, [
+              el('span', { class: 'chip__ico' }, row.icon), row.name,
+            ]),
             el('span', { class: 'legend-val' },
               `${row.share}% · ${formatAmount(row.total, state.base)}`),
           ]),

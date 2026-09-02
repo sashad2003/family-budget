@@ -1266,6 +1266,9 @@ button { cursor: pointer; border: none; background: none; }
 .cat.is-active { color: var(--tint, var(--fg-0)); background: var(--glass-3); border-color: currentColor; }
 
 .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   padding: 8px 14px;
   border-radius: var(--r-pill);
   background: var(--glass-1);
@@ -1287,7 +1290,11 @@ button { cursor: pointer; border: none; background: none; }
  * различие видно и в цвете, и в значке, то есть и при дальтонизме.
  * Зелёный на здешнем фоне даёт контраст 9.9:1, серый выключенного — 6.9:1.
  */
-.chip--toggle { display: inline-flex; align-items: center; gap: 7px; }
+.chip--toggle { gap: 7px; }
+/* Значок в чипе крупнее подписи, поэтому промежуток задан явно, а не пробелом */
+.chip__ico { font-size: 17px; line-height: 1; }
+/* В легенде строка не флексовая — там промежуток держит отступ самого значка */
+.legend-name .chip__ico { font-size: 15px; margin-inline-end: 7px; }
 .chip--toggle .chip__mark { font-size: 12px; opacity: 0.75; }
 .chip--toggle.is-active {
   color: var(--income);
