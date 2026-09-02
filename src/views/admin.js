@@ -5,18 +5,18 @@
  * Firestore — спрятанной кнопки мало, чужие профили закрывает база.
  */
 
-import { el, render } from '../core/dom.js?v=96';
-import { state } from '../core/store.js?v=96';
-import { formatAmount } from '../core/money.js?v=96';
-import { listUsers } from '../services/account.js?v=96';
+import { el, render } from '../core/dom.js?v=97';
+import { state } from '../core/store.js?v=97';
+import { formatAmount } from '../core/money.js?v=97';
+import { listUsers } from '../services/account.js?v=97';
 import {
   loadPriceRows, summarizePrices, summarizeUsers,
   ownPriceRows, summarizeOwnSources, summarizeUsage,
-} from '../services/adminStats.js?v=96';
-import { loadUsage } from '../services/usage.js?v=96';
-import { toastError, toastOk } from '../ui/toast.js?v=96';
-import { section } from '../ui/section.js?v=96';
-import { t, plural, intlLocale } from '../core/i18n.js?v=96';
+} from '../services/adminStats.js?v=97';
+import { loadUsage } from '../services/usage.js?v=97';
+import { toastError, toastOk } from '../ui/toast.js?v=97';
+import { section } from '../ui/section.js?v=97';
+import { t, plural, intlLocale } from '../core/i18n.js?v=97';
 
 const cache = { users: null, query: '', prices: null, usage: null, tab: 'mine' };
 

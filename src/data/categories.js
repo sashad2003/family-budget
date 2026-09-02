@@ -7,7 +7,7 @@
  * каждый раз значило бы затирать его собственное название.
  */
 
-import { t } from '../core/i18n.js?v=96';
+import { t } from '../core/i18n.js?v=97';
 
 const CATEGORIES = [
   // Расходы

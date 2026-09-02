@@ -40,12 +40,12 @@ import {
   writeBatch,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=96';
-import { getFamilyId } from '../core/session.js?v=96';
-import { defaultCategories } from '../data/categories.js?v=96';
-import { countUsage } from './usage.js?v=96';
-import { amountsInAllCurrencies } from '../core/money.js?v=96';
-import { monthOf } from '../core/dates.js?v=96';
+import { db } from '../core/firebase.js?v=97';
+import { getFamilyId } from '../core/session.js?v=97';
+import { defaultCategories } from '../data/categories.js?v=97';
+import { countUsage } from './usage.js?v=97';
+import { amountsInAllCurrencies } from '../core/money.js?v=97';
+import { monthOf } from '../core/dates.js?v=97';
 
 const txCollection = () => collection(db, 'families', getFamilyId(), 'transactions');
 const catCollection = () => collection(db, 'families', getFamilyId(), 'categories');
@@ -278,7 +278,7 @@ export async function createAutoBillPayment(input, { rates, user }) {
  */
 async function shareItemPrices(txId, tx, user) {
   try {
-    const { publishPrices } = await import('./prices.js?v=96');
+    const { publishPrices } = await import('./prices.js?v=97');
     await publishPrices(txId, tx, user.uid);
   } catch (error) {
     console.error('Не удалось обновить базу цен', error);
@@ -313,7 +313,7 @@ export async function deleteTransaction(id, user = null) {
 
   if (!user) return;
   try {
-    const { removePrices } = await import('./prices.js?v=96');
+    const { removePrices } = await import('./prices.js?v=97');
     await removePrices(id, user.uid);
   } catch (error) {
     console.error('Не удалось убрать цены удалённой операции', error);

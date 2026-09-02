@@ -40,9 +40,9 @@ import {
   limit,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=96';
-import { ADMIN_EMAILS, LEGACY_FAMILY_ID, TRIAL_DAYS } from '../config.js?v=96';
-import { t } from '../core/i18n.js?v=96';
+import { db } from '../core/firebase.js?v=97';
+import { ADMIN_EMAILS, LEGACY_FAMILY_ID, TRIAL_DAYS } from '../config.js?v=97';
+import { t } from '../core/i18n.js?v=97';
 
 const userRef = (uid) => doc(db, 'users', uid);
 const codeRef = (code) => doc(db, 'inviteCodes', String(code));
@@ -125,6 +125,20 @@ async function createFamily(user, name) {
 }
 
 /** Куда ведёт ссылка-приглашение. null — код выдуман или отозван. */
+/**
+ * Согласие на письма о новом.
+ *
+ * Спрашивается один раз, в анкете при регистрации, — и до сих пор там же и
+ * оставалось: передумать было негде. Согласие должно отзываться так же легко,
+ * как даётся, поэтому тот же переключатель стоит в настройках.
+ *
+ * Правила Firestore позволяют человеку менять у себя имя, телефон и это поле;
+ * состояние подписки и почту они трогать не дают.
+ */
+export async function setMarketing(uid, agreed) {
+  await updateDoc(userRef(uid), { marketing: Boolean(agreed) });
+}
+
 export async function inviteByCode(code) {
   const snap = await getDoc(codeRef(code)).catch(() => null);
   return snap?.exists() ? { code: snap.id, ...snap.data() } : null;

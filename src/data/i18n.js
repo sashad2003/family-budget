@@ -139,6 +139,33 @@ export const DICT = {
   'settings.noName': { ru: 'Без имени', en: 'No name', he: 'ללא שם' },
   'settings.signOut': { ru: 'Выйти', en: 'Sign out', he: 'התנתקות' },
   'settings.language': { ru: 'Язык', en: 'Language', he: 'שפה' },
+  'settings.mail': { ru: 'Письма', en: 'Emails', he: 'דיוור' },
+  'settings.mailTitle': {
+    ru: 'Письма о новом в приложении',
+    en: 'Emails about what’s new',
+    he: 'עדכונים על מה שחדש',
+  },
+  'settings.mailSub': {
+    ru: 'Редко и только по делу: что появилось и что изменилось. Выключить можно в любой момент — здесь же.',
+    en: 'Rarely and to the point: what’s new and what changed. You can turn it off at any time, right here.',
+    he: 'לעיתים רחוקות ולעניין: מה חדש ומה השתנה. אפשר לכבות בכל רגע, כאן.',
+  },
+  'settings.mailOn': {
+    ru: 'Будем писать о новом',
+    en: 'We’ll email you about what’s new',
+    he: 'נעדכן אתכם על מה שחדש',
+  },
+  'settings.mailOff': {
+    ru: 'Больше не пишем',
+    en: 'We won’t email you any more',
+    he: 'לא נשלח לכם עוד',
+  },
+  'settings.mailFailed': {
+    ru: 'Не удалось сохранить — попробуйте ещё раз',
+    en: 'Could not save — please try again',
+    he: 'השמירה נכשלה — נסו שוב',
+  },
+
   'settings.theme': { ru: 'Оформление', en: 'Appearance', he: 'מראה' },
   'settings.themeSystem': { ru: 'Как в системе', en: 'System', he: 'לפי המערכת' },
   'settings.themeLight': { ru: 'Светлая', en: 'Light', he: 'בהיר' },
