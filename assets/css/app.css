@@ -83,6 +83,11 @@
     radial-gradient(120% 130% at 20% 0%, rgba(255, 91, 91, 0.2), transparent 62%),
     linear-gradient(158deg, var(--glass-2), var(--glass-1));
   --alert-edge: rgba(255, 91, 91, 0.45);
+  /* Поле суммы и плитки съёмки чека: на тёмном — подсветка сверху */
+  --amount-bg: radial-gradient(120% 140% at 50% 0%, rgba(91, 159, 255, 0.14), var(--glass-1));
+  --scan-bg:
+    radial-gradient(120% 130% at 50% 0%, rgba(91, 159, 255, 0.18), transparent 65%),
+    linear-gradient(158deg, var(--glass-2), var(--glass-1));
 
   /*
    * Выбранное — везде одинаково: синяя подпись, синяя рамка, синяя подложка.
@@ -212,10 +217,13 @@ html[data-theme="light"] {
   --card-bg: #ffffff;
   /* Рамки у карточек нет — вес держит тень, поэтому она чуть плотнее */
   --card-shadow: 0 8px 22px -12px rgba(28, 39, 84, 0.28);
-  /* Баланс — тот же лист, только с холодным светом сверху */
-  --balance-bg: linear-gradient(180deg, #f2f6ff, #ffffff 70%);
+  /* Баланс — тот же лист, только холоднее. Ровная заливка, без перехода */
+  --balance-bg: #f1f5ff;
   --alert-bg: #fff1f2;
   --alert-edge: rgba(175, 63, 63, 0.28);
+  /* На светлом подсветка мутит белое — поля и плитки плоские, как остальные */
+  --amount-bg: var(--glass-1);
+  --scan-bg: var(--glass-1);
 
   /*
    * Акцент плоский: градиент на светлом фоне мутит цвет. Взят тёмный конец
@@ -292,6 +300,9 @@ html[data-theme="light"] .glass {
   border-color: transparent;
 }
 html[data-theme="light"] .card--alert { border-color: var(--alert-edge); }
+
+/* Плитки съёмки чека — обычное поле, а не выделенная кнопка */
+html[data-theme="light"] .scan-tile { border-color: var(--edge); }
 
 /*
  * Размытие фона под белой непрозрачной карточкой не видно, а стоит дорого:
@@ -942,7 +953,7 @@ button { cursor: pointer; border: none; background: none; }
   letter-spacing: -0.03em;
   text-align: center;
   padding: 20px 16px;
-  background: radial-gradient(120% 140% at 50% 0%, rgba(91, 159, 255, 0.14), var(--glass-1));
+  background: var(--amount-bg);
 }
 
 .row { display: flex; gap: 10px; }
@@ -2037,12 +2048,10 @@ button { cursor: pointer; border: none; background: none; }
   font-size: 15px;
   color: var(--fg-0);
   border: 1px solid var(--edge-strong);
-  background:
-    radial-gradient(120% 130% at 50% 0%, rgba(91, 159, 255, 0.18), transparent 65%),
-    linear-gradient(158deg, var(--glass-2), var(--glass-1));
+  background: var(--scan-bg);
   transition: transform 0.16s var(--ease), background 0.18s, border-color 0.18s;
 }
-.scan-tile:hover { border-color: rgba(91, 159, 255, 0.55); transform: translateY(-2px); }
+.scan-tile:hover { border-color: var(--sel-edge); transform: translateY(-2px); }
 .scan-tile:active { transform: scale(0.98); }
 .scan-tile__ico { font-size: 28px; line-height: 1; }
 

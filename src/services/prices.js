@@ -31,9 +31,9 @@ import {
   writeBatch,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=85';
-import { getFamilyId } from '../core/session.js?v=85';
-import { tokenize, merchantKey, searchToken, normalizeText } from '../core/priceKey.js?v=85';
+import { db } from '../core/firebase.js?v=86';
+import { getFamilyId } from '../core/session.js?v=86';
+import { tokenize, merchantKey, searchToken, normalizeText } from '../core/priceKey.js?v=86';
 
 const pricesCollection = () => collection(db, 'prices');
 
