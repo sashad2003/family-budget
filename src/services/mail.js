@@ -10,9 +10,9 @@
  * одному письму на адрес, чтобы получатели не видели чужих почт.
  */
 
-import { PROXY_URL, SUPPORT_WHATSAPP } from '../config.js?v=116';
-import { idToken } from './auth.js?v=116';
-import { t, tIn, LOCALES } from '../core/i18n.js?v=116';
+import { PROXY_URL, SUPPORT_WHATSAPP } from '../config.js?v=117';
+import { idToken } from './auth.js?v=117';
+import { t, tIn, LOCALES } from '../core/i18n.js?v=117';
 
 /** Столько же, сколько прокси принимает за раз. */
 export const MAIL_BATCH = 50;
@@ -73,7 +73,7 @@ export function buildLetter(title, body, locale = 'ru') {
   const content = isMarkup
     ? raw
     : paragraphs
-        .map((p) => `<p style="margin:0 0 14px;font-size:15px;line-height:1.6">${esc(p).replace(/\n/g, '<br>')}</p>`)
+        .map((p) => `<p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#14141f">${esc(p).replace(/\n/g, '<br>')}</p>`)
         .join('\n    ');
 
   /*
@@ -94,8 +94,15 @@ export function buildLetter(title, body, locale = 'ru') {
       </tr>
     </table>` : '';
 
+  /*
+   * color-scheme: light просит почтовую программу не перекрашивать письмо под
+   * свою ночную тему. Уважают его не все — Gmail на телефоне перекрашивает
+   * всё равно, — поэтому цвет задан у каждого блока и у каждого куска текста:
+   * когда клиент инвертирует, он инвертирует их согласованно, а не оставляет
+   * чёрные буквы на чёрном.
+   */
   const html = `
-<div dir="${dir}" style="margin:0;padding:24px;background:#eceef6;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;text-align:${align}">
+<div dir="${dir}" style="margin:0;padding:24px;background:#eceef6;color-scheme:light;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;text-align:${align}">
   <div style="max-width:560px;margin:0 auto;padding:28px;background:#ffffff;border-radius:18px;color:#14141f">
     <h1 style="margin:0 0 18px;font-size:22px;font-weight:600">${esc(title)}</h1>
     ${content}

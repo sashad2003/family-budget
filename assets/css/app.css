@@ -950,15 +950,23 @@ button { cursor: pointer; border: none; background: none; }
 .textarea { resize: vertical; min-height: 66px; }
 
 /*
- * Поле визуального редактора письма. Внутри лежит готовая разметка письма со
- * своими стилями в тегах, поэтому здесь только рамка и место: всё остальное
- * задаёт само письмо, и вид в поле совпадает с тем, что придёт получателю.
+ * Поле визуального редактора письма — всегда белый лист, в обеих темах.
+ *
+ * Внутри лежит готовая разметка письма: свои цвета прямо в тегах, тёмный
+ * текст заголовков. На ночном фоне приложения это было чёрным по тёмному —
+ * заголовков не видно. Письмо у получателя всё равно придёт на белом, и поле
+ * должно показывать именно его, а не подстраиваться под тему приложения.
  */
-.rich { display: block; }
-.rich:focus { outline: none; border-color: var(--sel-edge); background: var(--sel-bg); }
+.rich {
+  display: block;
+  background: #ffffff;
+  color: #14141f;
+  border-color: rgba(17, 20, 45, 0.14);
+  color-scheme: light;
+}
+.rich:focus { outline: none; border-color: var(--sel-edge); box-shadow: 0 0 0 3px var(--sel-ring); }
 .rich img { max-width: 100%; height: auto; }
-.rich h2, .rich h3, .rich p, .rich ul, .rich ol { color: var(--fg-0); }
-.rich a { color: var(--blue); }
+.rich a { color: #3a63ff; }
 
 .input--amount {
   font-family: var(--mono);

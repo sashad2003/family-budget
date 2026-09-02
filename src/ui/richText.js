@@ -16,20 +16,20 @@
  * пор; работает он везде, где работает приложение.
  */
 
-import { el } from '../core/dom.js?v=115';
-import { t } from '../core/i18n.js?v=115';
+import { el } from '../core/dom.js?v=117';
+import { t } from '../core/i18n.js?v=117';
 
 /** Стили писем: те же, что в готовых письмах, чтобы вид совпадал с отправкой. */
 const STYLE = {
-  p: 'margin:0 0 14px;font-size:15px;line-height:1.6',
+  p: 'margin:0 0 14px;font-size:15px;line-height:1.6;color:#14141f',
   h2: 'margin:26px 0 8px;font-size:17px;font-weight:600;color:#14141f',
   h3: 'margin:22px 0 6px;font-size:15px;font-weight:600;color:#14141f',
-  ul: 'margin:0 0 14px;padding-inline-start:22px;font-size:15px;line-height:1.6',
-  ol: 'margin:0 0 14px;padding-inline-start:22px;font-size:15px;line-height:1.6',
+  ul: 'margin:0 0 14px;padding-inline-start:22px;font-size:15px;line-height:1.6;color:#14141f',
+  ol: 'margin:0 0 14px;padding-inline-start:22px;font-size:15px;line-height:1.6;color:#14141f',
   li: 'margin:0 0 6px',
   a: 'color:#3a63ff',
   img: 'display:block;width:100%;max-width:468px;height:auto;border-radius:14px;border:1px solid #e2e4ee',
-  blockquote: 'margin:0 0 14px;padding:12px 16px;background:#f5f6fa;border-radius:12px;font-size:15px;line-height:1.6',
+  blockquote: 'margin:0 0 14px;padding:12px 16px;background:#f5f6fa;border-radius:12px;font-size:15px;line-height:1.6;color:#14141f',
 };
 
 /**
@@ -84,7 +84,7 @@ export function richText({ value = '', dir = 'ltr', onChange = () => {} }) {
     class: 'input rich',
     contenteditable: 'true',
     dir,
-    style: 'min-height:260px;overflow:auto;text-align:start',
+    style: 'min-height:260px;padding:20px;overflow:auto;text-align:start',
   });
   area.innerHTML = html || '';
 
