@@ -28,14 +28,22 @@ export function el(tag, attrs = {}, children = []) {
       node.setAttribute(key, value === true ? '' : value);
     }
   }
-  for (const child of [].concat(children)) {
+  // Разворачиваем на любую глубину — по той же причине, что и render ниже.
+  for (const child of [children].flat(Infinity)) {
     if (child == null || child === false) continue;
     node.append(child instanceof Node ? child : document.createTextNode(String(child)));
   }
   return node;
 }
 
-/** Заменяет содержимое контейнера. */
+/**
+ * Заменяет содержимое контейнера.
+ *
+ * Списки разворачиваются на любую глубину: экран нередко собирается из
+ * кусков, каждый из которых сам вернул несколько блоков. При развороте на
+ * один уровень вложенный список молча превращался в строку — на экране
+ * появлялось «[object HTMLElement]» вместо разметки.
+ */
 export function render(container, ...nodes) {
-  container.replaceChildren(...nodes.flat().filter(Boolean));
+  container.replaceChildren(...nodes.flat(Infinity).filter(Boolean));
 }
