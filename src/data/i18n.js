@@ -290,12 +290,22 @@ export const DICT = {
   },
   'unsub.undo': { ru: 'Я случайно, верните письма', en: 'That was a mistake, keep them', he: 'זו הייתה טעות, השאירו' },
 
-  'mail.footer': {
-    ru: 'Это письмо о новом в приложении «Семейный бюджет».',
-    en: 'This is an email about what’s new in the Family Budget app.',
-    he: 'זהו מייל על מה שחדש באפליקציית «תקציב משפחתי».',
+  'mail.contact': { ru: 'Написать в WhatsApp', en: 'Message me on WhatsApp', he: 'לכתוב לי בוואטסאפ' },
+  'mail.contactHint': {
+    ru: 'Что-то не работает, неудобно или есть идея — напишите, я отвечаю сам.',
+    en: 'Something broken, awkward, or an idea — write to me, I answer myself.',
+    he: 'משהו לא עובד, לא נוח או שיש רעיון — כתבו לי, אני עונה בעצמי.',
   },
-  'mail.unsubscribe': { ru: 'Отписаться', en: 'Unsubscribe', he: 'להסיר מהדיוור' },
+  'mail.footer': {
+    ru: 'Вы получили это письмо, потому что пользуетесь приложением «Семейный бюджет».',
+    en: 'You received this email because you use the Family Budget app.',
+    he: 'קיבלתם את המייל הזה כי אתם משתמשים באפליקציית «תקציב משפחתי».',
+  },
+  'mail.unsubscribe': {
+    ru: 'Не присылать такие письма',
+    en: 'Stop sending me these emails',
+    he: 'להפסיק לשלוח לי מיילים כאלה',
+  },
 
   'settings.mail': { ru: 'Письма', en: 'Emails', he: 'דיוור' },
   'settings.mailTitle': {

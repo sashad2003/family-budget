@@ -10,9 +10,9 @@
  * одному письму на адрес, чтобы получатели не видели чужих почт.
  */
 
-import { PROXY_URL } from '../config.js?v=110';
-import { idToken } from './auth.js?v=110';
-import { t, tIn, LOCALES } from '../core/i18n.js?v=110';
+import { PROXY_URL, SUPPORT_WHATSAPP } from '../config.js?v=111';
+import { idToken } from './auth.js?v=111';
+import { t, tIn, LOCALES } from '../core/i18n.js?v=111';
 
 /** Столько же, сколько прокси принимает за раз. */
 export const MAIL_BATCH = 50;
@@ -68,15 +68,37 @@ export function buildLetter(title, body, locale = 'ru', format = 'text') {
         .map((p) => `<p style="margin:0 0 14px;font-size:15px;line-height:1.6">${esc(p).replace(/\n/g, '<br>')}</p>`)
         .join('\n    ');
 
+  /*
+   * Подвал письма. Раньше подпись и ссылка отписки шли одной строкой и
+   * читались как одно предложение — «Это письмо о новом… Отписаться». Теперь
+   * это три разных вещи, разведённые по строкам и по весу: связаться,
+   * объяснение, отписка.
+   *
+   * Кнопка в WhatsApp стоит в каждом письме: человек, которому что-то не
+   * работает, отвечает туда, где ему удобно, а не ищет адрес поддержки.
+   */
+  const contact = SUPPORT_WHATSAPP ? `
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:26px 0 0">
+      <tr>
+        <td style="border-radius:12px;background:#25d366">
+          <a href="https://wa.me/${SUPPORT_WHATSAPP}" style="display:inline-block;padding:12px 22px;font-size:15px;font-weight:500;color:#ffffff;text-decoration:none">${esc(tIn(locale, 'mail.contact'))}</a>
+        </td>
+      </tr>
+    </table>
+    <p style="margin:8px 0 0;font-size:13.5px;line-height:1.6;color:#66667c">${esc(tIn(locale, 'mail.contactHint'))}</p>` : '';
+
   const html = `
 <div dir="${dir}" style="margin:0;padding:24px;background:#eceef6;font-family:system-ui,-apple-system,'Segoe UI',sans-serif;text-align:${align}">
   <div style="max-width:560px;margin:0 auto;padding:28px;background:#ffffff;border-radius:18px;color:#14141f">
     <h1 style="margin:0 0 18px;font-size:22px;font-weight:600">${esc(title)}</h1>
     ${content}
-    <p style="margin:26px 0 0;font-size:13px;line-height:1.6;color:#66667c">
-      ${esc(tIn(locale, 'mail.footer'))}
-      <a href="${UNSUBSCRIBE_URL}" style="color:#3a63ff">${esc(tIn(locale, 'mail.unsubscribe'))}</a>
-    </p>
+    ${contact}
+    <div style="margin:26px 0 0;padding-top:18px;border-top:1px solid #e2e4ee">
+      <p style="margin:0;font-size:13px;line-height:1.6;color:#8a8a9c">${esc(tIn(locale, 'mail.footer'))}</p>
+      <p style="margin:6px 0 0;font-size:13px;line-height:1.6">
+        <a href="${UNSUBSCRIBE_URL}" style="color:#8a8a9c">${esc(tIn(locale, 'mail.unsubscribe'))}</a>
+      </p>
+    </div>
   </div>
 </div>`.trim();
 
@@ -86,7 +108,13 @@ export function buildLetter(title, body, locale = 'ru', format = 'text') {
    * выкинув теги, — отдельно писать то же самое дважды никто не станет.
    */
   const plain = format === 'html' ? stripTags(String(body || '')) : paragraphs.join('\n\n');
-  const text = `${title}\n\n${plain}\n\n${tIn(locale, 'mail.footer')} ${UNSUBSCRIBE_URL}`;
+  const write = SUPPORT_WHATSAPP
+    ? `\n\n${tIn(locale, 'mail.contactHint')} https://wa.me/${SUPPORT_WHATSAPP}`
+    : '';
+
+  const text = `${title}\n\n${plain}${write}\n\n`
+    + `${tIn(locale, 'mail.footer')}\n`
+    + `${tIn(locale, 'mail.unsubscribe')}: ${UNSUBSCRIBE_URL}`;
 
   return { html, text };
 }
