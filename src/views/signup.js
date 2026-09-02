@@ -8,11 +8,11 @@
  * ни один сервис рассылок не станет отправлять письма этому адресу.
  */
 
-import { el, render, $ } from '../core/dom.js?v=113';
-import { registerUser } from '../services/account.js?v=113';
-import { logout } from '../services/auth.js?v=113';
-import { toastError } from '../ui/toast.js?v=113';
-import { t } from '../core/i18n.js?v=113';
+import { el, render, $ } from '../core/dom.js?v=114';
+import { registerUser } from '../services/account.js?v=114';
+import { logout } from '../services/auth.js?v=114';
+import { toastError } from '../ui/toast.js?v=114';
+import { t } from '../core/i18n.js?v=114';
 
 /**
  * Показывает анкету и ждёт, пока человек её заполнит.

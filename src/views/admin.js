@@ -5,21 +5,21 @@
  * Firestore — спрятанной кнопки мало, чужие профили закрывает база.
  */
 
-import { el, render } from '../core/dom.js?v=113';
-import { state } from '../core/store.js?v=113';
-import { formatAmount } from '../core/money.js?v=113';
-import { listUsers, wantsMail } from '../services/account.js?v=113';
+import { el, render } from '../core/dom.js?v=114';
+import { state } from '../core/store.js?v=114';
+import { formatAmount } from '../core/money.js?v=114';
+import { listUsers, wantsMail } from '../services/account.js?v=114';
 import {
   loadPriceRows, summarizePrices, summarizeUsers,
   ownPriceRows, summarizeOwnSources, summarizeUsage,
-} from '../services/adminStats.js?v=113';
-import { loadUsage } from '../services/usage.js?v=113';
+} from '../services/adminStats.js?v=114';
+import { loadUsage } from '../services/usage.js?v=114';
 import {
   buildLetter, sendBatch, translateLetter, localeOf, mailError, MAIL_BATCH,
-} from '../services/mail.js?v=113';
-import { toastError, toastOk } from '../ui/toast.js?v=113';
-import { section } from '../ui/section.js?v=113';
-import { t, plural, intlLocale, LOCALES } from '../core/i18n.js?v=113';
+} from '../services/mail.js?v=114';
+import { toastError, toastOk } from '../ui/toast.js?v=114';
+import { section } from '../ui/section.js?v=114';
+import { t, plural, intlLocale, LOCALES } from '../core/i18n.js?v=114';
 
 const cache = { users: null, query: '', prices: null, usage: null, tab: 'mine' };
 
@@ -177,12 +177,31 @@ function mailer() {
      */
     section(t('mail.sendTitle'), [
       el('div', { class: 'card' }, [
-        el('p', { style: 'margin:0 0 12px;font-size:14.5px' }, t('mail.sendWarning')),
+        /*
+         * Кому и на каком языке уйдёт — перед кнопкой, а не после отправки.
+         * Языки без текста показаны отдельно: их люди не получат ничего, и
+         * заметить это надо до нажатия, а не по итогу.
+         */
+        ...LOCALES.map((lang) => {
+          const people = recipientsBy(lang.code);
+          const draft = letter.drafts[lang.code];
+          const ready = Boolean(draft.subject.trim() && draft.body.trim());
+
+          return statRow(
+            lang.name,
+            people.length
+              ? t(ready ? 'mail.willGet' : 'mail.willSkip', { n: people.length })
+              : t('mail.nobodyHere'),
+          );
+        }),
+        el('p', { class: 'hint', style: 'margin-top:10px' }, t('mail.sendWarning')),
         el('button', {
           class: 'btn btn--primary btn--wide',
+          style: 'margin-top:12px',
           onclick: (e) => sendLetter(status, e.target),
         }, t('mail.send')),
       ]),
+      el('p', { class: 'hint' }, t('mail.langHint')),
     ]),
   ];
 }
@@ -627,6 +646,8 @@ function userRow(user) {
 
   const meta = [user.email];
   if (user.phone) meta.push(user.phone);
+  // Язык человека: по нему видно, какой вариант письма ему уйдёт.
+  meta.push(LOCALES.find((l) => l.code === localeOf(user))?.name || localeOf(user));
   if (!wantsMail(user)) meta.push(t('admin.optedOut'));
 
   return el('div', { class: 'tx' }, [

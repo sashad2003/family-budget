@@ -164,6 +164,18 @@ export const DICT = {
     he: 'קוד המכתב: <p>, <h2>, <a>, <img>, טבלאות. המסגרת והחתימה עם קישור ההסרה יתווספו מעצמן.',
   },
   'mail.sendTitle': { ru: 'Отправка всем', en: 'Send to everyone', he: 'שליחה לכולם' },
+  'mail.willGet': { ru: 'получат {n}', en: '{n} will get it', he: '{n} יקבלו' },
+  'mail.willSkip': {
+    ru: '{n} не получат — текст не заполнен',
+    en: '{n} will not get it — no text',
+    he: '{n} לא יקבלו — אין טקסט',
+  },
+  'mail.nobodyHere': { ru: 'никого', en: 'nobody', he: 'אף אחד' },
+  'mail.langHint': {
+    ru: 'Язык берётся из профиля: он записывается, когда человек выбирает язык в приложении. У тех, кто ещё не заходил после этого нововведения, языка в профиле нет — им уйдёт русский вариант.',
+    en: 'The language comes from the profile: it is stored when a person picks a language in the app. Those who have not opened the app since this was added have no language stored — they get the Russian version.',
+    he: 'השפה נלקחת מהפרופיל: היא נשמרת כשאדם בוחר שפה באפליקציה. למי שלא נכנס מאז שהתווסף הדבר הזה אין שפה שמורה — הוא יקבל את הגרסה הרוסית.',
+  },
   'mail.sendWarning': {
     ru: 'Письмо уйдёт всем, кто не отписался, на языке каждого. Отозвать отправленное нельзя — сначала проверьте пробным письмом себе.',
     en: 'The letter goes to everyone who has not opted out, each in their own language. Sent mail cannot be recalled — check it with a test to yourself first.',
