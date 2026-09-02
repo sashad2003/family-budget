@@ -5,18 +5,18 @@
  * Firestore — спрятанной кнопки мало, чужие профили закрывает база.
  */
 
-import { el, render } from '../core/dom.js?v=94';
-import { state } from '../core/store.js?v=94';
-import { formatAmount } from '../core/money.js?v=94';
-import { listUsers } from '../services/account.js?v=94';
+import { el, render } from '../core/dom.js?v=95';
+import { state } from '../core/store.js?v=95';
+import { formatAmount } from '../core/money.js?v=95';
+import { listUsers } from '../services/account.js?v=95';
 import {
   loadPriceRows, summarizePrices, summarizeUsers,
   ownPriceRows, summarizeOwnSources, summarizeUsage,
-} from '../services/adminStats.js?v=94';
-import { loadUsage } from '../services/usage.js?v=94';
-import { toastError, toastOk } from '../ui/toast.js?v=94';
-import { section } from '../ui/section.js?v=94';
-import { t, plural, intlLocale } from '../core/i18n.js?v=94';
+} from '../services/adminStats.js?v=95';
+import { loadUsage } from '../services/usage.js?v=95';
+import { toastError, toastOk } from '../ui/toast.js?v=95';
+import { section } from '../ui/section.js?v=95';
+import { t, plural, intlLocale } from '../core/i18n.js?v=95';
 
 const cache = { users: null, query: '', prices: null, usage: null };
 
@@ -38,11 +38,13 @@ export function renderAdmin() {
   render(container, [
     mine(),
     activity,
+    market,
+    // Список людей — в самом низу: он длинный, и всё, ради чего сюда заходят,
+    // должно быть видно раньше, чем начнётся перечисление подписчиков.
     section(t('admin.title'), [
       search,
       body,
     ], el('button', { class: 'chip', onclick: () => load(body, true) }, t('common.refresh'))),
-    market,
   ]);
 
   load(body, false, activity);
@@ -135,12 +137,25 @@ function drawActivity(node) {
 async function loadMarket(node, force = false) {
   if (!cache.prices || force) {
     render(node, el('div', { class: 'empty' }, el('div', { class: 'spinner' })));
+
     try {
-      [cache.prices, cache.usage] = await Promise.all([loadPriceRows(), loadUsage()]);
+      cache.prices = await loadPriceRows();
     } catch (error) {
       console.error(error);
       render(node, el('div', { class: 'empty' }, t('admin.loadFailed')));
       return;
+    }
+
+    /*
+     * Счётчик способов записи живёт по своим правилам доступа, и пока они не
+     * выложены на сервер, запрос к нему отказывает. Витрину цен это ронять не
+     * должно: она считается по другой коллекции и работает сама по себе.
+     */
+    try {
+      cache.usage = await loadUsage();
+    } catch (error) {
+      console.error('Счётчик способов записи недоступен', error);
+      cache.usage = null;
     }
   }
 
@@ -151,8 +166,27 @@ async function loadMarket(node, force = false) {
   const usage = summarizeUsage(cache.usage);
   const money = (value) => formatAmount(value, state.base, { whole: true });
 
+  const usageCard = [
+    el('div', { class: 'tx-group__date' }, t('admin.howEntered')),
+    el('div', { class: 'card' }, cache.usage === null
+      ? [el('div', { class: 'hint' }, t('admin.usageClosed'))]
+      : [
+          statRow(t('admin.usageTotal'), String(usage.total)),
+          statRow(t('admin.usagePhoto'), String(usage.photo)),
+          statRow(t('admin.usageQr'), String(usage.qr)),
+          statRow(t('admin.usageSms'), String(usage.sms)),
+          statRow(t('admin.usageManual'), String(usage.manual + usage.bill)),
+        ]),
+    el('p', { class: 'hint' }, t('admin.usageHint')),
+  ];
+
+  // Пока других семей нет — или они ещё не сканировали чеки, — витрине нечего
+  // показывать. Это не ошибка, и объяснить это надо словами, а не пустотой.
   if (!stats.rows) {
-    render(node, section(t('admin.market'), el('div', { class: 'empty' }, t('admin.marketEmpty'))));
+    render(node, section(t('admin.market'), [
+      el('div', { class: 'card' }, el('div', { class: 'hint' }, t('admin.marketEmpty'))),
+      ...usageCard,
+    ], el('button', { class: 'chip', onclick: () => loadMarket(node, true) }, t('common.refresh'))));
     return;
   }
 
@@ -166,16 +200,7 @@ async function loadMarket(node, force = false) {
         statRow(t('admin.period'), `${stats.earliest || '—'} — ${stats.latest || '—'}`),
       ]),
       el('p', { class: 'hint' }, t('admin.marketHint')),
-
-      el('div', { class: 'tx-group__date' }, t('admin.howEntered')),
-      el('div', { class: 'card' }, [
-        statRow(t('admin.usageTotal'), String(usage.total)),
-        statRow(t('admin.usagePhoto'), String(usage.photo)),
-        statRow(t('admin.usageQr'), String(usage.qr)),
-        statRow(t('admin.usageSms'), String(usage.sms)),
-        statRow(t('admin.usageManual'), String(usage.manual + usage.bill)),
-      ]),
-      el('p', { class: 'hint' }, t('admin.usageHint')),
+      ...usageCard,
     ], el('button', { class: 'chip', onclick: () => loadMarket(node, true) }, t('common.refresh'))),
 
     section(t('admin.topShops'), [

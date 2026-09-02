@@ -375,9 +375,14 @@ export const DICT = {
     he: 'מחושב מתוך מאגר המחירים המשותף — זה שגלוי לכל המשתמשים — ובלי הרשומות שלכם. מי קנה מה לא מוצג כאן: ברשומות אין שם ואין דוא״ל.',
   },
   'admin.marketEmpty': {
-    ru: 'В общей базе цен пока пусто',
-    en: 'The shared price database is still empty',
-    he: 'מאגר המחירים המשותף עדיין ריק',
+    ru: 'Чужих записей в общей базе цен пока нет: либо кроме вас никто ещё не сканировал чеки, либо у них не было позиций с ценой. Ваши собственные покупки показаны выше, в своей статистике.',
+    en: 'There are no other people’s entries in the shared price database yet: either nobody but you has scanned a receipt, or those receipts had no priced items. Your own purchases are shown above, in your own statistics.',
+    he: 'עדיין אין רשומות של אחרים במאגר המחירים המשותף: או שאף אחד מלבדכם לא סרק קבלה, או שלא היו בהן פריטים עם מחיר. הקניות שלכם מוצגות למעלה, בסטטיסטיקה שלכם.',
+  },
+  'admin.usageClosed': {
+    ru: 'Счётчик недоступен: правила Firestore для коллекции usage ещё не выложены на сервер.',
+    en: 'The counter is unavailable: the Firestore rules for the usage collection have not been deployed yet.',
+    he: 'המונה אינו זמין: כללי Firestore לאוסף usage עדיין לא הועלו לשרת.',
   },
   'admin.rows': { ru: 'Купленных позиций', en: 'Purchased items', he: 'פריטים שנקנו' },
   'admin.rowsShort': { ru: '{n} покупок', en: '{n} purchases', he: '{n} קניות' },
