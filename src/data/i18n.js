@@ -333,6 +333,41 @@ export const DICT = {
   'quick.none': { ru: 'Ничего не выбрано', en: 'Nothing selected', he: 'לא נבחר דבר' },
 
   // ---------------------------------------------------------------- админ-панель
+  'admin.activity': { ru: 'Активность', en: 'Activity', he: 'פעילות' },
+  'admin.usersTotal': { ru: 'Всего людей', en: 'People total', he: 'סה״כ אנשים' },
+  'admin.usersMonth': { ru: 'Пришли за месяц', en: 'Joined this month', he: 'הצטרפו בחודש' },
+  'admin.usersWeek': { ru: 'Пришли за неделю', en: 'Joined this week', he: 'הצטרפו בשבוע' },
+  'admin.subsActive': { ru: 'С подпиской', en: 'Subscribed', he: 'עם מנוי' },
+  'admin.subsTrial': { ru: 'На пробном', en: 'On trial', he: 'בתקופת ניסיון' },
+  'admin.subsExpired': { ru: 'Подписка истекла', en: 'Expired', he: 'המנוי פג' },
+
+  'admin.market': { ru: 'Цены и магазины', en: 'Prices and shops', he: 'מחירים וחנויות' },
+  'admin.marketHint': {
+    ru: 'Считается по общей базе цен — той самой, что видна всем пользователям. Кто именно что купил, здесь не показывается: в записях нет ни имени, ни почты.',
+    en: 'Calculated from the shared price database — the one every user can see. Who bought what is not shown here: the entries carry no name and no email.',
+    he: 'מחושב מתוך מאגר המחירים המשותף — זה שגלוי לכל המשתמשים. מי קנה מה לא מוצג כאן: ברשומות אין שם ואין דוא״ל.',
+  },
+  'admin.marketEmpty': {
+    ru: 'В общей базе цен пока пусто',
+    en: 'The shared price database is still empty',
+    he: 'מאגר המחירים המשותף עדיין ריק',
+  },
+  'admin.rows': { ru: 'Строк с товарами', en: 'Item entries', he: 'שורות מוצרים' },
+  'admin.rowsShort': { ru: '{n} зап.', en: '{n} entries', he: '{n} רשומות' },
+  'admin.receipts': { ru: 'Чеков', en: 'Receipts', he: 'קבלות' },
+  'admin.shopsCount': { ru: 'Магазинов', en: 'Shops', he: 'חנויות' },
+  'admin.turnover': { ru: 'Сумма покупок', en: 'Purchases total', he: 'סכום הקניות' },
+  'admin.period': { ru: 'Период', en: 'Period', he: 'תקופה' },
+  'admin.topItems': { ru: 'Что покупают', en: 'What people buy', he: 'מה קונים' },
+  'admin.topItemsHint': {
+    ru: 'Справа — цена от самой низкой до самой высокой среди всех магазинов, по сегодняшнему курсу.',
+    en: 'On the right — the price from lowest to highest across all shops, at today’s rate.',
+    he: 'מימין — המחיר מהנמוך לגבוה בכל החנויות, לפי שער היום.',
+  },
+  'admin.topShops': { ru: 'Где покупают', en: 'Where people buy', he: 'איפה קונים' },
+  'admin.shopMeta': { ru: '{items} тов. · {rows} зап.', en: '{items} items · {rows} entries', he: '{items} מוצרים · {rows} רשומות' },
+  'admin.byMonth': { ru: 'По месяцам', en: 'By month', he: 'לפי חודשים' },
+
   'admin.title': { ru: 'Подписчики', en: 'Subscribers', he: 'מנויים' },
   'admin.search': {
     ru: 'Поиск по имени, почте или телефону',
