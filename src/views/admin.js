@@ -5,24 +5,25 @@
  * Firestore — спрятанной кнопки мало, чужие профили закрывает база.
  */
 
-import { el, render } from '../core/dom.js?v=115';
-import { state } from '../core/store.js?v=115';
-import { formatAmount } from '../core/money.js?v=115';
-import { listUsers, wantsMail } from '../services/account.js?v=115';
+import { el, render } from '../core/dom.js?v=116';
+import { state } from '../core/store.js?v=116';
+import { formatAmount } from '../core/money.js?v=116';
+import { listUsers, wantsMail } from '../services/account.js?v=116';
 import {
   loadPriceRows, summarizePrices, summarizeUsers,
   ownPriceRows, summarizeOwnSources, summarizeUsage,
-} from '../services/adminStats.js?v=115';
-import { loadUsage } from '../services/usage.js?v=115';
+} from '../services/adminStats.js?v=116';
+import { loadUsage } from '../services/usage.js?v=116';
 import {
   saveDraft, loadDraft, listTemplates, saveTemplate, deleteTemplate,
-} from '../services/mailTemplates.js?v=115';
+} from '../services/mailTemplates.js?v=116';
 import {
   buildLetter, sendBatch, translateLetter, localeOf, mailError, MAIL_BATCH,
-} from '../services/mail.js?v=115';
-import { toastError, toastOk } from '../ui/toast.js?v=115';
-import { section } from '../ui/section.js?v=115';
-import { t, plural, intlLocale, LOCALES } from '../core/i18n.js?v=115';
+} from '../services/mail.js?v=116';
+import { toastError, toastOk } from '../ui/toast.js?v=116';
+import { section } from '../ui/section.js?v=116';
+import { richText } from '../ui/richText.js?v=116';
+import { t, plural, intlLocale, LOCALES } from '../core/i18n.js?v=116';
 
 const cache = { users: null, query: '', prices: null, usage: null, tab: 'mine' };
 
@@ -92,25 +93,33 @@ function mailer() {
   const fields = el('div');
   const preview = el('div');
 
+  /*
+   * Поле письма живёт между перерисовками: пересоздавать редактор на каждый
+   * чих нельзя — вместе с ним пропадали бы курсор и выделение.
+   */
+  let editor = null;
+
   const draw = () => {
     const draft = letter.drafts[letter.lang];
     const dir = letter.lang === 'he' ? 'rtl' : 'ltr';
 
+    const subject = el('input', {
+      class: 'input',
+      placeholder: t('mail.subjectPlaceholder'),
+      value: draft.subject,
+      dir,
+      oninput: (e) => { draft.subject = e.target.value; keepDraft(); },
+    });
+
+    editor = richText({
+      value: draft.body,
+      dir,
+      onChange: (html) => { draft.body = html; keepDraft(); },
+    });
+
     render(fields, [
-      el('input', {
-        class: 'input',
-        placeholder: t('mail.subjectPlaceholder'),
-        value: draft.subject,
-        dir,
-        oninput: (e) => { draft.subject = e.target.value; keepDraft(); },
-      }),
-      el('textarea', {
-        class: 'input textarea',
-        style: 'margin-top:10px;min-height:220px;font-family:var(--mono);font-size:13px',
-        placeholder: t('mail.bodyPlaceholder'),
-        dir: 'ltr',
-        oninput: (e) => { draft.body = e.target.value; keepDraft(); },
-      }, draft.body),
+      subject,
+      el('div', { style: 'margin-top:10px' }, editor.node),
       el('div', { class: 'hint', style: 'margin-top:8px' },
         t('mail.forLang', { n: recipientsBy(letter.lang).length })),
     ]);

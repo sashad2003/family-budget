@@ -16,7 +16,7 @@ import {
   collection, doc, getDocs, setDoc, deleteDoc, serverTimestamp, query, orderBy,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=114';
+import { db } from '../core/firebase.js?v=116';
 
 const templates = () => collection(db, 'mailTemplates');
 

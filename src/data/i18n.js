@@ -156,6 +156,23 @@ export const DICT = {
     en: 'Translated — check the text on the other tabs',
     he: 'תורגם — בדקו את הטקסט בלשוניות האחרות',
   },
+  'rich.visual': { ru: 'Как выглядит', en: 'Visual', he: 'תצוגה' },
+  'rich.code': { ru: 'Код', en: 'Code', he: 'קוד' },
+  'rich.bold': { ru: 'Жирный', en: 'Bold', he: 'מודגש' },
+  'rich.italic': { ru: 'Курсив', en: 'Italic', he: 'נטוי' },
+  'rich.heading': { ru: 'Заголовок', en: 'Heading', he: 'כותרת' },
+  'rich.paragraph': { ru: 'Обычный абзац', en: 'Normal paragraph', he: 'פסקה רגילה' },
+  'rich.list': { ru: 'Список', en: 'List', he: 'רשימה' },
+  'rich.link': { ru: 'Ссылка', en: 'Link', he: 'קישור' },
+  'rich.image': { ru: 'Картинка', en: 'Image', he: 'תמונה' },
+  'rich.clear': { ru: 'Убрать оформление', en: 'Clear formatting', he: 'ניקוי עיצוב' },
+  'rich.linkUrl': { ru: 'Адрес ссылки', en: 'Link address', he: 'כתובת הקישור' },
+  'rich.imageUrl': {
+    ru: 'Адрес картинки. Файл кладите в assets/img/ рядом с приложением — из чужих мест почтовые программы картинки не покажут.',
+    en: 'Image address. Put the file in assets/img/ next to the app — mail clients will not show images from elsewhere.',
+    he: 'כתובת התמונה. שימו את הקובץ ב-assets/img/ ליד האפליקציה — ממקומות אחרים תוכנות דואר לא יציגו תמונות.',
+  },
+
   'mail.saveTemplate': { ru: 'Сохранить письмо', en: 'Save letter', he: 'שמירת מכתב' },
   'mail.deleteTemplate': { ru: 'Удалить', en: 'Delete', he: 'מחיקה' },
   'mail.templateName': {

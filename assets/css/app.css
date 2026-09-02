@@ -949,6 +949,17 @@ button { cursor: pointer; border: none; background: none; }
 }
 .textarea { resize: vertical; min-height: 66px; }
 
+/*
+ * Поле визуального редактора письма. Внутри лежит готовая разметка письма со
+ * своими стилями в тегах, поэтому здесь только рамка и место: всё остальное
+ * задаёт само письмо, и вид в поле совпадает с тем, что придёт получателю.
+ */
+.rich { display: block; }
+.rich:focus { outline: none; border-color: var(--sel-edge); background: var(--sel-bg); }
+.rich img { max-width: 100%; height: auto; }
+.rich h2, .rich h3, .rich p, .rich ul, .rich ol { color: var(--fg-0); }
+.rich a { color: var(--blue); }
+
 .input--amount {
   font-family: var(--mono);
   font-size: 32px;
