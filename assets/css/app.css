@@ -99,6 +99,7 @@
   --sel-fg: #8ab8ff;
   --sel-bg: rgba(91, 159, 255, 0.18);
   --sel-edge: rgba(91, 159, 255, 0.55);
+  --sel-ring: rgba(91, 159, 255, 0.16);
 
   /* Заливка акцентных кнопок: дока, «плюса», «Сохранить» */
   --accent-fill: linear-gradient(150deg, #5b9fff, #3a63ff);
@@ -236,6 +237,7 @@ html[data-theme="light"] {
   --sel-fg: #2b57c9;
   --sel-bg: rgba(58, 99, 255, 0.10);
   --sel-edge: rgba(58, 99, 255, 0.45);
+  --sel-ring: rgba(58, 99, 255, 0.14);
 
   --tab-fill: #3a63ff;
   --tab-shadow: 0 8px 18px -10px rgba(58, 99, 255, 0.5);
@@ -939,10 +941,11 @@ button { cursor: pointer; border: none; background: none; }
   outline: none;
   transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
 }
+/* Поле под рукой отмечается тем же синим, что и всё выбранное */
 .input:focus, .select:focus, .textarea:focus {
-  border-color: rgba(91, 159, 255, 0.65);
-  background: rgba(91, 159, 255, 0.08);
-  box-shadow: 0 0 0 3px rgba(91, 159, 255, 0.14);
+  border-color: var(--sel-edge);
+  background: var(--sel-bg);
+  box-shadow: 0 0 0 3px var(--sel-ring);
 }
 .textarea { resize: vertical; min-height: 66px; }
 
@@ -1407,9 +1410,9 @@ button { cursor: pointer; border: none; background: none; }
   transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
 }
 .item-card__field:focus-within {
-  border-color: rgba(91, 159, 255, 0.65);
-  background: rgba(91, 159, 255, 0.08);
-  box-shadow: 0 0 0 3px rgba(91, 159, 255, 0.14);
+  border-color: var(--sel-edge);
+  background: var(--sel-bg);
+  box-shadow: 0 0 0 3px var(--sel-ring);
 }
 
 /*
@@ -1770,10 +1773,7 @@ button { cursor: pointer; border: none; background: none; }
   border: 1.5px solid var(--fg-2);
 }
 
-.budget.is-open {
-  border-color: rgba(45, 217, 138, 0.5);
-  background: linear-gradient(158deg, rgba(45, 217, 138, 0.14), rgba(45, 217, 138, 0.04));
-}
+.budget.is-open { border-color: var(--sel-edge); background: var(--sel-bg); }
 .budget.is-open .budget__name { color: var(--sel-fg); font-weight: 500; }
 .budget.is-open .budget__dot { background: var(--sel-fg); border-color: var(--sel-fg); }
 
@@ -1782,9 +1782,9 @@ button { cursor: pointer; border: none; background: none; }
   padding: 4px 11px;
   border-radius: var(--r-pill);
   font-size: 12px;
-  color: var(--income);
-  background: rgba(45, 217, 138, 0.12);
-  border: 1px solid rgba(45, 217, 138, 0.3);
+  color: var(--sel-fg);
+  background: var(--sel-bg);
+  border: 1px solid var(--sel-edge);
 }
 
 /* Кнопка выбора бюджета: на телефоне строкой под шапкой, на большом экране
@@ -1793,15 +1793,15 @@ button { cursor: pointer; border: none; background: none; }
   display: flex;
   align-items: center;
   gap: 8px;
-  border: 1px solid rgba(45, 217, 138, 0.32);
+  border: 1px solid var(--sel-edge);
   border-radius: var(--r-pill);
-  background: rgba(45, 217, 138, 0.1);
-  color: var(--income);
+  background: var(--sel-bg);
+  color: var(--sel-fg);
   font-size: 14px;
   padding: 8px 14px;
   transition: background 0.18s, border-color 0.18s;
 }
-.budget-pick:hover { background: rgba(45, 217, 138, 0.16); border-color: rgba(45, 217, 138, 0.5); }
+.budget-pick:hover { background: var(--sel-ring); border-color: var(--sel-edge); }
 
 .budget-pick__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .budget-pick__caret { flex: 0 0 auto; opacity: 0.7; font-size: 12px; line-height: 1; }
@@ -1839,7 +1839,7 @@ button { cursor: pointer; border: none; background: none; }
   font-size: 17px;
   background: var(--glass-2);
 }
-.cur.is-active .cur__sym { background: var(--accent-fill); color: var(--on-accent); }
+.cur.is-active .cur__sym { background: var(--sel-bg); color: var(--sel-fg); }
 
 .cur__body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .cur__code { font-size: 16px; font-weight: 500; }
@@ -1972,7 +1972,7 @@ button { cursor: pointer; border: none; background: none; }
   background: var(--knob);
   transition: transform 0.2s var(--ease);
 }
-.toggle.is-on { border-color: rgba(91, 159, 255, 0.5); }
+.toggle.is-on { border-color: var(--sel-edge); }
 .toggle.is-on .toggle__knob { background: var(--accent-fill); }
 /* В иврите переключатель едет в другую сторону — логического аналога
    у translateX нет, поэтому вторая сторона задана отдельно ниже. */
