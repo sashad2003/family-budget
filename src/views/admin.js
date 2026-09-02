@@ -5,26 +5,26 @@
  * Firestore — спрятанной кнопки мало, чужие профили закрывает база.
  */
 
-import { el, render } from '../core/dom.js?v=120';
-import { state } from '../core/store.js?v=120';
-import { formatAmount } from '../core/money.js?v=120';
-import { listUsers, wantsMail } from '../services/account.js?v=120';
+import { el, render } from '../core/dom.js?v=121';
+import { state } from '../core/store.js?v=121';
+import { formatAmount } from '../core/money.js?v=121';
+import { listUsers, wantsMail } from '../services/account.js?v=121';
 import {
   loadPriceRows, summarizePrices, summarizeUsers,
   ownPriceRows, summarizeOwnSources, summarizeUsage,
-} from '../services/adminStats.js?v=120';
-import { loadUsage } from '../services/usage.js?v=120';
+} from '../services/adminStats.js?v=121';
+import { loadUsage } from '../services/usage.js?v=121';
 import {
   saveDraft, loadDraft, listTemplates, saveTemplate, deleteTemplate,
-} from '../services/mailTemplates.js?v=120';
+} from '../services/mailTemplates.js?v=121';
 import {
   buildLetter, sendBatch, translateLetter, letterTexts, applyLetterTexts,
   localeOf, mailError, MAIL_BATCH,
-} from '../services/mail.js?v=120';
-import { toastError, toastOk } from '../ui/toast.js?v=120';
-import { section } from '../ui/section.js?v=120';
-import { richText } from '../ui/richText.js?v=120';
-import { t, plural, intlLocale, LOCALES } from '../core/i18n.js?v=120';
+} from '../services/mail.js?v=121';
+import { toastError, toastOk } from '../ui/toast.js?v=121';
+import { section } from '../ui/section.js?v=121';
+import { richText } from '../ui/richText.js?v=121';
+import { t, plural, intlLocale, LOCALES } from '../core/i18n.js?v=121';
 
 const cache = { users: null, query: '', prices: null, usage: null, tab: 'mine' };
 
@@ -269,10 +269,12 @@ async function saveCurrent(redraw) {
   if (!name?.trim()) return;
 
   try {
-    await saveTemplate(name, letter.drafts);
+    const where = await saveTemplate(name, letter.drafts);
     letter.templates = await listTemplates();
     redraw();
-    toastOk(t('mail.templateSaved', { name: name.trim() }));
+
+    // Сохранилось всегда — вопрос лишь в том, увидит ли его другое устройство.
+    toastOk(t(where === 'both' ? 'mail.templateSaved' : 'mail.templateLocal', { name: name.trim() }));
   } catch (error) {
     console.error(error);
     toastError(t('mail.templateFailed'));
@@ -315,45 +317,52 @@ function showPreview(node) {
     return;
   }
 
-  const { html } = buildLetter(draft.subject.trim(), draft.body.trim(), letter.lang);
+  // Предпросмотр строится из письма и может упасть на кривой разметке. Молчать
+  // тут нельзя: человек нажал кнопку и должен понять, что произошло.
+  try {
+    const { html } = buildLetter(draft.subject.trim(), draft.body.trim(), letter.lang);
 
-  /*
-   * Ночной вид собирается так же, как его делают почтовые программы:
-   * переворачиваются цвета всей страницы, а картинки и цветные кнопки
-   * переворачиваются обратно. Иначе фотография чека выходила негативом, а
-   * зелёная кнопка — розовой, чего в почте не бывает: клиенты трогают фон и
-   * текст, а картинки и заливки оставляют.
-   */
-  const darkSkin = `<style>
-    html { background: #15151a; filter: invert(1) hue-rotate(180deg); }
-    img, td[style*="background:#"], th[style*="background:#"] { filter: invert(1) hue-rotate(180deg); }
-  </style>`;
+    /*
+     * Ночной вид собирается так же, как его делают почтовые программы:
+     * переворачиваются цвета всей страницы, а картинки и цветные кнопки
+     * переворачиваются обратно. Иначе фотография чека выходила негативом, а
+     * зелёная кнопка — розовой, чего в почте не бывает: клиенты трогают фон и
+     * текст, а картинки и заливки оставляют.
+     */
+    const darkSkin = `<style>
+      html { background: #15151a; filter: invert(1) hue-rotate(180deg); }
+      img, td[style*="background:#"], th[style*="background:#"] { filter: invert(1) hue-rotate(180deg); }
+    </style>`;
 
-  const frame = el('iframe', {
-    // Отдельное окно: стили письма не текут на страницу, скрипты из него не
-    // выполняются.
-    srcdoc: html,
-    sandbox: '',
-    style: 'width:100%;height:460px;border:1px solid var(--edge);border-radius:12px;background:#fff',
-  });
+    const frame = el('iframe', {
+      // Отдельное окно: стили письма не текут на страницу, скрипты из него не
+      // выполняются.
+      srcdoc: html,
+      sandbox: '',
+      style: 'width:100%;height:460px;border:1px solid var(--edge);border-radius:12px;background:#fff',
+    });
 
-  const modes = el('div', { class: 'segmented', style: 'margin:14px 0 10px' },
-    [[false, t('mail.previewLight')], [true, t('mail.previewDark')]].map(([value, label]) =>
-      el('button', {
-        class: value === false ? 'is-active' : '',
-        onclick: (e) => {
-          [...modes.children].forEach((b) => b.classList.remove('is-active'));
-          e.target.classList.add('is-active');
-          frame.srcdoc = value ? darkSkin + html : html;
-          frame.style.background = value ? '#15151a' : '#fff';
-        },
-      }, label)));
+    const modes = el('div', { class: 'segmented', style: 'margin:14px 0 10px' },
+      [[false, t('mail.previewLight')], [true, t('mail.previewDark')]].map(([value, label]) =>
+        el('button', {
+          class: value === false ? 'is-active' : '',
+          onclick: (e) => {
+            [...modes.children].forEach((b) => b.classList.remove('is-active'));
+            e.target.classList.add('is-active');
+            frame.srcdoc = value ? darkSkin + html : html;
+            frame.style.background = value ? '#15151a' : '#fff';
+          },
+        }, label)));
 
-  render(node, [
-    modes,
-    frame,
-    el('p', { class: 'hint', style: 'margin-top:8px' }, t('mail.previewHint')),
-  ]);
+    render(node, [
+      modes,
+      frame,
+      el('p', { class: 'hint', style: 'margin-top:8px' }, t('mail.previewHint')),
+    ]);
+  } catch (error) {
+    console.error(error);
+    toastError(t('mail.previewFailed'));
+  }
 }
 
 /** Перевод черновика на остальные языки — той же моделью, что читает чеки. */

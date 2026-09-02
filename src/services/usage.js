@@ -16,8 +16,8 @@ import {
   doc, setDoc, getDocs, collection, increment,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=120';
-import { monthKey } from '../core/dates.js?v=120';
+import { db } from '../core/firebase.js?v=121';
+import { monthKey } from '../core/dates.js?v=121';
 
 /** Способы записи. Всё незнакомое считаем ручным вводом. */
 const KINDS = {

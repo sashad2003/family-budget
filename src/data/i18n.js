@@ -202,6 +202,16 @@ export const DICT = {
     he: 'איזה מכתב למחוק? קיימים: {names}',
   },
   'mail.templateDeleted': { ru: 'Удалено: {name}', en: 'Deleted: {name}', he: 'נמחק: {name}' },
+  'mail.templateLocal': {
+    ru: 'Сохранено на этом устройстве: {name}. В общую базу не попало — правила Firestore для писем ещё не выложены.',
+    en: 'Saved on this device: {name}. It did not reach the shared database — the Firestore rules for letters are not deployed yet.',
+    he: 'נשמר במכשיר הזה: {name}. לא הגיע למאגר המשותף — כללי Firestore למכתבים עדיין לא הועלו.',
+  },
+  'mail.previewFailed': {
+    ru: 'Не удалось показать письмо — подробности в консоли',
+    en: 'Could not render the letter — details in the console',
+    he: 'לא הצלחנו להציג את המכתב — פרטים במסוף',
+  },
   'mail.templateFailed': {
     ru: 'Не получилось — подробности в консоли',
     en: 'Did not work — details in the console',

@@ -16,7 +16,7 @@ import {
   collection, doc, getDocs, setDoc, deleteDoc, serverTimestamp, query, orderBy,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=120';
+import { db } from '../core/firebase.js?v=121';
 
 const templates = () => collection(db, 'mailTemplates');
 
@@ -47,29 +47,84 @@ export function clearDraft() {
   } catch { /* не важно */ }
 }
 
-/** Все шаблоны, свежие сверху. */
+/**
+ * Шаблоны в браузере — запасное хранилище.
+ *
+ * Правила Firestore для коллекции выкладываются отдельно от кода, и пока это
+ * не сделано, база отвечает отказом. Терять из-за этого написанное письмо
+ * нельзя, поэтому сохранённое всегда ложится и сюда: с этого устройства оно
+ * откроется в любом случае, а на другие уедет, когда база станет доступна.
+ */
+const LOCAL_KEY = 'mailTemplates';
+
+function localList() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(LOCAL_KEY) || '[]');
+    return Array.isArray(saved) ? saved : [];
+  } catch {
+    return [];
+  }
+}
+
+function localSave(list) {
+  try {
+    localStorage.setItem(LOCAL_KEY, JSON.stringify(list));
+  } catch (error) {
+    console.error('Шаблон не сохранился в браузере', error);
+  }
+}
+
+/**
+ * Все шаблоны, свежие сверху: из базы и из браузера, без повторов по имени.
+ *
+ * База главнее — она общая для всех устройств. Отказ базы не ошибка для
+ * вызывающего: показываем то, что есть локально, и пишем причину в консоль.
+ */
 export async function listTemplates() {
-  const snap = await getDocs(query(templates(), orderBy('updatedAt', 'desc')));
-  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  const local = localList();
+
+  try {
+    const snap = await getDocs(query(templates(), orderBy('updatedAt', 'desc')));
+    const remote = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    const names = new Set(remote.map((item) => item.name));
+
+    return [...remote, ...local.filter((item) => !names.has(item.name))];
+  } catch (error) {
+    console.error('Шаблоны из базы недоступны', error);
+    return local;
+  }
 }
 
 /**
  * Сохранение под именем. Имя и есть ключ: сохранив дважды одно и то же письмо,
  * человек ожидает увидеть один шаблон, а не два одинаковых.
+ *
+ * Возвращает, куда легло: 'both' — и в базу, и в браузер, 'local' — только в
+ * браузер, потому что база отказала. Второе честно показывается человеку: он
+ * должен знать, что с другого устройства письма пока не будет.
  */
 export async function saveTemplate(name, drafts) {
   const id = String(name || '').trim().slice(0, 80);
   if (!id) throw new Error('empty_name');
 
-  await setDoc(doc(templates(), id), {
-    name: id,
-    drafts,
-    updatedAt: serverTimestamp(),
-  });
+  const local = localList().filter((item) => item.name !== id);
+  localSave([{ id, name: id, drafts, local: true }, ...local]);
 
-  return id;
+  try {
+    await setDoc(doc(templates(), id), { name: id, drafts, updatedAt: serverTimestamp() });
+    return 'both';
+  } catch (error) {
+    console.error('Шаблон не сохранился в базе', error);
+    return 'local';
+  }
 }
 
-export function deleteTemplate(id) {
-  return deleteDoc(doc(templates(), id));
+export async function deleteTemplate(id) {
+  localSave(localList().filter((item) => item.id !== id));
+
+  try {
+    await deleteDoc(doc(templates(), id));
+  } catch (error) {
+    console.error('Шаблон не удалился из базы', error);
+  }
 }
