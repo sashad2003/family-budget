@@ -40,9 +40,9 @@ import {
   limit,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=103';
-import { ADMIN_EMAILS, LEGACY_FAMILY_ID, TRIAL_DAYS } from '../config.js?v=103';
-import { t, getLocale } from '../core/i18n.js?v=103';
+import { db } from '../core/firebase.js?v=104';
+import { ADMIN_EMAILS, LEGACY_FAMILY_ID, TRIAL_DAYS } from '../config.js?v=104';
+import { t, getLocale } from '../core/i18n.js?v=104';
 
 const userRef = (uid) => doc(db, 'users', uid);
 const codeRef = (code) => doc(db, 'inviteCodes', String(code));

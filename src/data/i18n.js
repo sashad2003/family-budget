@@ -78,7 +78,7 @@ export const DICT = {
   'nav.prices': { ru: 'Цены', en: 'Prices', he: 'מחירים' },
   'nav.charts': { ru: 'Статистика', en: 'Stats', he: 'סטטיסטיקה' },
   'nav.settings': { ru: 'Настройки', en: 'Settings', he: 'הגדרות' },
-  'nav.admin': { ru: 'Люди', en: 'People', he: 'אנשים' },
+  'nav.admin': { ru: 'Админ', en: 'Admin', he: 'ניהול' },
   'nav.more': { ru: 'Ещё', en: 'More', he: 'עוד' },
   'nav.addTx': { ru: 'Операция', en: 'Transaction', he: 'תנועה' },
   'nav.addTxLabel': { ru: 'Добавить операцию', en: 'Add transaction', he: 'הוספת תנועה' },
