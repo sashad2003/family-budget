@@ -1,0 +1,70 @@
+<!--
+  Письмо о новом за август-сентябрь 2026.
+
+  Вставляется в админ-панели: «Письмо всем» → вид «Своя разметка» → это тело.
+  Заголовок письма приложение ставит само из темы, рамку и подпись со ссылкой
+  отписки добавляет тоже само — здесь только содержимое.
+
+  Тема: Что нового в «Бюджете»: где дешевле, светлая тема и поиск по сумме
+
+  Вёрстка нарочно простая: таблицы и стили прямо в тегах. Почтовые программы
+  вырезают внешние таблицы стилей, а flex и grid половина из них не понимает.
+  Картинок нет намеренно: у многих они не загружаются по умолчанию, и письмо
+  должно читаться без них — поэтому сравнение цен нарисовано разметкой.
+-->
+
+<p style="margin:0 0 18px;font-size:15px;line-height:1.6">За последний месяц в приложении появилось несколько вещей, ради которых стоит заглянуть.</p>
+
+<h2 style="margin:26px 0 8px;font-size:17px;font-weight:600;color:#14141f">Видно, где товар дешевле</h2>
+<p style="margin:0 0 12px;font-size:15px;line-height:1.6">Цены собираются из чеков — ваших и других пользователей. Наберите название товара на вкладке «Цены» и увидите, сколько он стоит в каждом магазине и когда там были в последний раз.</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 12px;border-collapse:collapse;background:#f5f6fa;border-radius:12px">
+  <tr>
+    <td style="padding:14px 16px 6px;font-size:13px;color:#66667c">Помидоры, кг · 2 магазина</td>
+  </tr>
+  <tr>
+    <td style="padding:6px 16px">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+        <tr>
+          <td style="font-size:15px;color:#14141f">Lidl<span style="color:#66667c">&nbsp;· 31 августа</span></td>
+          <td align="right" style="font-size:15px;font-weight:600;color:#197a4d;white-space:nowrap">109,99 дин</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:6px 16px 16px">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+        <tr>
+          <td style="font-size:15px;color:#14141f">Maxi<span style="color:#66667c">&nbsp;· 26 августа</span></td>
+          <td align="right" style="font-size:15px;font-weight:600;color:#14141f;white-space:nowrap">169,99 дин <span style="color:#af3f3f;font-weight:400">+55%</span></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+<h2 style="margin:26px 0 8px;font-size:17px;font-weight:600;color:#14141f">Светлая тема</h2>
+<p style="margin:0 0 12px;font-size:15px;line-height:1.6">Ночная нравится не всем и не всегда удобна днём. В настройках теперь три варианта: светлая, тёмная и «как в системе» — тогда приложение переключается вместе с телефоном.</p>
+
+<h2 style="margin:26px 0 8px;font-size:17px;font-weight:600;color:#14141f">Поиск по сумме</h2>
+<p style="margin:0 0 12px;font-size:15px;line-height:1.6">Название вспоминается не всегда, а цена — часто. Наберите в поиске «303», и найдётся покупка за 303, за 303,50 и за 1303 — в том числе по цене товара внутри чека.</p>
+
+<h2 style="margin:26px 0 8px;font-size:17px;font-weight:600;color:#14141f">Только нужные валюты</h2>
+<p style="margin:0 0 12px;font-size:15px;line-height:1.6">Раньше при вводе всегда предлагались все четыре. Теперь лишние можно выключить в настройках, и остаются только те, которыми вы правда пользуетесь. Главную валюту, в которой считаются итоги, тоже можно поменять.</p>
+
+<h2 style="margin:26px 0 8px;font-size:17px;font-weight:600;color:#14141f">Счета оплачиваются сами</h2>
+<p style="margin:0 0 12px;font-size:15px;line-height:1.6">У регулярного платежа с постоянной суммой можно включить автооплату — запись появится сама, в свой день, и не придётся вспоминать о ней каждый месяц.</p>
+
+<h2 style="margin:26px 0 8px;font-size:17px;font-weight:600;color:#14141f">Интерфейс стал спокойнее</h2>
+<p style="margin:0 0 12px;font-size:15px;line-height:1.6">Значки категорий крупнее и без цветных плиток, выбранное везде помечается одинаково, а на узких экранах перестали обрезаться названия и суммы.</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:28px 0 8px">
+  <tr>
+    <td style="border-radius:12px;background:#3a63ff">
+      <a href="https://mybudget.sitemarket.co.il" style="display:inline-block;padding:13px 26px;font-size:15px;font-weight:500;color:#ffffff;text-decoration:none">Открыть приложение</a>
+    </td>
+  </tr>
+</table>
+
+<p style="margin:18px 0 0;font-size:14px;line-height:1.6;color:#66667c">Если что-то не работает или неудобно — просто ответьте на это письмо.</p>

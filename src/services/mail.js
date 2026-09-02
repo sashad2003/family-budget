@@ -10,9 +10,9 @@
  * одному письму на адрес, чтобы получатели не видели чужих почт.
  */
 
-import { PROXY_URL } from '../config.js?v=108';
-import { idToken } from './auth.js?v=108';
-import { t, tIn, LOCALES } from '../core/i18n.js?v=108';
+import { PROXY_URL } from '../config.js?v=109';
+import { idToken } from './auth.js?v=109';
+import { t, tIn, LOCALES } from '../core/i18n.js?v=109';
 
 /** Столько же, сколько прокси принимает за раз. */
 export const MAIL_BATCH = 50;
@@ -91,17 +91,26 @@ export function buildLetter(title, body, locale = 'ru', format = 'text') {
   return { html, text };
 }
 
-/** Разметка → читаемый текст: переносы там, где были блоки. */
+/**
+ * Разметка → читаемый текст: переносы там, где были блоки.
+ *
+ * Отступы разметки после снятия тегов остаются пробелами в начале строк, а
+ * вложенные таблицы дают вереницу пустых строк. И то и другое убираем: эту
+ * часть письма читают почтовики без разметки и антиспам-фильтры, и выглядеть
+ * она должна как письмо, а не как обломки вёрстки.
+ */
 function stripTags(html) {
   return html
     .replace(/<(script|style)[\s\S]*?<\/\1>/gi, '')
     .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<\/(p|div|h[1-6]|li|tr)>/gi, '\n\n')
+    .replace(/<\/(p|div|h[1-6]|li|tr|table)>/gi, '\n\n')
     .replace(/<[^>]+>/g, '')
     .replace(/&nbsp;/g, ' ')
     .replace(/&amp;/g, '&')
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/^[ \t]+|[ \t]+$/gm, '')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 }

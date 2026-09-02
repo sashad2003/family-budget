@@ -18,9 +18,9 @@
  * быстрее, чем набрал бы слово.
  */
 
-import { el, render } from '../core/dom.js?v=108';
-import { EMOJI_GROUPS, emojiOf } from '../data/emoji.js?v=108';
-import { t } from '../core/i18n.js?v=108';
+import { el, render } from '../core/dom.js?v=109';
+import { EMOJI_GROUPS, emojiOf } from '../data/emoji.js?v=109';
+import { t } from '../core/i18n.js?v=109';
 
 const RECENT_KEY = 'emojiRecent';
 const RECENT_MAX = 24;
