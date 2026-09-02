@@ -1,20 +1,20 @@
 /** Настройки: профиль, участники, валюта, курсы, категории. */
 
-import { el, render } from '../core/dom.js?v=95';
-import { state, set } from '../core/store.js?v=95';
-import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=95';
-import { formatAmount, convert } from '../core/money.js?v=95';
-import { logout } from '../services/auth.js?v=95';
+import { el, render } from '../core/dom.js?v=96';
+import { state, set } from '../core/store.js?v=96';
+import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=96';
+import { formatAmount, convert } from '../core/money.js?v=96';
+import { logout } from '../services/auth.js?v=96';
 import {
   inviteLink, resetInviteLink, removeMember, leaveFamily, isOwner,
-} from '../services/account.js?v=95';
-import { refreshRates } from '../services/rates.js?v=95';
-import { saveCategory, deleteCategory, reorderCategories } from '../services/transactions.js?v=95';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=95';
-import { section } from '../ui/section.js?v=95';
-import { t, intlLocale } from '../core/i18n.js?v=95';
-import { THEMES, getTheme, setTheme } from '../core/theme.js?v=95';
-import { toastOk, toastError } from '../ui/toast.js?v=95';
+} from '../services/account.js?v=96';
+import { refreshRates } from '../services/rates.js?v=96';
+import { saveCategory, deleteCategory, reorderCategories } from '../services/transactions.js?v=96';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=96';
+import { section } from '../ui/section.js?v=96';
+import { t, intlLocale } from '../core/i18n.js?v=96';
+import { THEMES, getTheme, setTheme } from '../core/theme.js?v=96';
+import { toastOk, toastError } from '../ui/toast.js?v=96';
 
 const PALETTE = ['#2dd98a', '#ff5b5b', '#5b9fff', '#ffb347', '#ff7eb3', '#38b6f5', '#8a8a94'];
 
@@ -345,7 +345,7 @@ function openCategoryEditor(cat, onDone) {
   // потому что на остальных экранах он не нужен.
   const pickerBox = el('div', {}, el('p', { class: 'hint' }, t('cat.iconLoading')));
 
-  import('../ui/emojiPicker.js?v=95')
+  import('../ui/emojiPicker.js?v=96')
     .then(({ emojiPicker }) => render(pickerBox, emojiPicker({
       value: model.icon,
       onPick: (glyph) => { model.icon = glyph; preview.textContent = glyph; },

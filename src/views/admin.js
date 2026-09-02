@@ -5,24 +5,55 @@
  * Firestore — спрятанной кнопки мало, чужие профили закрывает база.
  */
 
-import { el, render } from '../core/dom.js?v=95';
-import { state } from '../core/store.js?v=95';
-import { formatAmount } from '../core/money.js?v=95';
-import { listUsers } from '../services/account.js?v=95';
+import { el, render } from '../core/dom.js?v=96';
+import { state } from '../core/store.js?v=96';
+import { formatAmount } from '../core/money.js?v=96';
+import { listUsers } from '../services/account.js?v=96';
 import {
   loadPriceRows, summarizePrices, summarizeUsers,
   ownPriceRows, summarizeOwnSources, summarizeUsage,
-} from '../services/adminStats.js?v=95';
-import { loadUsage } from '../services/usage.js?v=95';
-import { toastError, toastOk } from '../ui/toast.js?v=95';
-import { section } from '../ui/section.js?v=95';
-import { t, plural, intlLocale } from '../core/i18n.js?v=95';
+} from '../services/adminStats.js?v=96';
+import { loadUsage } from '../services/usage.js?v=96';
+import { toastError, toastOk } from '../ui/toast.js?v=96';
+import { section } from '../ui/section.js?v=96';
+import { t, plural, intlLocale } from '../core/i18n.js?v=96';
 
-const cache = { users: null, query: '', prices: null, usage: null };
+const cache = { users: null, query: '', prices: null, usage: null, tab: 'mine' };
 
+/**
+ * Админ-панель на два язычка.
+ *
+ * Своё и чужое разведены намеренно. Своя статистика подробная, с товарами и
+ * магазинами; чужая — обезличенная, и смотреть их одним списком значит всё
+ * время сверять в уме, где кто. Выбранный язычок держится в памяти экрана:
+ * при возврате открывается тот же.
+ */
 export function renderAdmin() {
   const container = el('div');
+  const view = el('div');
+
+  const tabs = () => el('div', { class: 'segmented', style: 'margin-bottom:16px' },
+    [['mine', t('admin.tabMine')], ['others', t('admin.tabOthers')]].map(([key, label]) =>
+      el('button', {
+        class: cache.tab === key ? 'is-active' : '',
+        onclick: () => { cache.tab = key; draw(); },
+      }, label),
+    ));
+
+  const draw = () => {
+    render(container, [tabs(), view]);
+    render(view, cache.tab === 'mine' ? mine() : others());
+  };
+
+  draw();
+  return container;
+}
+
+/** Всё, что про остальных: активность, витрина цен, список людей. */
+function others() {
   const body = el('div');
+  const activity = el('div');
+  const market = el('div');
 
   const search = el('input', {
     class: 'input',
@@ -32,11 +63,10 @@ export function renderAdmin() {
     oninput: (e) => { cache.query = e.target.value; draw(body); },
   });
 
-  const activity = el('div');
-  const market = el('div');
+  load(body, false, activity);
+  loadMarket(market);
 
-  render(container, [
-    mine(),
+  return [
     activity,
     market,
     // Список людей — в самом низу: он длинный, и всё, ради чего сюда заходят,
@@ -44,12 +74,8 @@ export function renderAdmin() {
     section(t('admin.title'), [
       search,
       body,
-    ], el('button', { class: 'chip', onclick: () => load(body, true) }, t('common.refresh'))),
-  ]);
-
-  load(body, false, activity);
-  loadMarket(market);
-  return container;
+    ], el('button', { class: 'chip', onclick: () => load(body, true, activity) }, t('common.refresh'))),
+  ];
 }
 
 /**
