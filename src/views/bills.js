@@ -3,20 +3,20 @@
  * оплаченные отмечены галочкой, забытые горят красным.
  */
 
-import { el, render } from '../core/dom.js?v=84';
-import { state, set, currencyChoices } from '../core/store.js?v=84';
-import { formatAmount, parseAmount, currencyInfo, convert } from '../core/money.js?v=84';
-import { monthLabel, monthKey, today } from '../core/dates.js?v=84';
-import { billsForMonth } from '../core/selectors.js?v=84';
-import { createBill, updateBill, deleteBill } from '../services/bills.js?v=84';
-import { autoStartMark } from '../services/autoBills.js?v=84';
-import { createTransaction, deleteTransaction } from '../services/transactions.js?v=84';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=84';
-import { toastOk, toastError } from '../ui/toast.js?v=84';
-import { openTxForm } from './txForm.js?v=84';
-import { tileStyle } from './list.js?v=84';
-import { section } from '../ui/section.js?v=84';
-import { t } from '../core/i18n.js?v=84';
+import { el, render } from '../core/dom.js?v=85';
+import { state, set, currencyChoices } from '../core/store.js?v=85';
+import { formatAmount, parseAmount, currencyInfo, convert } from '../core/money.js?v=85';
+import { monthLabel, monthKey, today } from '../core/dates.js?v=85';
+import { billsForMonth } from '../core/selectors.js?v=85';
+import { createBill, updateBill, deleteBill } from '../services/bills.js?v=85';
+import { autoStartMark } from '../services/autoBills.js?v=85';
+import { createTransaction, deleteTransaction } from '../services/transactions.js?v=85';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=85';
+import { toastOk, toastError } from '../ui/toast.js?v=85';
+import { openTxForm } from './txForm.js?v=85';
+import { tileStyle } from './list.js?v=85';
+import { section } from '../ui/section.js?v=85';
+import { t } from '../core/i18n.js?v=85';
 
 export function renderBills() {
   const rows = billsForMonth(state);
@@ -330,7 +330,6 @@ function buildBillBody(model, rerender) {
       el('div', { class: 'cat-grid' }, pool.map((cat) =>
         el('button', {
           class: `cat ${model.categoryId === cat.id ? 'is-active' : ''}`,
-          style: model.categoryId === cat.id ? `--tint:${cat.color}` : '',
           onclick: () => { model.categoryId = cat.id; rerender(); },
         }, [
           el('span', { class: 'cat__ico', style: tileStyle(cat.color) },

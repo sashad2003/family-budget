@@ -84,6 +84,17 @@
     linear-gradient(158deg, var(--glass-2), var(--glass-1));
   --alert-edge: rgba(255, 91, 91, 0.45);
 
+  /*
+   * Выбранное — везде одинаково: синяя подпись, синяя рамка, синяя подложка.
+   * Раньше валюты помечались зелёным, категории — своим цветом, фильтры —
+   * серой подложкой: три разных языка для одного и того же смысла.
+   * Цвет категории остался там, где он и правда о категории: у значка и у
+   * полоски доли.
+   */
+  --sel-fg: #8ab8ff;
+  --sel-bg: rgba(91, 159, 255, 0.18);
+  --sel-edge: rgba(91, 159, 255, 0.55);
+
   /* Заливка акцентных кнопок: дока, «плюса», «Сохранить» */
   --accent-fill: linear-gradient(150deg, #5b9fff, #3a63ff);
   --accent-fill-hover: linear-gradient(150deg, #6ea8ff, #4a71ff);
@@ -214,6 +225,10 @@ html[data-theme="light"] {
   --accent-fill: #3a63ff;
   --accent-fill-hover: #2f56cc;
   --accent-shadow: 0 10px 22px -12px rgba(58, 99, 255, 0.55);
+  --sel-fg: #2b57c9;
+  --sel-bg: rgba(58, 99, 255, 0.10);
+  --sel-edge: rgba(58, 99, 255, 0.45);
+
   --tab-fill: #3a63ff;
   --tab-shadow: 0 8px 18px -10px rgba(58, 99, 255, 0.5);
   --fab-shadow: 0 12px 26px -12px rgba(58, 99, 255, 0.55);
@@ -289,22 +304,6 @@ html[data-theme="light"] .rail,
 html[data-theme="light"] .sheet {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
-}
-
-/*
- * Цвет категории приходит из данных и в разметке лежит в --tint. На тёмном
- * фоне им красится сама подпись, на светлом тот же цвет пришлось бы читать
- * с контрастом около двух к одному — поэтому там он замешивается с чернильным
- * до читаемого, а роль «выбрано» берёт на себя рамка.
- */
-html[data-theme="light"] .cat.is-active,
-html[data-theme="light"] .chip.is-active {
-  /*
-   * 48% цвета — доля, при которой самый светлый цвет палитры (бирюзовый)
-   * даёт на светлом фоне 4.7:1. При двух третях он давал 3.2:1, то есть
-   * подпись выбранной категории читалась хуже невыбранных соседок.
-   */
-  color: color-mix(in srgb, var(--tint, currentColor) 48%, #0b0b14);
 }
 
 /*
@@ -635,7 +634,7 @@ button { cursor: pointer; border: none; background: none; }
 }
 .more-item + .more-item { margin-top: 8px; }
 .more-item:active { transform: scale(0.99); }
-.more-item.is-active { border-color: rgba(91, 159, 255, 0.5); }
+.more-item.is-active { border-color: var(--sel-edge); background: var(--sel-bg); color: var(--sel-fg); }
 .more-item__ico {
   flex: 0 0 auto;
   width: 40px; height: 40px;
@@ -1218,9 +1217,12 @@ button { cursor: pointer; border: none; background: none; }
   transition: background 0.2s, color 0.2s;
 }
 .segmented button:hover { color: var(--fg-0); }
-.segmented button.is-active { background: var(--glass-3); color: var(--fg-0); }
-.segmented button.is-active[data-value="income"] { background: rgba(45, 217, 138, 0.18); color: var(--income); }
-.segmented button.is-active[data-value="expense"] { background: rgba(255, 91, 91, 0.18); color: var(--expense); }
+/*
+ * Доходы и расходы раньше подсвечивались зелёным и красным. Смысл цвета
+ * здесь тот же, что у любого другого выбора, — «нажато сюда», и два лишних
+ * цвета в одном ряду с остальными переключателями только сбивали.
+ */
+.segmented button.is-active { background: var(--sel-bg); color: var(--sel-fg); font-weight: 500; }
 
 /* Категории плиткой */
 
@@ -1262,8 +1264,12 @@ button { cursor: pointer; border: none; background: none; }
   font-size: 28px;
   line-height: 1;
 }
-/* --tint приходит из разметки: это цвет выбранной категории */
-.cat.is-active { color: var(--tint, var(--fg-0)); background: var(--glass-3); border-color: currentColor; }
+.cat.is-active {
+  color: var(--sel-fg);
+  background: var(--sel-bg);
+  border-color: var(--sel-edge);
+  font-weight: 500;
+}
 
 .chip {
   display: inline-flex;
@@ -1278,7 +1284,16 @@ button { cursor: pointer; border: none; background: none; }
   transition: background 0.18s, color 0.18s, border-color 0.18s;
 }
 .chip:hover { color: var(--fg-0); border-color: var(--edge-strong); }
-.chip.is-active { background: var(--glass-3); color: var(--tint, var(--fg-0)); border-color: var(--edge-strong); }
+/*
+ * Выбранное. Три признака сразу — подпись, рамка и подложка синим, — потому
+ * что одной подложки чуть плотнее соседних на светлой теме не видно.
+ */
+.chip.is-active {
+  color: var(--sel-fg);
+  background: var(--sel-bg);
+  border-color: var(--sel-edge);
+  font-weight: 500;
+}
 .chip--currency { font-family: var(--mono); font-weight: 500; color: var(--fg-0); }
 
 /*
@@ -1296,13 +1311,8 @@ button { cursor: pointer; border: none; background: none; }
 /* В легенде строка не флексовая — там промежуток держит отступ самого значка */
 .legend-name .chip__ico { font-size: 15px; margin-inline-end: 7px; }
 .chip--toggle .chip__mark { font-size: 12px; opacity: 0.75; }
-.chip--toggle.is-active {
-  color: var(--income);
-  background: rgba(45, 217, 138, 0.14);
-  border-color: rgba(45, 217, 138, 0.55);
-}
 .chip--toggle.is-active .chip__mark { opacity: 1; }
-.chip--toggle.is-active:hover { color: var(--income); }
+.chip--toggle.is-active:hover { color: var(--sel-fg); }
 
 .chip-row { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
 .chip-row::-webkit-scrollbar { display: none; }
@@ -1687,7 +1697,7 @@ button { cursor: pointer; border: none; background: none; }
   transition: opacity 0.18s, background 0.18s;
 }
 .emoji-pick__tab:hover { opacity: 0.85; }
-.emoji-pick__tab.is-active { opacity: 1; background: var(--glass-3); }
+.emoji-pick__tab.is-active { opacity: 1; background: var(--sel-bg); color: var(--sel-fg); }
 
 .emoji-grid {
   display: grid;
@@ -1706,7 +1716,7 @@ button { cursor: pointer; border: none; background: none; }
   transition: background 0.14s;
 }
 .emoji-cell:hover { background: var(--glass-3); }
-.emoji-cell.is-active { background: var(--glass-3); box-shadow: inset 0 0 0 1px var(--edge-strong); }
+.emoji-cell.is-active { background: var(--sel-bg); box-shadow: inset 0 0 0 1px var(--sel-edge); }
 
 /*
  * На низком экране (старый телефон, открытая клавиатура) сетка ужимается:
@@ -1753,8 +1763,8 @@ button { cursor: pointer; border: none; background: none; }
   border-color: rgba(45, 217, 138, 0.5);
   background: linear-gradient(158deg, rgba(45, 217, 138, 0.14), rgba(45, 217, 138, 0.04));
 }
-.budget.is-open .budget__name { color: var(--income); font-weight: 500; }
-.budget.is-open .budget__dot { background: var(--income); border-color: var(--income); }
+.budget.is-open .budget__name { color: var(--sel-fg); font-weight: 500; }
+.budget.is-open .budget__dot { background: var(--sel-fg); border-color: var(--sel-fg); }
 
 .budget__mark {
   flex: 0 0 auto;
@@ -1807,10 +1817,7 @@ button { cursor: pointer; border: none; background: none; }
   transition: border-color 0.18s, background 0.18s;
 }
 .cur:hover { background: var(--glass-hover); }
-.cur.is-active {
-  border-color: rgba(91, 159, 255, 0.6);
-  background: linear-gradient(150deg, rgba(91, 159, 255, 0.22), rgba(58, 99, 255, 0.1));
-}
+.cur.is-active { border-color: var(--sel-edge); background: var(--sel-bg); color: var(--sel-fg); }
 
 .cur__sym {
   flex: 0 0 42px;
@@ -2006,13 +2013,14 @@ button { cursor: pointer; border: none; background: none; }
 }
 .pick:hover { background: var(--glass-hover); color: var(--fg-0); }
 .pick.is-active {
-  color: var(--on-accent);
-  border-color: rgba(91, 159, 255, 0.6);
-  background: linear-gradient(150deg, rgba(91, 159, 255, 0.28), rgba(58, 99, 255, 0.16));
+  color: var(--sel-fg);
+  border-color: var(--sel-edge);
+  background: var(--sel-bg);
+  font-weight: 500;
 }
 .pick__name { line-height: 1.25; }
 .pick__price { font-size: 12px; color: var(--fg-2); }
-.pick.is-active .pick__price { color: rgba(255, 255, 255, 0.78); }
+.pick.is-active .pick__price { color: var(--fg-1); }
 .pick--new { border-style: dashed; border-color: var(--edge-strong); color: var(--fg-0); }
 
 /* Пара крупных кнопок съёмки чека */
