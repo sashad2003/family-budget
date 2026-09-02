@@ -5,26 +5,26 @@
  * Firestore — спрятанной кнопки мало, чужие профили закрывает база.
  */
 
-import { el, render } from '../core/dom.js?v=121';
-import { state } from '../core/store.js?v=121';
-import { formatAmount } from '../core/money.js?v=121';
-import { listUsers, wantsMail } from '../services/account.js?v=121';
+import { el, render } from '../core/dom.js?v=122';
+import { state } from '../core/store.js?v=122';
+import { formatAmount } from '../core/money.js?v=122';
+import { listUsers, wantsMail } from '../services/account.js?v=122';
 import {
   loadPriceRows, summarizePrices, summarizeUsers,
   ownPriceRows, summarizeOwnSources, summarizeUsage,
-} from '../services/adminStats.js?v=121';
-import { loadUsage } from '../services/usage.js?v=121';
+} from '../services/adminStats.js?v=122';
+import { loadUsage } from '../services/usage.js?v=122';
 import {
   saveDraft, loadDraft, listTemplates, saveTemplate, deleteTemplate,
-} from '../services/mailTemplates.js?v=121';
+} from '../services/mailTemplates.js?v=122';
 import {
   buildLetter, sendBatch, translateLetter, letterTexts, applyLetterTexts,
   localeOf, mailError, MAIL_BATCH,
-} from '../services/mail.js?v=121';
-import { toastError, toastOk } from '../ui/toast.js?v=121';
-import { section } from '../ui/section.js?v=121';
-import { richText } from '../ui/richText.js?v=121';
-import { t, plural, intlLocale, LOCALES } from '../core/i18n.js?v=121';
+} from '../services/mail.js?v=122';
+import { toastError, toastOk } from '../ui/toast.js?v=122';
+import { section } from '../ui/section.js?v=122';
+import { richText } from '../ui/richText.js?v=122';
+import { t, plural, intlLocale, LOCALES } from '../core/i18n.js?v=122';
 
 const cache = { users: null, query: '', prices: null, usage: null, tab: 'mine' };
 

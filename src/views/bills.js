@@ -3,20 +3,20 @@
  * оплаченные отмечены галочкой, забытые горят красным.
  */
 
-import { el, render } from '../core/dom.js?v=121';
-import { state, set, currencyChoices } from '../core/store.js?v=121';
-import { formatAmount, parseAmount, currencyInfo, convert } from '../core/money.js?v=121';
-import { monthLabel, monthKey, today } from '../core/dates.js?v=121';
-import { billsForMonth } from '../core/selectors.js?v=121';
-import { createBill, updateBill, deleteBill } from '../services/bills.js?v=121';
-import { autoStartMark } from '../services/autoBills.js?v=121';
-import { createTransaction, deleteTransaction } from '../services/transactions.js?v=121';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=121';
-import { toastOk, toastError } from '../ui/toast.js?v=121';
-import { openTxForm } from './txForm.js?v=121';
-import { tileStyle } from './list.js?v=121';
-import { section } from '../ui/section.js?v=121';
-import { t } from '../core/i18n.js?v=121';
+import { el, render } from '../core/dom.js?v=122';
+import { state, set, currencyChoices } from '../core/store.js?v=122';
+import { formatAmount, parseAmount, currencyInfo, convert } from '../core/money.js?v=122';
+import { monthLabel, monthKey, today } from '../core/dates.js?v=122';
+import { billsForMonth } from '../core/selectors.js?v=122';
+import { createBill, updateBill, deleteBill } from '../services/bills.js?v=122';
+import { autoStartMark } from '../services/autoBills.js?v=122';
+import { createTransaction, deleteTransaction } from '../services/transactions.js?v=122';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=122';
+import { toastOk, toastError } from '../ui/toast.js?v=122';
+import { openTxForm } from './txForm.js?v=122';
+import { tileStyle } from './list.js?v=122';
+import { section } from '../ui/section.js?v=122';
+import { t } from '../core/i18n.js?v=122';
 
 export function renderBills() {
   const rows = billsForMonth(state);

@@ -10,9 +10,9 @@
  * одному письму на адрес, чтобы получатели не видели чужих почт.
  */
 
-import { PROXY_URL, SUPPORT_WHATSAPP } from '../config.js?v=121';
-import { idToken } from './auth.js?v=121';
-import { t, tIn, LOCALES } from '../core/i18n.js?v=121';
+import { PROXY_URL, SUPPORT_WHATSAPP } from '../config.js?v=122';
+import { idToken } from './auth.js?v=122';
+import { t, tIn, LOCALES } from '../core/i18n.js?v=122';
 
 /** Столько же, сколько прокси принимает за раз. */
 export const MAIL_BATCH = 50;
@@ -131,6 +131,15 @@ export function buildLetter(title, body, locale = 'ru') {
     + `${tIn(locale, 'mail.unsubscribe')}: ${UNSUBSCRIBE_URL}`;
 
   return { html, text };
+}
+
+/** Экранирование текста перед вставкой в письмо. */
+function esc(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
 }
 
 /**
