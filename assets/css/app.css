@@ -1314,6 +1314,19 @@ button { cursor: pointer; border: none; background: none; }
   font-weight: 500;
 }
 
+/*
+ * Плитка «новая категория» в форме операции. Пунктир отличает её от самих
+ * категорий: это не выбор, а действие, и выбранной она не бывает.
+ */
+.cat--add {
+  border-style: dashed;
+  border-color: var(--edge-strong);
+  background: transparent;
+  color: var(--fg-2);
+}
+.cat--add .cat__ico { font-size: 26px; opacity: 0.75; }
+.cat--add:hover { color: var(--fg-1); border-color: var(--sel-edge); background: var(--glass-1); }
+
 .chip {
   display: inline-flex;
   align-items: center;
@@ -2064,7 +2077,12 @@ button { cursor: pointer; border: none; background: none; }
 .pick--new { border-style: dashed; border-color: var(--edge-strong); color: var(--fg-0); }
 
 /* Пара крупных кнопок съёмки чека */
-.scan-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
+/*
+ * Плиток две или три — третья (QR) появляется там, где браузер умеет его
+ * читать. auto-fit сам решает, ставить их в ряд или переносить: при 96px на
+ * плитку три помещаются в ряд начиная с ширины 330px, ниже переносятся.
+ */
+.scan-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 10px; }
 
 .scan-tile {
   display: flex;

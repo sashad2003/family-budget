@@ -4,15 +4,16 @@
  * открывается в редактируемой форме.
  */
 
-import { el, render } from '../core/dom.js?v=124';
-import { openSheet, closeSheet } from '../ui/sheet.js?v=124';
-import { toastError } from '../ui/toast.js?v=124';
-import { state } from '../core/store.js?v=124';
-import { findDuplicates } from '../core/selectors.js?v=124';
-import { guessCategory } from '../data/categories.js?v=124';
-import { openDupCompare } from './dupCompare.js?v=124';
-import { scanReceiptImages, scanReceiptUrl, scanSmsText, MAX_RECEIPT_IMAGES } from '../services/receipts.js?v=124';
-import { t } from '../core/i18n.js?v=124';
+import { el, render } from '../core/dom.js?v=125';
+import { openSheet, closeSheet } from '../ui/sheet.js?v=125';
+import { toastError } from '../ui/toast.js?v=125';
+import { state } from '../core/store.js?v=125';
+import { findDuplicates } from '../core/selectors.js?v=125';
+import { guessCategory } from '../data/categories.js?v=125';
+import { openDupCompare } from './dupCompare.js?v=125';
+import { scanReceiptImages, scanReceiptUrl, scanSmsText, MAX_RECEIPT_IMAGES } from '../services/receipts.js?v=125';
+import { t } from '../core/i18n.js?v=125';
+import { qrSupported, openQrScanner } from '../ui/qrScanner.js?v=125';
 
 /** Шторка «распознаём…» — на время запроса заменяет собой форму. */
 function showBusy(text) {
@@ -117,6 +118,15 @@ function pickPhotos({ fromCamera }, onDraft) {
 export const scanFromCamera = (onDraft) => pickPhotos({ fromCamera: true }, onDraft);
 export const scanFromGallery = (onDraft) => pickPhotos({ fromCamera: false }, onDraft);
 
+/** Разбор ссылки со страницы фискального чека — с проверкой, что она наша. */
+function readUrl(url, onDraft) {
+  if (!/^https:\/\//i.test(url)) {
+    toastError(t('scan.urlHttps'));
+    return;
+  }
+  run(() => scanReceiptUrl(url), t('scan.readingPage'), onDraft);
+}
+
 /** Шторка для ссылки со страницы фискального чека. */
 export function openScanUrlSheet(onDraft) {
   const urlInput = el('input', {
@@ -126,23 +136,52 @@ export function openScanUrlSheet(onDraft) {
     placeholder: 'https://…',
   });
 
-  const submit = () => {
-    const url = urlInput.value.trim();
-    if (!/^https:\/\//i.test(url)) {
-      toastError(t('scan.urlHttps'));
-      return;
-    }
-    run(() => scanReceiptUrl(url), t('scan.readingPage'), onDraft);
-  };
+  /*
+   * Вставка из буфера. На айфоне камера читает QR сама и кладёт ссылку в
+   * буфер — тогда набирать её руками не нужно. Разрешение на чтение буфера
+   * спрашивает браузер; отказ не ошибка: поле осталось, вставить можно
+   * привычным долгим нажатием.
+   */
+  const paste = el('button', {
+    class: 'chip',
+    onclick: async () => {
+      try {
+        const text = (await navigator.clipboard.readText()).trim();
+        if (text) urlInput.value = text;
+      } catch (error) {
+        console.debug('Буфер недоступен', error);
+        toastError(t('scan.pasteFailed'));
+      }
+    },
+  }, t('scan.paste'));
+
+  const tools = el('div', { class: 'chip-row', style: 'margin-top:10px' }, [paste]);
+
+  // Кнопку чтения QR показываем, только если браузер правда умеет: обещать
+  // камеру и открыть пустой экран хуже, чем не обещать.
+  qrSupported().then((ok) => {
+    if (!ok) return;
+    tools.prepend(el('button', {
+      class: 'chip',
+      onclick: () => openQrScanner(
+        (value) => readUrl(value, onDraft),
+        () => openScanUrlSheet(onDraft),
+      ),
+    }, t('scan.qrButton')));
+  });
 
   openSheet({
     title: t('scan.urlTitle'),
     body: [
       urlInput,
+      tools,
       el('p', { class: 'hint' },
         t('scan.urlHint')),
     ],
-    footer: [el('button', { class: 'btn btn--primary', onclick: submit }, t('scan.parse'))],
+    footer: [el('button', {
+      class: 'btn btn--primary',
+      onclick: () => readUrl(urlInput.value.trim(), onDraft),
+    }, t('scan.parse'))],
   });
 }
 
@@ -182,17 +221,34 @@ export function openScanSmsSheet(onDraft) {
 export function openScanSheet(onDraft) {
   const body = el('div');
 
-  render(body, [
-    el('div', { class: 'scan-row' }, [
-      el('button', { class: 'scan-tile', onclick: () => scanFromCamera(onDraft) }, [
-        el('span', { class: 'scan-tile__ico' }, '📷'),
-        el('span', {}, t('scan.camera')),
-      ]),
-      el('button', { class: 'scan-tile', onclick: () => scanFromGallery(onDraft) }, [
-        el('span', { class: 'scan-tile__ico' }, '🖼'),
-        el('span', {}, t('scan.gallery')),
-      ]),
+  const tiles = el('div', { class: 'scan-row' }, [
+    el('button', { class: 'scan-tile', onclick: () => scanFromCamera(onDraft) }, [
+      el('span', { class: 'scan-tile__ico' }, '📷'),
+      el('span', {}, t('scan.camera')),
     ]),
+    el('button', { class: 'scan-tile', onclick: () => scanFromGallery(onDraft) }, [
+      el('span', { class: 'scan-tile__ico' }, '🖼'),
+      el('span', {}, t('scan.gallery')),
+    ]),
+  ]);
+
+  // Третья плитка появляется, если браузер умеет читать QR сам.
+  qrSupported().then((ok) => {
+    if (!ok) return;
+    tiles.append(el('button', {
+      class: 'scan-tile',
+      onclick: () => openQrScanner(
+        (value) => readUrl(value, onDraft),
+        () => openScanSheet(onDraft),
+      ),
+    }, [
+      el('span', { class: 'scan-tile__ico' }, '🔳'),
+      el('span', {}, t('scan.qr')),
+    ]));
+  });
+
+  render(body, [
+    tiles,
     el('p', { class: 'hint' },
       t('scan.photoHint', { n: MAX_RECEIPT_IMAGES })),
     el('div', { class: 'divider' }, t('scan.or')),

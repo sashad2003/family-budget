@@ -3,20 +3,21 @@
  * после сканирования каждое поле и каждая строка товара остаются редактируемыми.
  */
 
-import { el, render } from '../core/dom.js?v=124';
-import { state, currencyChoices } from '../core/store.js?v=124';
-import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=124';
-import { today } from '../core/dates.js?v=124';
-import { guessCategory } from '../data/categories.js?v=124';
-import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=124';
-import { tileStyle } from './list.js?v=124';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=124';
-import { toastOk, toastError } from '../ui/toast.js?v=124';
-import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=124';
-import { openQuickPick } from './quickPick.js?v=124';
-import { findDuplicates } from '../core/selectors.js?v=124';
-import { openDupCompare } from './dupCompare.js?v=124';
-import { t } from '../core/i18n.js?v=124';
+import { el, render } from '../core/dom.js?v=125';
+import { state, currencyChoices } from '../core/store.js?v=125';
+import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=125';
+import { today } from '../core/dates.js?v=125';
+import { guessCategory } from '../data/categories.js?v=125';
+import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=125';
+import { tileStyle } from './list.js?v=125';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=125';
+import { toastOk, toastError } from '../ui/toast.js?v=125';
+import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=125';
+import { openQuickPick } from './quickPick.js?v=125';
+import { openCategoryEditor } from './catForm.js?v=125';
+import { findDuplicates } from '../core/selectors.js?v=125';
+import { openDupCompare } from './dupCompare.js?v=125';
+import { t } from '../core/i18n.js?v=125';
 
 /**
  * openTxForm({ tx })          — правка существующей операции
@@ -133,6 +134,36 @@ const itemsSum = (model) => model.items.reduce((sum, item) => sum + (Number(item
  * записи: сохранение уходило бы в addDoc, а проверка повторов находила бы
  * саму же правящуюся операцию и ругалась на неё.
  */
+/**
+ * Завести категорию, не потеряв набранное.
+ *
+ * Шторка в приложении одна, поэтому редактор категории занимает собой форму.
+ * Форму открываем заново тем же черновиком: и после сохранения, и после
+ * отказа — человек не должен вводить всё второй раз.
+ */
+function addCategory(model, tx, backTo) {
+  const back = () => openTxForm({ tx, model, backTo });
+
+  openCategoryEditor(null, async (id) => {
+    if (!id) { back(); return; }
+
+    model.categoryId = id;
+    // Ждём, пока новая категория придёт из базы обратно: до этого её нет в
+    // списке, и выбранной она бы не показалась.
+    await waitForCategory(id);
+    back();
+  }, { type: model.type, onCancel: back });
+}
+
+/** Ждёт появления категории в списке — но не дольше секунды с небольшим. */
+async function waitForCategory(id, timeout = 1500) {
+  const until = Date.now() + timeout;
+  while (Date.now() < until) {
+    if ((state.categories || []).some((cat) => cat.id === id)) return;
+    await new Promise((resolve) => setTimeout(resolve, 60));
+  }
+}
+
 function buildBody(model, rerender, tx, backTo = null) {
   const nodes = [];
 
@@ -213,18 +244,30 @@ function buildBody(model, rerender, tx, backTo = null) {
   nodes.push(
     el('div', { class: 'field' }, [
       el('label', { class: 'field__label' }, t('form.category')),
-      el('div', { class: 'cat-grid' }, pool.map((cat) =>
+      el('div', { class: 'cat-grid' }, [
+        ...pool.map((cat) =>
+          el('button', {
+            class: `cat ${model.categoryId === cat.id ? 'is-active' : ''}`,
+            onclick: () => { model.categoryId = cat.id; rerender(); },
+          }, [
+            el('span', {
+              class: 'cat__ico',
+              style: tileStyle(cat.color),
+            }, cat.icon || '•'),
+            el('span', {}, cat.name),
+          ])),
+
+        // Нужной категории может не оказаться ровно тогда, когда чек уже
+        // распознан. Без этой плитки приходилось уходить в настройки и
+        // сканировать заново.
         el('button', {
-          class: `cat ${model.categoryId === cat.id ? 'is-active' : ''}`,
-          onclick: () => { model.categoryId = cat.id; rerender(); },
+          class: 'cat cat--add',
+          onclick: () => addCategory(model, tx, backTo),
         }, [
-          el('span', {
-            class: 'cat__ico',
-            style: tileStyle(cat.color),
-          }, cat.icon || '•'),
-          el('span', {}, cat.name),
+          el('span', { class: 'cat__ico' }, '+'),
+          el('span', {}, t('form.newCategory')),
         ]),
-      )),
+      ]),
     ]),
   );
 
