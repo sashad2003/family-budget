@@ -871,6 +871,12 @@ function fetchReceiptContent(string $url): array
 /** Один вызов Claude с жёсткой схемой ответа — на выходе всегда валидный JSON. */
 function extractReceipt(array $config, array $content): array
 {
+    // Денег нет — не тратим ни времени человека, ни запроса: Anthropic
+    // ответит отказом, только на десяток секунд позже.
+    if (creditsExhausted()) {
+        respond(402, ['error' => 'out_of_credits']);
+    }
+
     $schema = [
         'type' => 'object',
         'properties' => [
@@ -948,6 +954,13 @@ TXT;
     $resp = json_decode((string)$body, true);
     if ($code !== 200 || !is_array($resp)) {
         error_log('claude error ' . $code . ': ' . substr((string)$body, 0, 500));
+        // «Credit balance is too low» — это не поломка, а пустой счёт. Человеку
+        // о нём надо сказать иначе, чем о сбое, и запомнить, чтобы следующий
+        // не ждал впустую.
+        if (stripos((string)$body, 'credit balance') !== false) {
+            markOutOfCredits();
+            respond(402, ['error' => 'out_of_credits']);
+        }
         respond(502, ['error' => 'claude_error', 'status' => $code]);
     }
     if (($resp['stop_reason'] ?? '') === 'refusal') {
@@ -1061,6 +1074,8 @@ function recordSpend(string $kind, int $in, int $out, float $cost): void
         $row['kinds'][$kind] = (int)($row['kinds'][$kind] ?? 0) + 1;
 
         $data['months'][$month] = $row;
+        // Вызов прошёл — значит деньги есть, прежний отказ больше не в счёт.
+        unset($data['blocked_at']);
         $data['spent'] = round((float)($data['spent'] ?? 0) + $cost, 6);
         $data['calls'] = (int)($data['calls'] ?? 0) + 1;
         // Журнал храним за два года: дальше он никому не нужен, а файл растёт.
@@ -1069,6 +1084,58 @@ function recordSpend(string $kind, int $in, int $out, float $cost): void
             $data['months'] = array_slice($data['months'], -24, null, true);
         }
 
+        ftruncate($handle, 0);
+        rewind($handle);
+        fwrite($handle, json_encode($data, JSON_UNESCAPED_UNICODE));
+        fflush($handle);
+        flock($handle, LOCK_UN);
+    }
+    fclose($handle);
+}
+
+/**
+ * Кончились ли деньги.
+ *
+ * Считаем по своему же журналу, а не спрашиваем Anthropic: запроса «сколько
+ * осталось» у них нет. Пока админ не вписал остаток, ответ «нет» — гадать и
+ * запрещать людям сканирование на догадке нельзя.
+ *
+ * Отдельно помним отказ самого Anthropic: он вернее нашего счёта, потому что
+ * с того же счёта могут тратить и другие.
+ */
+function creditsExhausted(): bool
+{
+    $data = readSpend();
+
+    $blocked = (int)($data['blocked_at'] ?? 0);
+    // Отказ помним недолго: счёт могли пополнить в ту же минуту, и упереться
+    // в собственную память было бы обиднее, чем сделать лишний запрос.
+    if ($blocked && time() - $blocked < 900) {
+        return true;
+    }
+
+    $balance = $data['balance'] ?? null;
+    if (!is_array($balance)) {
+        return false;
+    }
+
+    $left = (float)$balance['usd'] - ((float)$data['spent'] - (float)($balance['spent_at'] ?? 0));
+    return $left <= 0;
+}
+
+/** Запоминает отказ Anthropic по деньгам — снимается первым удачным вызовом. */
+function markOutOfCredits(): void
+{
+    $handle = @fopen(spendFile(), 'c+');
+    if (!$handle) {
+        return;
+    }
+    if (flock($handle, LOCK_EX)) {
+        $data = json_decode((string)stream_get_contents($handle), true);
+        if (!is_array($data)) {
+            $data = ['months' => [], 'spent' => 0.0, 'calls' => 0];
+        }
+        $data['blocked_at'] = time();
         ftruncate($handle, 0);
         rewind($handle);
         fwrite($handle, json_encode($data, JSON_UNESCAPED_UNICODE));
@@ -1134,6 +1201,7 @@ function usageStats(array $config, array $user, array $req): array
         'calls' => (int)$data['calls'],
         'balance' => $balance,
         'left_usd' => $left,
+        'blocked' => creditsExhausted(),
         'model' => (string)($config['model'] ?? ''),
         'price_in' => PRICE_IN_PER_MTOK,
         'price_out' => PRICE_OUT_PER_MTOK,

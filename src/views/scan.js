@@ -4,16 +4,17 @@
  * открывается в редактируемой форме.
  */
 
-import { el, render } from '../core/dom.js?v=125';
-import { openSheet, closeSheet } from '../ui/sheet.js?v=125';
-import { toastError } from '../ui/toast.js?v=125';
-import { state } from '../core/store.js?v=125';
-import { findDuplicates } from '../core/selectors.js?v=125';
-import { guessCategory } from '../data/categories.js?v=125';
-import { openDupCompare } from './dupCompare.js?v=125';
-import { scanReceiptImages, scanReceiptUrl, scanSmsText, MAX_RECEIPT_IMAGES } from '../services/receipts.js?v=125';
-import { t } from '../core/i18n.js?v=125';
-import { qrSupported, openQrScanner } from '../ui/qrScanner.js?v=125';
+import { el, render } from '../core/dom.js?v=126';
+import { openSheet, closeSheet } from '../ui/sheet.js?v=126';
+import { toastError } from '../ui/toast.js?v=126';
+import { state } from '../core/store.js?v=126';
+import { findDuplicates } from '../core/selectors.js?v=126';
+import { guessCategory } from '../data/categories.js?v=126';
+import { openDupCompare } from './dupCompare.js?v=126';
+import { scanReceiptImages, scanReceiptUrl, scanSmsText, MAX_RECEIPT_IMAGES } from '../services/receipts.js?v=126';
+import { t } from '../core/i18n.js?v=126';
+import { qrSupported, openQrScanner } from '../ui/qrScanner.js?v=126';
+import { scanBlocked } from '../services/scanGate.js?v=126';
 
 /** Шторка «распознаём…» — на время запроса заменяет собой форму. */
 function showBusy(text) {
@@ -88,6 +89,13 @@ function warnAboutDuplicate(draft, twins, candidate, onDraft) {
  * без него — галерею, поэтому два разных input.
  */
 function pickPhotos({ fromCamera }, onDraft) {
+  // Деньги на распознавание кончились: открывать камеру незачем — снимок
+  // всё равно некому будет разобрать.
+  if (scanBlocked()) {
+    toastError(t('scan.unavailable'));
+    return;
+  }
+
   const input = el('input', {
     type: 'file',
     accept: 'image/*',
@@ -120,6 +128,10 @@ export const scanFromGallery = (onDraft) => pickPhotos({ fromCamera: false }, on
 
 /** Разбор ссылки со страницы фискального чека — с проверкой, что она наша. */
 function readUrl(url, onDraft) {
+  if (scanBlocked()) {
+    toastError(t('scan.unavailable'));
+    return;
+  }
   if (!/^https:\/\//i.test(url)) {
     toastError(t('scan.urlHttps'));
     return;
@@ -248,6 +260,12 @@ export function openScanSheet(onDraft) {
   });
 
   render(body, [
+    // Пока денег на распознавание нет, честнее сказать это сразу, чем дать
+    // человеку сфотографировать чек и показать ошибку.
+    scanBlocked()
+      ? el('div', { class: 'card', style: 'margin-bottom:12px' },
+          el('div', { class: 'hint' }, t('scan.unavailableLong')))
+      : null,
     tiles,
     el('p', { class: 'hint' },
       t('scan.photoHint', { n: MAX_RECEIPT_IMAGES })),

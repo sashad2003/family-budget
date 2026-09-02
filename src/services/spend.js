@@ -10,8 +10,8 @@
  * Считает именно сервер: он один видит каждый вызов, а браузер — только свои.
  */
 
-import { PROXY_URL } from '../config.js?v=125';
-import { idToken } from './auth.js?v=125';
+import { PROXY_URL } from '../config.js?v=126';
+import { idToken } from './auth.js?v=126';
 
 /**
  * Расход и остаток. Если передать balanceUsd — сервер сначала запомнит эту
@@ -69,6 +69,9 @@ export function summarizeSpend(data) {
     scansLeft: left !== null && avg > 0 ? Math.floor(left / avg) : null,
     thisMonth: months.find((m) => m.month === new Date().toISOString().slice(0, 7)) || null,
     balanceAt: data?.balance?.at ? new Date(data.balance.at * 1000) : null,
+    // Сервер уже никого не пускает к распознаванию: либо счёт по нашему
+    // журналу пуст, либо Anthropic только что отказал по деньгам.
+    blocked: Boolean(data?.blocked),
     model: data?.model || '',
     writable: data?.writable !== false,
   };

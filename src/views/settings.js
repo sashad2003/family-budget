@@ -1,21 +1,21 @@
 /** Настройки: профиль, участники, валюта, курсы, категории. */
 
-import { el, render } from '../core/dom.js?v=125';
-import { state, set } from '../core/store.js?v=125';
-import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=125';
-import { formatAmount, convert } from '../core/money.js?v=125';
-import { logout } from '../services/auth.js?v=125';
+import { el, render } from '../core/dom.js?v=126';
+import { state, set } from '../core/store.js?v=126';
+import { CURRENCY_CODES, CURRENCIES } from '../config.js?v=126';
+import { formatAmount, convert } from '../core/money.js?v=126';
+import { logout } from '../services/auth.js?v=126';
 import {
   inviteLink, resetInviteLink, removeMember, leaveFamily, isOwner, setMarketing, wantsMail,
-} from '../services/account.js?v=125';
-import { refreshRates } from '../services/rates.js?v=125';
-import { reorderCategories } from '../services/transactions.js?v=125';
-import { openCategoryEditor } from './catForm.js?v=125';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=125';
-import { section } from '../ui/section.js?v=125';
-import { t, intlLocale } from '../core/i18n.js?v=125';
-import { THEMES, getTheme, setTheme } from '../core/theme.js?v=125';
-import { toastOk, toastError } from '../ui/toast.js?v=125';
+} from '../services/account.js?v=126';
+import { refreshRates } from '../services/rates.js?v=126';
+import { reorderCategories } from '../services/transactions.js?v=126';
+import { openCategoryEditor } from './catForm.js?v=126';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=126';
+import { section } from '../ui/section.js?v=126';
+import { t, intlLocale } from '../core/i18n.js?v=126';
+import { THEMES, getTheme, setTheme } from '../core/theme.js?v=126';
+import { toastOk, toastError } from '../ui/toast.js?v=126';
 
 
 

@@ -5,11 +5,12 @@
  * AI ошибается в названиях товаров, поэтому ни одно поле не считается финальным.
  */
 
-import { PROXY_URL, CURRENCY_CODES } from '../config.js?v=125';
-import { idToken } from './auth.js?v=125';
-import { normalizeDate, today } from '../core/dates.js?v=125';
-import { parseBankSms } from '../core/smsParse.js?v=125';
-import { t } from '../core/i18n.js?v=125';
+import { PROXY_URL, CURRENCY_CODES } from '../config.js?v=126';
+import { idToken } from './auth.js?v=126';
+import { normalizeDate, today } from '../core/dates.js?v=126';
+import { parseBankSms } from '../core/smsParse.js?v=126';
+import { t } from '../core/i18n.js?v=126';
+import { blockScan, unblockScan } from './scanGate.js?v=126';
 
 /** Сколько пикселей по длинной стороне отправляем. Больше — дороже и медленнее без выигрыша. */
 const MAX_EDGE = 1600;
@@ -72,8 +73,14 @@ async function callProxy(payload) {
 
   const data = await response.json().catch(() => null);
   if (!response.ok || !data?.receipt) {
+    // Деньги на счету кончились — это надолго, и остальным незачем упираться
+    // в тот же отказ по одному.
+    if (data?.error === 'out_of_credits') blockScan();
     throw new Error(errorText(data?.error, response.status));
   }
+
+  // Разобралось — значит деньги есть: прежний запрет снимаем.
+  unblockScan();
 
   /**
    * Во что обошёлся разбор — в консоль браузера. Нужно, чтобы понимать
@@ -105,6 +112,7 @@ function errorText(code, status) {
     claude_unparsable: t('receipt.unparsable'),
     refused: t('receipt.refused'),
     config_missing: t('receipt.configMissing'),
+    out_of_credits: t('receipt.outOfCredits'),
   };
   return messages[code] || t('receipt.genericError', { code: code || status });
 }

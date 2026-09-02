@@ -5,27 +5,27 @@
  * Firestore — спрятанной кнопки мало, чужие профили закрывает база.
  */
 
-import { el, render } from '../core/dom.js?v=125';
-import { state } from '../core/store.js?v=125';
-import { formatAmount } from '../core/money.js?v=125';
-import { listUsers, wantsMail } from '../services/account.js?v=125';
+import { el, render } from '../core/dom.js?v=126';
+import { state } from '../core/store.js?v=126';
+import { formatAmount } from '../core/money.js?v=126';
+import { listUsers, wantsMail } from '../services/account.js?v=126';
 import {
   loadPriceRows, summarizePrices, summarizeUsers,
   ownPriceRows, summarizeOwnSources, summarizeUsage,
-} from '../services/adminStats.js?v=125';
-import { loadUsage } from '../services/usage.js?v=125';
-import { loadSpend, summarizeSpend, LOW_BALANCE_USD } from '../services/spend.js?v=125';
+} from '../services/adminStats.js?v=126';
+import { loadUsage } from '../services/usage.js?v=126';
+import { loadSpend, summarizeSpend, LOW_BALANCE_USD } from '../services/spend.js?v=126';
 import {
   saveDraft, loadDraft, listTemplates, saveTemplate, deleteTemplate,
-} from '../services/mailTemplates.js?v=125';
+} from '../services/mailTemplates.js?v=126';
 import {
   buildLetter, sendBatch, translateLetter, letterTexts, applyLetterTexts,
   localeOf, mailError, MAIL_BATCH,
-} from '../services/mail.js?v=125';
-import { toastError, toastOk } from '../ui/toast.js?v=125';
-import { section } from '../ui/section.js?v=125';
-import { richText } from '../ui/richText.js?v=125';
-import { t, plural, intlLocale, LOCALES } from '../core/i18n.js?v=125';
+} from '../services/mail.js?v=126';
+import { toastError, toastOk } from '../ui/toast.js?v=126';
+import { section } from '../ui/section.js?v=126';
+import { richText } from '../ui/richText.js?v=126';
+import { t, plural, intlLocale, LOCALES } from '../core/i18n.js?v=126';
 
 const cache = { users: null, query: '', prices: null, usage: null, spend: null, tab: 'mine' };
 
@@ -803,9 +803,13 @@ function drawSpend(node) {
     rows.push(statRow(t('spend.avg'), usd(data.avg)));
   }
 
-  const warn = data.left !== null && data.left < LOW_BALANCE_USD
-    ? el('p', { class: 'hint', style: 'color:var(--expense)' }, t('spend.low'))
-    : null;
+  // Уже перестало работать — это не предупреждение, а факт, и говорится
+  // сильнее, чем «на исходе».
+  const warn = data.blocked
+    ? el('p', { class: 'hint', style: 'color:var(--expense)' }, t('spend.stopped'))
+    : data.left !== null && data.left < LOW_BALANCE_USD
+      ? el('p', { class: 'hint', style: 'color:var(--expense)' }, t('spend.low'))
+      : null;
 
   const byMonth = data.months.length > 1
     ? [

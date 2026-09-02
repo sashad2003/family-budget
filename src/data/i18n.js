@@ -649,6 +649,7 @@ export const DICT = {
   'spend.balanceSave': { ru: 'Запомнить остаток', en: 'Save balance', he: 'שמור יתרה' },
   'spend.balanceSaved': { ru: 'Остаток записан', en: 'Balance saved', he: 'היתרה נשמרה' },
   'spend.balanceAt': { ru: 'Задан {date}', en: 'Set on {date}', he: 'הוגדר ב־{date}' },
+  'spend.stopped': { ru: 'Деньги кончились: распознавание чеков сейчас не работает ни у кого. Пополните счёт — оно включится само.', en: 'Funds have run out: receipt recognition is not working for anyone right now. Top up and it turns back on by itself.', he: 'הכסף נגמר: זיהוי הקבלות אינו עובד כרגע לאף אחד. טענו את החשבון והוא יחזור לפעול מעצמו.' },
   'spend.low': { ru: 'Деньги на исходе. Пополните счёт, иначе сканирование чеков перестанет работать у всех.', en: 'Funds are running out. Top up, or receipt scanning stops working for everyone.', he: 'הכסף אוזל. טענו את החשבון, אחרת סריקת הקבלות תפסיק לעבוד אצל כולם.' },
   'spend.hint': {
     ru: 'Остаток Anthropic не отдаёт по запросу — его видно только в кабинете. Перепишите оттуда цифру, и приложение будет вычитать из неё расход, который считает само по каждому разбору чека.',
@@ -882,6 +883,12 @@ export const DICT = {
   'scan.readingSms': { ru: 'Разбираем SMS…', en: 'Reading the SMS…', he: 'מפענחים את ה-SMS…' },
   'scan.urlButton': { ru: '🔗  Ссылка из QR-кода', en: '🔗  Link from a QR code', he: '🔗  קישור מקוד QR' },
   'scan.urlTitle': { ru: 'Чек по ссылке', en: 'Receipt by link', he: 'קבלה לפי קישור' },
+  'scan.unavailable': { ru: 'Распознавание временно недоступно', en: 'Recognition is temporarily unavailable', he: 'הזיהוי אינו זמין זמנית' },
+  'scan.unavailableLong': {
+    ru: 'Распознавание чеков временно недоступно — на счету сервиса кончились средства. Мы уже знаем и пополняем. Операцию пока можно внести руками, а чек сохранить и отсканировать позже.',
+    en: 'Receipt recognition is temporarily unavailable — the service account has run out of funds. We already know and are topping it up. You can add the entry by hand for now and scan the receipt later.',
+    he: 'זיהוי הקבלות אינו זמין זמנית — נגמרו הכספים בחשבון השירות. אנחנו כבר יודעים וטוענים אותו. בינתיים אפשר להזין את הפעולה ידנית ולסרוק את הקבלה מאוחר יותר.',
+  },
   'scan.qr': { ru: 'QR чека', en: 'Receipt QR', he: 'QR של קבלה' },
   'scan.qrButton': { ru: 'Навести камеру на QR', en: 'Point the camera at the QR', he: 'כוונו את המצלמה ל־QR' },
   'scan.paste': { ru: 'Вставить ссылку', en: 'Paste link', he: 'הדביקו קישור' },
@@ -1004,6 +1011,11 @@ export const DICT = {
   'receipt.unsupported': { ru: 'Такой формат файла не поддерживается', en: 'That file format is not supported', he: 'פורמט הקובץ אינו נתמך' },
   'receipt.unparsable': { ru: 'Не удалось разобрать ответ AI', en: 'Could not parse the AI response', he: 'לא הצלחנו לפענח את תשובת ה-AI' },
   'receipt.refused': { ru: 'AI отказался обрабатывать это изображение', en: 'The AI refused to process this image', he: 'ה-AI סירב לעבד את התמונה' },
+  'receipt.outOfCredits': {
+    ru: 'Распознавание временно недоступно: на счету сервиса кончились средства. Внесите операцию руками — чек можно отсканировать позже.',
+    en: 'Recognition is temporarily unavailable: the service account has run out of funds. Add the entry by hand — the receipt can be scanned later.',
+    he: 'הזיהוי אינו זמין זמנית: נגמרו הכספים בחשבון השירות. הזינו את הפעולה ידנית — אפשר לסרוק את הקבלה מאוחר יותר.',
+  },
   'receipt.configMissing': { ru: 'На сервере не настроен config.php', en: 'config.php is not set up on the server', he: 'הקובץ config.php אינו מוגדר בשרת' },
   'receipt.genericError': { ru: 'Ошибка распознавания ({code})', en: 'Reading error ({code})', he: 'שגיאת קריאה ({code})' },
   'receipt.fileUnreadable': {
