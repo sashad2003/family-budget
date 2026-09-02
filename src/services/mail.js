@@ -10,9 +10,9 @@
  * одному письму на адрес, чтобы получатели не видели чужих почт.
  */
 
-import { PROXY_URL, SUPPORT_WHATSAPP } from '../config.js?v=119';
-import { idToken } from './auth.js?v=119';
-import { t, tIn, LOCALES } from '../core/i18n.js?v=119';
+import { PROXY_URL, SUPPORT_WHATSAPP } from '../config.js?v=120';
+import { idToken } from './auth.js?v=120';
+import { t, tIn, LOCALES } from '../core/i18n.js?v=120';
 
 /** Столько же, сколько прокси принимает за раз. */
 export const MAIL_BATCH = 50;
@@ -158,33 +158,76 @@ function stripTags(html) {
 }
 
 /**
- * Перевод письма на остальные языки — той же моделью, что разбирает чеки.
- * Разметку она сохраняет, переводится только текст между тегами.
+ * Куски текста из письма — то, что нужно перевести.
+ *
+ * Переводим не разметку целиком, а только слова между тегами. Разметка письма
+ * длинная — стили стоят в каждом теге, — и на неё уходило столько времени,
+ * что сервер обрывал запрос по таймауту. Слов же в письме немного, и модель
+ * не может испортить вёрстку, потому что вёрстки не видит.
  */
-export async function translateLetter({ subject, body, from, targets }) {
+export function letterTexts(html) {
+  const box = document.createElement('div');
+  box.innerHTML = String(html || '');
+
+  const walker = document.createTreeWalker(box, NodeFilter.SHOW_TEXT);
+  const texts = [];
+
+  while (walker.nextNode()) {
+    const value = walker.currentNode.nodeValue;
+    if (value && value.trim()) texts.push(value.trim());
+  }
+
+  return texts;
+}
+
+/**
+ * Собирает письмо обратно: те же теги, переведённые слова.
+ *
+ * Идём по тем же узлам и в том же порядке, что и при разборе, — список
+ * переводов приходит ровно такой же длины. Если модель вернула меньше,
+ * оставшиеся куски остаются на исходном языке: лучше смешанное письмо, чем
+ * порванная разметка.
+ */
+export function applyLetterTexts(html, texts) {
+  const box = document.createElement('div');
+  box.innerHTML = String(html || '');
+
+  const walker = document.createTreeWalker(box, NodeFilter.SHOW_TEXT);
+  let index = 0;
+
+  while (walker.nextNode()) {
+    const node = walker.currentNode;
+    if (!node.nodeValue || !node.nodeValue.trim()) continue;
+    if (index < texts.length && texts[index]) node.nodeValue = texts[index];
+    index += 1;
+  }
+
+  return box.innerHTML;
+}
+
+/**
+ * Перевод письма на один язык.
+ *
+ * Языки переводятся по очереди, отдельными запросами: два языка в одном
+ * запросе не укладывались во время, отведённое серверу на ответ, и он обрывал
+ * его с ошибкой 504.
+ */
+export async function translateLetter({ subject, texts, from, to }) {
   const token = await idToken();
   if (!token) throw new Error(t('receipt.signInAgain'));
 
   const response = await fetch(PROXY_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-    body: JSON.stringify({ action: 'translate_mail', subject, body, from, targets }),
+    body: JSON.stringify({ action: 'translate_mail', subject, texts, from, to }),
   });
 
   const data = await response.json().catch(() => null);
-  if (!response.ok || !data?.translations) {
+  if (!response.ok || !data?.translation) {
     throw new Error(mailError(data?.error, response.status));
   }
 
-  return data.translations;
-}
-
-function esc(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+  return data.translation;
 }
 
 /**
@@ -255,6 +298,10 @@ export function mailError(code, status = 0) {
   if (head.startsWith('send_failed_')) {
     return t('mail.serviceRefused', { code: head.replace('send_failed_', '') });
   }
+
+  // 504 и 502 приходят от самого сервера, без разбора тела: он оборвал долгий
+  // запрос. Для человека это не «ошибка 504», а «письмо слишком длинное».
+  if (status === 504 || status === 502) return t('mail.translateTimeout');
 
   return t('receipt.genericError', { code: text || status });
 }

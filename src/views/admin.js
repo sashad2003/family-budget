@@ -5,25 +5,26 @@
  * Firestore — спрятанной кнопки мало, чужие профили закрывает база.
  */
 
-import { el, render } from '../core/dom.js?v=119';
-import { state } from '../core/store.js?v=119';
-import { formatAmount } from '../core/money.js?v=119';
-import { listUsers, wantsMail } from '../services/account.js?v=119';
+import { el, render } from '../core/dom.js?v=120';
+import { state } from '../core/store.js?v=120';
+import { formatAmount } from '../core/money.js?v=120';
+import { listUsers, wantsMail } from '../services/account.js?v=120';
 import {
   loadPriceRows, summarizePrices, summarizeUsers,
   ownPriceRows, summarizeOwnSources, summarizeUsage,
-} from '../services/adminStats.js?v=119';
-import { loadUsage } from '../services/usage.js?v=119';
+} from '../services/adminStats.js?v=120';
+import { loadUsage } from '../services/usage.js?v=120';
 import {
   saveDraft, loadDraft, listTemplates, saveTemplate, deleteTemplate,
-} from '../services/mailTemplates.js?v=119';
+} from '../services/mailTemplates.js?v=120';
 import {
-  buildLetter, sendBatch, translateLetter, localeOf, mailError, MAIL_BATCH,
-} from '../services/mail.js?v=119';
-import { toastError, toastOk } from '../ui/toast.js?v=119';
-import { section } from '../ui/section.js?v=119';
-import { richText } from '../ui/richText.js?v=119';
-import { t, plural, intlLocale, LOCALES } from '../core/i18n.js?v=119';
+  buildLetter, sendBatch, translateLetter, letterTexts, applyLetterTexts,
+  localeOf, mailError, MAIL_BATCH,
+} from '../services/mail.js?v=120';
+import { toastError, toastOk } from '../ui/toast.js?v=120';
+import { section } from '../ui/section.js?v=120';
+import { richText } from '../ui/richText.js?v=120';
+import { t, plural, intlLocale, LOCALES } from '../core/i18n.js?v=120';
 
 const cache = { users: null, query: '', prices: null, usage: null, tab: 'mine' };
 
@@ -366,24 +367,34 @@ async function translateDraft(status, button) {
   }
 
   const targets = LOCALES.map((l) => l.code).filter((code) => code !== letter.lang);
+  const texts = letterTexts(draft.body);
 
   letter.busy = true;
   button.disabled = true;
-  status.textContent = t('mail.translating');
 
   try {
-    const result = await translateLetter({
-      subject: draft.subject.trim(),
-      body: draft.body.trim(),
-      from: letter.lang,
-      targets,
-    });
-
+    /*
+     * Языки переводим по очереди, отдельными запросами: два языка в одном
+     * ответе не укладывались во время, отведённое серверу, и он обрывал
+     * запрос с ошибкой 504. Готовый язык сразу ложится в свой язычок — если
+     * второй не дойдёт, первый уже никуда не денется.
+     */
     for (const code of targets) {
-      if (result[code]?.subject) letter.drafts[code].subject = result[code].subject;
-      if (result[code]?.body) letter.drafts[code].body = result[code].body;
+      const name = LOCALES.find((l) => l.code === code)?.name || code;
+      status.textContent = t('mail.translatingOne', { lang: name });
+
+      // eslint-disable-next-line no-await-in-loop -- языки идут по очереди намеренно
+      const result = await translateLetter({
+        subject: draft.subject.trim(),
+        texts,
+        from: letter.lang,
+        to: code,
+      });
+
+      letter.drafts[code].subject = result.subject || draft.subject;
+      letter.drafts[code].body = applyLetterTexts(draft.body, result.items || []);
+      keepDraft();
     }
-    keepDraft();
 
     status.textContent = t('mail.translated');
     toastOk(t('mail.translated'));
@@ -397,49 +408,7 @@ async function translateDraft(status, button) {
   }
 }
 
-/** Письмо себе — на том языке, который открыт сейчас. */
-async function sendTest(status, button) {
-  if (letter.busy) return;
-
-  const draft = letter.drafts[letter.lang];
-  const email = state.user?.email;
-  if (!draft.subject.trim() || !draft.body.trim()) {
-    toastError(t('mail.bodyEmpty'));
-    return;
-  }
-  if (!email) return;
-
-  letter.busy = true;
-  button.disabled = true;
-  status.textContent = t('mail.testSending', { email });
-
-  try {
-    const subject = draft.subject.trim();
-    const { html, text } = buildLetter(subject, draft.body.trim(), letter.lang);
-    const result = await sendBatch({
-      subject, html, text, recipients: [{ email, name: state.profile?.name || '' }],
-    });
-
-    if (result.sent) {
-      status.textContent = t('mail.testSent', { email });
-      toastOk(t('mail.testSent', { email }));
-    } else {
-      const reason = mailError(result.failed?.[0]?.error);
-      status.textContent = t('mail.testFailed', { reason });
-      toastError(t('mail.testFailed', { reason }));
-      console.warn('Письмо не ушло', result.failed);
-    }
-  } catch (error) {
-    console.error(error);
-    status.textContent = error.message;
-    toastError(error.message);
-  } finally {
-    letter.busy = false;
-    button.disabled = false;
-  }
-}
-
-/** Кому уйдёт письмо на этом языке: не отписавшиеся, у кого он выбран. */
+/** Кому уйдёт письмо на этом языке/** Кому уйдёт письмо на этом языке: не отписавшиеся, у кого он выбран. */
 function recipientsBy(locale) {
   return (cache.users || [])
     .filter((u) => u.email && wantsMail(u) && localeOf(u) === locale);

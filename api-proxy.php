@@ -35,6 +35,9 @@ const MAX_TOKENS      = 8000;
 const MAX_MAIL_BATCH   = 50;
 const MAX_MAIL_SUBJECT = 200;
 const MAX_MAIL_BYTES   = 100 * 1024;
+// Кусков текста на перевод за раз. Письмо длиннее сотни абзацев — редкость,
+// а запрос подлиннее сервер обрывает по времени.
+const MAX_MAIL_TEXTS   = 120;
 
 const AHASEND_API = 'https://api.ahasend.com/v2/accounts/%s/messages';
 
@@ -266,61 +269,52 @@ function translateMail(array $config, array $user, array $req): array
     }
 
     $subject = trim((string)($req['subject'] ?? ''));
-    $body = (string)($req['body'] ?? '');
+    $texts = is_array($req['texts'] ?? null) ? array_values($req['texts']) : [];
     $from = (string)($req['from'] ?? 'ru');
-    $targets = array_values(array_filter(
-        is_array($req['targets'] ?? null) ? $req['targets'] : [],
-        static fn ($code) => in_array($code, ['ru', 'en', 'he'], true),
-    ));
+    $to = (string)($req['to'] ?? '');
 
-    if ($subject === '' || $body === '' || $targets === []) {
+    if ($subject === '' || $texts === [] || !in_array($to, ['ru', 'en', 'he'], true)) {
         respond(400, ['error' => 'translate_input_invalid']);
     }
-    if (strlen($subject) + strlen($body) > MAX_MAIL_BYTES) {
+    if (count($texts) > MAX_MAIL_TEXTS) {
         respond(400, ['error' => 'mail_body_too_large']);
     }
 
     $names = ['ru' => 'русский', 'en' => 'английский', 'he' => 'иврит'];
-    $properties = [];
-    foreach ($targets as $code) {
-        $properties[$code] = [
-            'type' => 'object',
-            'properties' => [
-                'subject' => ['type' => 'string'],
-                'body'    => ['type' => 'string'],
-            ],
-            'required' => ['subject', 'body'],
-            'additionalProperties' => false,
-        ];
-    }
 
     $schema = [
         'type' => 'object',
-        'properties' => $properties,
-        'required' => $targets,
+        'properties' => [
+            'subject' => ['type' => 'string'],
+            'items'   => ['type' => 'array', 'items' => ['type' => 'string']],
+        ],
+        'required' => ['subject', 'items'],
         'additionalProperties' => false,
     ];
 
     $system = <<<'TXT'
 Ты переводишь письмо пользователям приложения для семейного бюджета.
-Переводи так, как пишут людям, а не как переводят документы: тем же тоном,
-той же длины, без канцелярита и без добавленных от себя любезностей.
-Названия приложения и валют не переводи. Разметку сохраняй в точности:
-если в тексте есть HTML-теги, они должны остаться теми же и на тех же местах,
-переводится только текст между ними. Пустые строки между абзацами сохраняй.
+Переводи так, как пишут людям: тем же тоном, той же длины, без канцелярита
+и без добавленных от себя любезностей. Названия приложения и валют не переводи.
+Тебе дают куски текста списком — переведи каждый и верни ровно столько же
+элементов в том же порядке. Ничего не объединяй, не разбивай и не пропускай:
+куски вернутся на свои места в вёрстке письма, и лишний или недостающий
+элемент её сломает.
 TXT;
-
-    $list = implode(', ', array_map(static fn ($c) => $names[$c] ?? $c, $targets));
-    $prompt = "Исходный язык: {$names[$from]}. Переведи на: {$list}.\n\n"
-        . "Тема: {$subject}\n\nТекст:\n{$body}";
 
     $payload = [
         'model'      => $config['model'],
         'max_tokens' => MAX_TOKENS,
         'system'     => $system,
-        'messages'   => [['role' => 'user', 'content' => [['type' => 'text', 'text' => $prompt]]]],
+        'messages'   => [['role' => 'user', 'content' => [['type' => 'text', 'text' =>
+            "Исходный язык: {$names[$from]}. Переведи на: {$names[$to]}.\n\n"
+            . "Тема: {$subject}\n\nКуски текста:\n"
+            . json_encode($texts, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT),
+        ]]]],
         'output_config' => [
-            'effort' => 'medium',
+            // Перевод коротких кусков — работа механическая, и время ответа
+            // здесь важнее глубины: сервер обрывает долгий запрос.
+            'effort' => 'low',
             'format' => ['type' => 'json_schema', 'schema' => $schema],
         ],
     ];
@@ -330,18 +324,18 @@ TXT;
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_POST           => true,
         CURLOPT_POSTFIELDS     => json_encode($payload, JSON_UNESCAPED_UNICODE),
-        CURLOPT_TIMEOUT        => 120,
+        CURLOPT_TIMEOUT        => 100,
         CURLOPT_HTTPHEADER     => [
             'Content-Type: application/json',
             'x-api-key: ' . $config['anthropic_key'],
             'anthropic-version: 2023-06-01',
         ],
     ]);
-    $body_raw = curl_exec($ch);
+    $raw = curl_exec($ch);
     $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
     curl_close($ch);
 
-    $resp = json_decode((string)$body_raw, true);
+    $resp = json_decode((string)$raw, true);
     if ($code !== 200 || !is_array($resp)) {
         respond(502, ['error' => 'claude_error', 'status' => $code]);
     }
@@ -349,8 +343,8 @@ TXT;
     foreach ($resp['content'] ?? [] as $block) {
         if (($block['type'] ?? '') === 'text') {
             $parsed = json_decode((string)$block['text'], true);
-            if (is_array($parsed)) {
-                return ['ok' => true, 'translations' => $parsed];
+            if (is_array($parsed) && isset($parsed['items'])) {
+                return ['ok' => true, 'translation' => $parsed];
             }
         }
     }

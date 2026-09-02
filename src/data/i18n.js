@@ -151,6 +151,11 @@ export const DICT = {
   'mail.preview': { ru: 'Посмотреть', en: 'Preview', he: 'תצוגה מקדימה' },
   'mail.translate': { ru: 'Перевести на остальные', en: 'Translate to the rest', he: 'לתרגם לשאר' },
   'mail.translating': { ru: 'Переводим…', en: 'Translating…', he: 'מתרגמים…' },
+  'mail.translatingOne': {
+    ru: 'Переводим на {lang}…',
+    en: 'Translating to {lang}…',
+    he: 'מתרגמים ל{lang}…',
+  },
   'mail.translated': {
     ru: 'Переведено — проверьте текст на других язычках',
     en: 'Translated — check the text on the other tabs',
@@ -226,9 +231,14 @@ export const DICT = {
     he: 'המכתב יישלח לכל מי שלא ביטל, כל אחד בשפתו. אי אפשר לבטל שליחה — בדקו קודם עם מייל בדיקה לעצמכם.',
   },
   'mail.translateFailed': {
-    ru: 'Перевод не получился',
-    en: 'Translation failed',
-    he: 'התרגום נכשל',
+    ru: 'Перевод не получился — попробуйте ещё раз',
+    en: 'Translation failed — try again',
+    he: 'התרגום נכשל — נסו שוב',
+  },
+  'mail.translateTimeout': {
+    ru: 'Сервер не дождался перевода. Письмо слишком длинное — переведите его частями или сократите.',
+    en: 'The server timed out on the translation. The letter is too long — translate it in parts or shorten it.',
+    he: 'השרת לא המתין לתרגום. המכתב ארוך מדי — תרגמו אותו בחלקים או קצרו אותו.',
   },
   'mail.testSending': { ru: 'Отправляем на {email}…', en: 'Sending to {email}…', he: 'שולחים אל {email}…' },
   'mail.testSent': {

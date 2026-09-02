@@ -9,7 +9,7 @@
  * такой текст уходит в Claude, который разберёт любой банк и язык.
  */
 
-import { CURRENCY_CODES } from '../config.js?v=119';
+import { CURRENCY_CODES } from '../config.js?v=120';
 
 /** Сумма и валюта: «iznos 1,733.94RSD» или «RSD 1.733,94». */
 const AMOUNT_RE = new RegExp(
