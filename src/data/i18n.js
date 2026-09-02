@@ -177,9 +177,9 @@ export const DICT = {
   'mail.previewLight': { ru: 'Обычный вид', en: 'Normal', he: 'תצוגה רגילה' },
   'mail.previewDark': { ru: 'Ночная почта', en: 'Dark mail client', he: 'דואר במצב כהה' },
   'mail.previewHint': {
-    ru: 'Ночной вид приблизительный: почтовые программы перекрашивают письмо каждая по-своему, и запретить им это нельзя. Смотрите на одно — не пропало ли что-нибудь совсем.',
-    en: 'The dark view is approximate: every mail client recolours letters its own way and cannot be told not to. Look for one thing — whether anything disappears entirely.',
-    he: 'התצוגה הכהה משוערת: כל תוכנת דואר צובעת מחדש בדרכה שלה ואי אפשר למנוע זאת. בדקו דבר אחד — אם משהו נעלם לגמרי.',
+    ru: 'В ночном виде переворачиваются только фон и текст — картинки и цветные кнопки остаются как есть, так это и делают почтовые программы. Вид приблизительный: у каждой программы он свой. Смотрите на одно — не пропало ли что-нибудь совсем.',
+    en: 'In the dark view only the background and the text are flipped — images and coloured buttons stay as they are, which is what mail clients do. It is approximate: every client differs. Look for one thing — whether anything disappears entirely.',
+    he: 'בתצוגה הכהה מתהפכים רק הרקע והטקסט — תמונות וכפתורים צבעוניים נשארים כמו שהם, וכך גם עושות תוכנות הדואר. התצוגה משוערת: לכל תוכנה יש שלה. בדקו דבר אחד — אם משהו נעלם לגמרי.',
   },
 
   'mail.saveTemplate': { ru: 'Сохранить письмо', en: 'Save letter', he: 'שמירת מכתב' },

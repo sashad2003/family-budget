@@ -5,25 +5,25 @@
  * Firestore — спрятанной кнопки мало, чужие профили закрывает база.
  */
 
-import { el, render } from '../core/dom.js?v=118';
-import { state } from '../core/store.js?v=118';
-import { formatAmount } from '../core/money.js?v=118';
-import { listUsers, wantsMail } from '../services/account.js?v=118';
+import { el, render } from '../core/dom.js?v=119';
+import { state } from '../core/store.js?v=119';
+import { formatAmount } from '../core/money.js?v=119';
+import { listUsers, wantsMail } from '../services/account.js?v=119';
 import {
   loadPriceRows, summarizePrices, summarizeUsers,
   ownPriceRows, summarizeOwnSources, summarizeUsage,
-} from '../services/adminStats.js?v=118';
-import { loadUsage } from '../services/usage.js?v=118';
+} from '../services/adminStats.js?v=119';
+import { loadUsage } from '../services/usage.js?v=119';
 import {
   saveDraft, loadDraft, listTemplates, saveTemplate, deleteTemplate,
-} from '../services/mailTemplates.js?v=118';
+} from '../services/mailTemplates.js?v=119';
 import {
   buildLetter, sendBatch, translateLetter, localeOf, mailError, MAIL_BATCH,
-} from '../services/mail.js?v=118';
-import { toastError, toastOk } from '../ui/toast.js?v=118';
-import { section } from '../ui/section.js?v=118';
-import { richText } from '../ui/richText.js?v=118';
-import { t, plural, intlLocale, LOCALES } from '../core/i18n.js?v=118';
+} from '../services/mail.js?v=119';
+import { toastError, toastOk } from '../ui/toast.js?v=119';
+import { section } from '../ui/section.js?v=119';
+import { richText } from '../ui/richText.js?v=119';
+import { t, plural, intlLocale, LOCALES } from '../core/i18n.js?v=119';
 
 const cache = { users: null, query: '', prices: null, usage: null, tab: 'mine' };
 
@@ -315,7 +315,18 @@ function showPreview(node) {
   }
 
   const { html } = buildLetter(draft.subject.trim(), draft.body.trim(), letter.lang);
-  let dark = false;
+
+  /*
+   * Ночной вид собирается так же, как его делают почтовые программы:
+   * переворачиваются цвета всей страницы, а картинки и цветные кнопки
+   * переворачиваются обратно. Иначе фотография чека выходила негативом, а
+   * зелёная кнопка — розовой, чего в почте не бывает: клиенты трогают фон и
+   * текст, а картинки и заливки оставляют.
+   */
+  const darkSkin = `<style>
+    html { background: #15151a; filter: invert(1) hue-rotate(180deg); }
+    img, td[style*="background:#"], th[style*="background:#"] { filter: invert(1) hue-rotate(180deg); }
+  </style>`;
 
   const frame = el('iframe', {
     // Отдельное окно: стили письма не текут на страницу, скрипты из него не
@@ -328,13 +339,12 @@ function showPreview(node) {
   const modes = el('div', { class: 'segmented', style: 'margin:14px 0 10px' },
     [[false, t('mail.previewLight')], [true, t('mail.previewDark')]].map(([value, label]) =>
       el('button', {
-        class: dark === value ? 'is-active' : '',
+        class: value === false ? 'is-active' : '',
         onclick: (e) => {
-          dark = value;
           [...modes.children].forEach((b) => b.classList.remove('is-active'));
           e.target.classList.add('is-active');
-          frame.style.filter = dark ? 'invert(1) hue-rotate(180deg)' : '';
-          frame.style.background = dark ? '#1b1b20' : '#fff';
+          frame.srcdoc = value ? darkSkin + html : html;
+          frame.style.background = value ? '#15151a' : '#fff';
         },
       }, label)));
 
