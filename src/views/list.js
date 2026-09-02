@@ -1,14 +1,14 @@
 /** Список операций с фильтрами по типу, категории и тексту. */
 
-import { el, render } from '../core/dom.js?v=82';
-import { state } from '../core/store.js?v=82';
-import { formatAmount, txAmountIn } from '../core/money.js?v=82';
-import { dayLabel } from '../core/dates.js?v=82';
-import { monthTransactions, groupByDate, totals } from '../core/selectors.js?v=82';
-import { openTxForm } from './txForm.js?v=82';
-import { section } from '../ui/section.js?v=82';
-import { t, getLocale } from '../core/i18n.js?v=82';
-import { activeTheme } from '../core/theme.js?v=82';
+import { el, render } from '../core/dom.js?v=83';
+import { state } from '../core/store.js?v=83';
+import { formatAmount, txAmountIn } from '../core/money.js?v=83';
+import { dayLabel } from '../core/dates.js?v=83';
+import { monthTransactions, groupByDate, totals } from '../core/selectors.js?v=83';
+import { openTxForm } from './txForm.js?v=83';
+import { section } from '../ui/section.js?v=83';
+import { t, getLocale } from '../core/i18n.js?v=83';
+import { activeTheme } from '../core/theme.js?v=83';
 
 /** Фильтры живут вне state: они локальны для экрана и не влияют на другие. */
 const filters = { type: 'all', categoryId: null, query: '' };
@@ -165,38 +165,23 @@ export function txRow(tx, onClick) {
 }
 
 /**
- * Плитка под значок категории: мягкая подложка её цветом.
+ * Значок категории: без подложки, только цвет самого знака.
  *
- * Раньше плитка заливалась насыщенным градиентом того же цвета. Рядом друг с
- * другом такие квадраты спорят между собой и с эмодзи внутри: цвета много, а
- * значка почти не видно. Теперь цвет только намечен — он по-прежнему
- * различает категории с одного взгляда, но не перекрикивает содержимое, а
- * сам значок стал крупнее.
+ * Сначала плитка заливалась насыщенным цветом, потом бледной подложкой — и
+ * то и другое спорит с эмодзи внутри. Эмодзи и так цветной, ему подложка не
+ * нужна: она добавляет квадрат вокруг каждой строки и дробит список.
  *
- * Цвет отдаём и текстом: у «Прочего» вместо эмодзи точка, и на бледной
- * подложке белая точка исчезла бы.
- *
- * Плотность подложки зависит от темы: на светлом фоне тот же процент цвета
- * выглядит заметно гуще, чем на тёмном.
+ * Цвет всё же передаём: у «Прочего» вместо эмодзи точка, у оплаченного счёта
+ * галочка — им цвет категории заменяет отсутствующую картинку. На светлой
+ * теме знак затемняется: светлые цвета палитры на белом фоне не читаются.
  */
 export function tileStyle(hex) {
   const value = String(hex || '').replace('#', '');
   const color = value.length === 6 ? `#${value}` : '#8a8a94';
+  if (activeTheme() !== 'light') return `color:${color}`;
+
   const rgb = [0, 2, 4].map((i) => Number.parseInt(color.slice(1 + i, 3 + i), 16));
-
-  const light = activeTheme() === 'light';
-  const alpha = light ? 0.16 : 0.26;
-
-  /*
-   * На светлой теме знак пишем затемнённым цветом: сам цвет категории на
-   * своей же бледной подложке даёт около двух к одному, и точка «Прочего»
-   * терялась. Затемнение до 60% даёт от 4.2:1 на всей палитре.
-   */
-  const ink = light
-    ? `#${rgb.map((c) => Math.round(c * 0.6).toString(16).padStart(2, '0')).join('')}`
-    : color;
-
-  return `background:rgba(${rgb.join(', ')}, ${alpha});color:${ink}`;
+  return `color:#${rgb.map((c) => Math.round(c * 0.6).toString(16).padStart(2, '0')).join('')}`;
 }
 
 /** Сплошной цвет категории — для полосок доли и точек. */

@@ -863,19 +863,18 @@ button { cursor: pointer; border: none; background: none; }
 .tx:active { transform: scale(0.99); }
 
 /*
- * Плитка категории: цвет намечен подложкой, значок крупный.
+ * Значок категории: только эмодзи, без подложки.
  *
- * Насыщенная заливка с бликом спорила с эмодзи внутри — цвета было много, а
- * значка почти не видно. Цвет подложки и цвет самого знака приходят из
- * разметки: они считаются от цвета категории (tileStyle в list.js).
+ * Заливка — сначала насыщенная, потом бледная — спорила с эмодзи и обводила
+ * квадратом каждую строку списка. Место под значок осталось прежним, чтобы
+ * названия операций стояли в одну линию.
  */
 .tx__ico {
-  flex: 0 0 46px;
-  height: 46px;
-  border-radius: 14px;
+  flex: 0 0 42px;
+  height: 42px;
   display: grid;
   place-items: center;
-  font-size: 26px;
+  font-size: 30px;
   line-height: 1;
 }
 
@@ -1190,7 +1189,7 @@ button { cursor: pointer; border: none; background: none; }
 @media (max-width: 380px) {
   .cat-grid { gap: 6px; }
   .cat { padding: 10px 2px; font-size: 11px; }
-  .cat__ico { width: 32px; height: 32px; font-size: 21px; border-radius: 10px; }
+  .cat__ico { width: 30px; height: 30px; font-size: 25px; }
 
   .segmented { padding: 4px; gap: 3px; }
   .segmented button { padding: 10px 4px; font-size: 13px; }
@@ -1258,10 +1257,9 @@ button { cursor: pointer; border: none; background: none; }
 }
 .cat:hover { background: var(--glass-hover); transform: translateY(-2px); }
 .cat__ico {
-  width: 38px; height: 38px;
+  width: 34px; height: 34px;
   display: grid; place-items: center;
-  border-radius: 12px;
-  font-size: 24px;
+  font-size: 28px;
   line-height: 1;
 }
 /* --tint приходит из разметки: это цвет выбранной категории */
@@ -1879,19 +1877,15 @@ button { cursor: pointer; border: none; background: none; }
 }
 
 .bill__ico {
-  flex: 0 0 42px;
-  height: 42px;
-  border-radius: 13px;
+  flex: 0 0 38px;
+  height: 38px;
   display: grid;
   place-items: center;
-  font-size: 24px;
+  font-size: 28px;
   line-height: 1;
 }
-/* Оплаченный счёт — зелёная галочка на такой же мягкой подложке */
-.bill.is-paid .bill__ico {
-  background: rgba(45, 217, 138, 0.18) !important;
-  color: var(--income) !important;
-}
+/* Оплаченный счёт отмечает зелёная галочка вместо значка категории */
+.bill.is-paid .bill__ico { color: var(--income) !important; }
 
 .bill__body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .bill__name { font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
