@@ -202,9 +202,9 @@ export const DICT = {
     he: 'הדוא״ל אינו מוגדר: ב-config.php חסר מפתח AhaSend או כתובת שולח',
   },
   'mail.smtpAuth': {
-    ru: 'Почтовый сервер не принял логин или пароль. У Gmail нужен пароль приложения, обычный не подойдёт.',
-    en: 'The mail server rejected the login or password. Gmail needs an app password, the normal one will not do.',
-    he: 'שרת הדואר דחה את שם המשתמש או הסיסמה. ב-Gmail נדרשת סיסמת אפליקציה, הרגילה לא תעבוד.',
+    ru: 'Почтовый сервер не принял логин или пароль. Логин — полный адрес ящика, пароль — от самого ящика, а не от панели хостинга. У Gmail нужен отдельный пароль приложения.',
+    en: 'The mail server rejected the login or password. The login is the full mailbox address and the password is the mailbox’s own, not your hosting panel’s. Gmail needs a separate app password.',
+    he: 'שרת הדואר דחה את שם המשתמש או הסיסמה. שם המשתמש הוא כתובת התיבה המלאה, והסיסמה היא של התיבה עצמה ולא של פאנל האחסון. ב-Gmail נדרשת סיסמת אפליקציה נפרדת.',
   },
   'mail.smtpConnect': {
     ru: 'Почтовый сервер не отвечает — проверьте smtp_host и smtp_port в config.php',

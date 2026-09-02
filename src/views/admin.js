@@ -5,21 +5,21 @@
  * Firestore — спрятанной кнопки мало, чужие профили закрывает база.
  */
 
-import { el, render } from '../core/dom.js?v=105';
-import { state } from '../core/store.js?v=105';
-import { formatAmount } from '../core/money.js?v=105';
-import { listUsers, wantsMail } from '../services/account.js?v=105';
+import { el, render } from '../core/dom.js?v=106';
+import { state } from '../core/store.js?v=106';
+import { formatAmount } from '../core/money.js?v=106';
+import { listUsers, wantsMail } from '../services/account.js?v=106';
 import {
   loadPriceRows, summarizePrices, summarizeUsers,
   ownPriceRows, summarizeOwnSources, summarizeUsage,
-} from '../services/adminStats.js?v=105';
-import { loadUsage } from '../services/usage.js?v=105';
+} from '../services/adminStats.js?v=106';
+import { loadUsage } from '../services/usage.js?v=106';
 import {
   buildLetter, sendBatch, localeOf, mailError, MAIL_BATCH,
-} from '../services/mail.js?v=105';
-import { toastError, toastOk } from '../ui/toast.js?v=105';
-import { section } from '../ui/section.js?v=105';
-import { t, plural, intlLocale, LOCALES } from '../core/i18n.js?v=105';
+} from '../services/mail.js?v=106';
+import { toastError, toastOk } from '../ui/toast.js?v=106';
+import { section } from '../ui/section.js?v=106';
+import { t, plural, intlLocale, LOCALES } from '../core/i18n.js?v=106';
 
 const cache = { users: null, query: '', prices: null, usage: null, tab: 'mine' };
 
