@@ -207,9 +207,40 @@ export const DICT = {
     he: 'שרת הדואר דחה את שם המשתמש או הסיסמה. ב-Gmail נדרשת סיסמת אפליקציה, הרגילה לא תעבוד.',
   },
   'mail.smtpConnect': {
-    ru: 'Не удалось связаться с почтовым сервером — проверьте адрес и порт в config.php',
-    en: 'Could not reach the mail server — check the host and port in config.php',
-    he: 'לא הצלחנו להתחבר לשרת הדואר — בדקו כתובת ופורט ב-config.php',
+    ru: 'Почтовый сервер не отвечает — проверьте smtp_host и smtp_port в config.php',
+    en: 'The mail server did not respond — check smtp_host and smtp_port in config.php',
+    he: 'שרת הדואר לא הגיב — בדקו smtp_host ו-smtp_port ב-config.php',
+  },
+  'mail.smtpTls': {
+    ru: 'Не удалось включить шифрование. На порту 465 оно начинается сразу, на 587 — после приветствия: попробуйте другой порт.',
+    en: 'Could not start encryption. Port 465 starts it immediately, 587 after the greeting — try the other port.',
+    he: 'לא ניתן היה להפעיל הצפנה. פורט 465 מתחיל מיד, 587 אחרי הברכה — נסו את הפורט השני.',
+  },
+  'mail.smtpAuthUnsupported': {
+    ru: 'Сервер не принимает вход по логину и паролю на этом порту',
+    en: 'The server does not accept login and password on this port',
+    he: 'השרת לא מקבל שם משתמש וסיסמה בפורט הזה',
+  },
+  'mail.smtpFrom': {
+    ru: 'Сервер отказался отправлять с этого адреса: mail_from_email должен совпадать с ящиком, под которым вошли',
+    en: 'The server refused this sender: mail_from_email must match the mailbox you logged in with',
+    he: 'השרת סירב לכתובת השולח: mail_from_email חייב להתאים לתיבה שאיתה נכנסתם',
+  },
+  'mail.smtpRecipient': {
+    ru: 'Сервер отказался принять адрес получателя',
+    en: 'The server refused the recipient address',
+    he: 'השרת סירב לכתובת הנמען',
+  },
+  'mail.smtpSend': {
+    ru: 'Сервер оборвал отправку письма',
+    en: 'The server dropped the message',
+    he: 'השרת ניתק את שליחת ההודעה',
+  },
+  'mail.badAddress': { ru: 'Неверный адрес', en: 'Invalid address', he: 'כתובת שגויה' },
+  'mail.serviceRefused': {
+    ru: 'Почтовый сервис отказал, код {code}',
+    en: 'The mail service refused, code {code}',
+    he: 'שירות הדואר סירב, קוד {code}',
   },
   'mail.subjectInvalid': { ru: 'Тема пустая или слишком длинная', en: 'The subject is empty or too long', he: 'הנושא ריק או ארוך מדי' },
   'mail.bodyEmpty': { ru: 'Заполните тему и текст письма', en: 'Fill in the subject and the text', he: 'מלאו נושא וטקסט' },

@@ -10,9 +10,9 @@
  * одному письму на адрес, чтобы получатели не видели чужих почт.
  */
 
-import { PROXY_URL } from '../config.js?v=104';
-import { idToken } from './auth.js?v=104';
-import { t, tIn, LOCALES } from '../core/i18n.js?v=104';
+import { PROXY_URL } from '../config.js?v=105';
+import { idToken } from './auth.js?v=105';
+import { t, tIn, LOCALES } from '../core/i18n.js?v=105';
 
 /** Столько же, сколько прокси принимает за раз. */
 export const MAIL_BATCH = 50;
@@ -105,16 +105,46 @@ export async function sendBatch({ subject, html, text, recipients }) {
   return { sent: Number(data?.sent) || 0, failed: data?.failed || [] };
 }
 
-function mailError(code, status) {
-  const messages = {
-    not_admin: t('mail.notAdmin'),
-    smtp_auth_failed: t('mail.smtpAuth'),
-    smtp_connect_failed: t('mail.smtpConnect'),
-    mail_not_configured: t('mail.notConfigured'),
-    mail_subject_invalid: t('mail.subjectInvalid'),
-    mail_body_empty: t('mail.bodyEmpty'),
-    mail_body_too_large: t('mail.bodyTooLarge'),
-    mail_recipients_invalid: t('mail.recipientsInvalid'),
+/**
+ * Человеческое описание отказа.
+ *
+ * Коды приходят и от прокси, и от почтового сервера; у SMTP их с десяток, и
+ * каждый чинится по-своему — поэтому расшифровываем, а не показываем как
+ * есть. Неизвестный код всё же выводим целиком: он полезнее пустого «не
+ * получилось».
+ */
+export function mailError(code, status = 0) {
+  const known = {
+    not_admin: 'mail.notAdmin',
+    mail_not_configured: 'mail.notConfigured',
+    mail_subject_invalid: 'mail.subjectInvalid',
+    mail_body_empty: 'mail.bodyEmpty',
+    mail_body_too_large: 'mail.bodyTooLarge',
+    mail_recipients_invalid: 'mail.recipientsInvalid',
+    invalid_email: 'mail.badAddress',
+
+    smtp_connect_failed: 'mail.smtpConnect',
+    smtp_greeting_failed: 'mail.smtpConnect',
+    smtp_ehlo_failed: 'mail.smtpConnect',
+    smtp_starttls_refused: 'mail.smtpTls',
+    smtp_tls_failed: 'mail.smtpTls',
+    smtp_auth_unsupported: 'mail.smtpAuthUnsupported',
+    smtp_auth_failed: 'mail.smtpAuth',
+    smtp_from_refused: 'mail.smtpFrom',
+    smtp_recipient_refused: 'mail.smtpRecipient',
+    smtp_data_refused: 'mail.smtpSend',
+    smtp_send_failed: 'mail.smtpSend',
   };
-  return messages[code] || t('receipt.genericError', { code: code || status });
+
+  const text = String(code || '');
+  // У части кодов к ним приписана подробность: «smtp_connect_failed: 111 …».
+  const head = text.split(':')[0].trim();
+  const tail = text.slice(head.length + 1).trim();
+
+  if (known[head]) return tail ? `${t(known[head])} (${tail})` : t(known[head]);
+  if (head.startsWith('send_failed_')) {
+    return t('mail.serviceRefused', { code: head.replace('send_failed_', '') });
+  }
+
+  return t('receipt.genericError', { code: text || status });
 }

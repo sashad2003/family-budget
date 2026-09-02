@@ -5,19 +5,21 @@
  * Firestore — спрятанной кнопки мало, чужие профили закрывает база.
  */
 
-import { el, render } from '../core/dom.js?v=104';
-import { state } from '../core/store.js?v=104';
-import { formatAmount } from '../core/money.js?v=104';
-import { listUsers, wantsMail } from '../services/account.js?v=104';
+import { el, render } from '../core/dom.js?v=105';
+import { state } from '../core/store.js?v=105';
+import { formatAmount } from '../core/money.js?v=105';
+import { listUsers, wantsMail } from '../services/account.js?v=105';
 import {
   loadPriceRows, summarizePrices, summarizeUsers,
   ownPriceRows, summarizeOwnSources, summarizeUsage,
-} from '../services/adminStats.js?v=104';
-import { loadUsage } from '../services/usage.js?v=104';
-import { buildLetter, sendBatch, localeOf, MAIL_BATCH } from '../services/mail.js?v=104';
-import { toastError, toastOk } from '../ui/toast.js?v=104';
-import { section } from '../ui/section.js?v=104';
-import { t, plural, intlLocale, LOCALES } from '../core/i18n.js?v=104';
+} from '../services/adminStats.js?v=105';
+import { loadUsage } from '../services/usage.js?v=105';
+import {
+  buildLetter, sendBatch, localeOf, mailError, MAIL_BATCH,
+} from '../services/mail.js?v=105';
+import { toastError, toastOk } from '../ui/toast.js?v=105';
+import { section } from '../ui/section.js?v=105';
+import { t, plural, intlLocale, LOCALES } from '../core/i18n.js?v=105';
 
 const cache = { users: null, query: '', prices: null, usage: null, tab: 'mine' };
 
@@ -162,9 +164,10 @@ async function sendTest(status, button) {
       status.textContent = t('mail.testSent', { email });
       toastOk(t('mail.testSent', { email }));
     } else {
-      const reason = result.failed?.[0]?.error || '';
+      const reason = mailError(result.failed?.[0]?.error);
       status.textContent = t('mail.testFailed', { reason });
       toastError(t('mail.testFailed', { reason }));
+      console.warn('Письмо не ушло', result.failed);
     }
   } catch (error) {
     console.error(error);

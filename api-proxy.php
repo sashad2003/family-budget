@@ -298,7 +298,9 @@ function sendViaSmtp(array $config, array $letter): ?string
 
     $socket = @stream_socket_client($address, $errno, $errstr, 20, STREAM_CLIENT_CONNECT, $context);
     if (!$socket) {
-        return 'smtp_connect_failed';
+        // Причину прикладываем к коду: «соединение отклонено» и «имя не
+        // разрешается» чинятся по-разному, а по одному коду их не различить.
+        return 'smtp_connect_failed: ' . $errno . ' ' . $errstr;
     }
     stream_set_timeout($socket, 20);
 

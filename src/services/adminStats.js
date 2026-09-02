@@ -19,9 +19,9 @@ import {
   collection, getDocs, query, orderBy, limit,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=104';
-import { convert } from '../core/money.js?v=104';
-import { monthOf } from '../core/dates.js?v=104';
+import { db } from '../core/firebase.js?v=105';
+import { convert } from '../core/money.js?v=105';
+import { monthOf } from '../core/dates.js?v=105';
 
 /**
  * Сколько строк тянем. Считаем на телефоне, поэтому берём свежие записи, а не
