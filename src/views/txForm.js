@@ -3,21 +3,21 @@
  * после сканирования каждое поле и каждая строка товара остаются редактируемыми.
  */
 
-import { el, render } from '../core/dom.js?v=127';
-import { state, currencyChoices } from '../core/store.js?v=127';
-import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=127';
-import { today } from '../core/dates.js?v=127';
-import { guessCategory } from '../data/categories.js?v=127';
-import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=127';
-import { tileStyle } from './list.js?v=127';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=127';
-import { toastOk, toastError } from '../ui/toast.js?v=127';
-import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=127';
-import { openQuickPick } from './quickPick.js?v=127';
-import { openCategoryEditor } from './catForm.js?v=127';
-import { findDuplicates } from '../core/selectors.js?v=127';
-import { openDupCompare } from './dupCompare.js?v=127';
-import { t } from '../core/i18n.js?v=127';
+import { el, render } from '../core/dom.js?v=128';
+import { state, currencyChoices } from '../core/store.js?v=128';
+import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=128';
+import { today } from '../core/dates.js?v=128';
+import { guessCategory } from '../data/categories.js?v=128';
+import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=128';
+import { tileStyle } from './list.js?v=128';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=128';
+import { toastOk, toastError } from '../ui/toast.js?v=128';
+import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=128';
+import { openQuickPick } from './quickPick.js?v=128';
+import { openCategoryEditor } from './catForm.js?v=128';
+import { findDuplicates } from '../core/selectors.js?v=128';
+import { openDupCompare } from './dupCompare.js?v=128';
+import { t } from '../core/i18n.js?v=128';
 
 /**
  * openTxForm({ tx })          — правка существующей операции
@@ -95,6 +95,7 @@ function fromDraft(draft) {
       items: [],
       source: 'manual',
       receiptUrl: '',
+      billId: null,
       showItems: false,
       mismatch: false,
     };
@@ -119,6 +120,8 @@ function fromDraft(draft) {
     items: draft.items || [],
     source: draft.source || 'manual',
     receiptUrl: draft.receiptUrl || '',
+    // Черновик с чека ни к какому счёту не привязан — привязывают уже здесь.
+    billId: draft.billId || null,
     showItems: (draft.items || []).length > 0,
     mismatch: Boolean(draft.mismatch),
   };
@@ -134,6 +137,55 @@ const itemsSum = (model) => model.items.reduce((sum, item) => sum + (Number(item
  * записи: сохранение уходило бы в addDoc, а проверка повторов находила бы
  * саму же правящуюся операцию и ругалась на неё.
  */
+/**
+ * «Это оплата счёта» — привязка операции к регулярному платежу.
+ *
+ * Свёрнуто, пока не нужно: у обычной покупки счёта нет, и десяток лишних
+ * кнопок в форме мешал бы. Разворачивается само, если привязка уже есть.
+ */
+function billField(model, rerender, tx) {
+  const bills = (state.bills || []).filter((bill) => bill.active !== false);
+  if (model.type !== 'expense' || !bills.length) return null;
+
+  const chosen = bills.find((bill) => bill.id === model.billId) || null;
+  if (!model.showBills && !chosen) {
+    return el('button', {
+      class: 'chip',
+      style: 'margin-bottom:14px',
+      onclick: () => { model.showBills = true; rerender(); },
+    }, t('form.billAsk'));
+  }
+
+  const month = (model.date || '').slice(0, 7);
+
+  /*
+   * Счёт этого месяца может быть уже оплачен другой операцией. Запрещать не
+   * за что — бывает и две оплаты, — но сказать об этом надо: чаще всего это
+   * значит, что человек привязывает не то.
+   */
+  const paidByOther = (bill) => (state.transactions || []).some((other) => other.billId === bill.id
+    && other.id !== tx?.id
+    && (other.date || '').slice(0, 7) === month);
+
+  return el('div', { class: 'field' }, [
+    el('label', { class: 'field__label' }, t('form.billLabel')),
+    el('div', { class: 'chip-row chip-row--wrap' }, bills.map((bill) => el('button', {
+      class: `chip ${model.billId === bill.id ? 'is-active' : ''}`,
+      onclick: () => {
+        // Повторное нажатие снимает привязку: отдельной кнопки «убрать» не
+        // нужно, и понятно без подписи.
+        model.billId = model.billId === bill.id ? null : bill.id;
+        rerender();
+      },
+    }, `${paidByOther(bill) ? '✓ ' : ''}${bill.name}`))),
+
+    chosen && paidByOther(chosen)
+      ? el('p', { class: 'hint', style: 'color:var(--expense)' },
+          t('form.billAlreadyPaid', { name: chosen.name }))
+      : el('p', { class: 'hint' }, t('form.billHint')),
+  ]);
+}
+
 /**
  * Завести категорию, не потеряв набранное.
  *
@@ -270,6 +322,10 @@ function buildBody(model, rerender, tx, backTo = null) {
       ]),
     ]),
   );
+
+  // Оплата регулярного платежа: расход часто вносится раньше, чем отмечается
+  // счёт, — чеком или из SMS. Привязка здесь избавляет от второй записи.
+  nodes.push(billField(model, rerender, tx));
 
   // Дата и время в одной строке. Время необязательно: с чека и из SMS оно
   // приходит само, при ручном вводе его обычно не заполняют.

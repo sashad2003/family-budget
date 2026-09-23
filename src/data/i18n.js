@@ -1031,6 +1031,18 @@ export const DICT = {
   'form.income': { ru: 'Доход', en: 'Income', he: 'הכנסה' },
   'form.converted': { ru: '≈ {sum} по сегодняшнему курсу', en: '≈ {sum} at today’s rate', he: '≈ {sum} לפי השער היום' },
   'form.category': { ru: 'Категория', en: 'Category', he: 'קטגוריה' },
+  'form.billAsk': { ru: 'Это оплата счёта', en: 'This pays a bill', he: 'זהו תשלום חשבון' },
+  'form.billLabel': { ru: 'Оплата счёта', en: 'Bill payment', he: 'תשלום חשבון' },
+  'form.billHint': {
+    ru: 'Счёт за этот месяц станет оплаченным этой операцией. Нажмите ещё раз, чтобы убрать привязку.',
+    en: 'The bill for this month will count as paid by this entry. Tap again to remove the link.',
+    he: 'החשבון של החודש ייחשב כמשולם באמצעות הפעולה הזו. הקישו שוב כדי להסיר את הקישור.',
+  },
+  'form.billAlreadyPaid': {
+    ru: 'Счёт «{name}» за этот месяц уже оплачен другой операцией. Привязка добавит вторую оплату.',
+    en: 'The “{name}” bill for this month is already paid by another entry. Linking adds a second payment.',
+    he: 'החשבון «{name}» לחודש הזה כבר שולם בפעולה אחרת. הקישור יוסיף תשלום שני.',
+  },
   'form.newCategory': { ru: 'Новая', en: 'New', he: 'חדשה' },
   'form.date': { ru: 'Дата', en: 'Date', he: 'תאריך' },
   'form.time': { ru: 'Время', en: 'Time', he: 'שעה' },

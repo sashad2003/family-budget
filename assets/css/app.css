@@ -1373,6 +1373,11 @@ button { cursor: pointer; border: none; background: none; }
 .chip-row { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
 .chip-row::-webkit-scrollbar { display: none; }
 .chip-row .chip { flex: 0 0 auto; }
+/*
+ * Ряд без прокрутки: там, где выбирают из десятка счетов, прятать половину
+ * за краем нельзя — человек не знает, что там есть, и не станет листать.
+ */
+.chip-row--wrap { flex-wrap: wrap; overflow-x: visible; }
 
 /* ------------------------------------------------ строки товаров чека */
 
