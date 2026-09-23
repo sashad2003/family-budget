@@ -11,9 +11,9 @@
  * распознаёт QR сама, и ссылку остаётся вставить из буфера.
  */
 
-import { el } from '../core/dom.js?v=126';
-import { openSheet, closeSheet } from '../ui/sheet.js?v=126';
-import { t } from '../core/i18n.js?v=126';
+import { el } from '../core/dom.js?v=127';
+import { openSheet, closeSheet } from '../ui/sheet.js?v=127';
+import { t } from '../core/i18n.js?v=127';
 
 /** Умеет ли браузер читать QR сам. Проверяется до показа кнопки. */
 export async function qrSupported() {

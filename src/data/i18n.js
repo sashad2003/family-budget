@@ -1070,6 +1070,40 @@ export const DICT = {
     en: 'auto on the {day}th',
     he: 'אוטומטית ב-{day} בחודש',
   },
+  // Привязка уже записанного расхода к счёту.
+  'bills.alreadyPaid': { ru: 'Уже оплачен', en: 'Already paid', he: 'כבר שולם' },
+  'bills.writePayment': { ru: 'Записать оплату', en: 'Record payment', he: 'רישום תשלום' },
+  'bills.varyingAsk': {
+    ru: 'Сумма у этого счёта меняется. Впишите её — или привяжите расход, если он уже записан чеком или SMS.',
+    en: 'This bill has a varying amount. Enter it — or attach the expense if it is already recorded from a receipt or an SMS.',
+    he: 'הסכום של החשבון הזה משתנה. הזינו אותו — או קשרו את ההוצאה אם היא כבר נרשמה מקבלה או ממסרון.',
+  },
+  'bills.attachTitle': { ru: 'Привязать операцию', en: 'Attach an entry', he: 'קישור פעולה' },
+  'bills.attachHint': {
+    ru: 'Выберите расход, которым оплачен счёт «{name}». Сумма и дата останутся прежними — операция просто зачтётся как оплата.',
+    en: 'Pick the expense that paid the “{name}” bill. Its amount and date stay as they are — it will simply count as the payment.',
+    he: 'בחרו את ההוצאה ששילמה את החשבון «{name}». הסכום והתאריך יישארו כפי שהם — הפעולה פשוט תיחשב כתשלום.',
+  },
+  'bills.attachEmpty': {
+    ru: 'В {month} нет расходов, которые ещё не привязаны к счетам. Запишите оплату обычным способом.',
+    en: 'There are no expenses in {month} that are not yet attached to a bill. Record the payment the usual way.',
+    he: 'אין ב־{month} הוצאות שעדיין אינן מקושרות לחשבונות. רשמו את התשלום בדרך הרגילה.',
+  },
+  'bills.attached': { ru: '{name} — оплачено', en: '{name} — paid', he: '{name} — שולם' },
+  'bills.attachFailed': { ru: 'Не удалось привязать операцию', en: 'Could not attach the entry', he: 'לא ניתן לקשר את הפעולה' },
+  'bills.detach': { ru: 'Отвязать', en: 'Detach', he: 'ביטול קישור' },
+  'bills.detached': { ru: 'Операция отвязана от счёта', en: 'The entry is detached from the bill', he: 'הפעולה נותקה מהחשבון' },
+  'bills.paidLinked': { ru: 'привязано', en: 'attached', he: 'מקושר' },
+  'bills.paidText': {
+    ru: 'Оплачено {date}. Отмена уберёт эту операцию из бюджета — счёт снова станет неоплаченным.',
+    en: 'Paid on {date}. Cancelling removes this entry from the budget — the bill becomes unpaid again.',
+    he: 'שולם ב־{date}. ביטול יסיר את הפעולה מהתקציב — החשבון יחזור להיות לא משולם.',
+  },
+  'bills.paidAttachedText': {
+    ru: 'Оплачено {date} операцией, записанной отдельно. Отвязка вернёт счёту вид неоплаченного, но саму операцию не тронет.',
+    en: 'Paid on {date} by an entry recorded separately. Detaching marks the bill unpaid again but leaves the entry untouched.',
+    he: 'שולם ב־{date} באמצעות פעולה שנרשמה בנפרד. ניתוק הקישור יסמן את החשבון כלא משולם, אך לא ייגע בפעולה עצמה.',
+  },
   'bills.paidAuto': { ru: 'записано само', en: 'recorded automatically', he: 'נרשם אוטומטית' },
   'bills.paidManual': { ru: 'оплачено', en: 'paid', he: 'שולם' },
   'bills.autoDone': {

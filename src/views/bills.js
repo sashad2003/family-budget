@@ -3,20 +3,22 @@
  * оплаченные отмечены галочкой, забытые горят красным.
  */
 
-import { el, render } from '../core/dom.js?v=126';
-import { state, set, currencyChoices } from '../core/store.js?v=126';
-import { formatAmount, parseAmount, currencyInfo, convert } from '../core/money.js?v=126';
-import { monthLabel, monthKey, today } from '../core/dates.js?v=126';
-import { billsForMonth } from '../core/selectors.js?v=126';
-import { createBill, updateBill, deleteBill } from '../services/bills.js?v=126';
-import { autoStartMark } from '../services/autoBills.js?v=126';
-import { createTransaction, deleteTransaction } from '../services/transactions.js?v=126';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=126';
-import { toastOk, toastError } from '../ui/toast.js?v=126';
-import { openTxForm } from './txForm.js?v=126';
-import { tileStyle } from './list.js?v=126';
-import { section } from '../ui/section.js?v=126';
-import { t } from '../core/i18n.js?v=126';
+import { el, render } from '../core/dom.js?v=127';
+import { state, set, currencyChoices } from '../core/store.js?v=127';
+import { formatAmount, parseAmount, currencyInfo, convert } from '../core/money.js?v=127';
+import { monthLabel, monthKey, today } from '../core/dates.js?v=127';
+import { billsForMonth } from '../core/selectors.js?v=127';
+import { createBill, updateBill, deleteBill } from '../services/bills.js?v=127';
+import { autoStartMark } from '../services/autoBills.js?v=127';
+import {
+  createTransaction, deleteTransaction, linkTransactionToBill, unlinkTransactionFromBill,
+} from '../services/transactions.js?v=127';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=127';
+import { toastOk, toastError } from '../ui/toast.js?v=127';
+import { openTxForm } from './txForm.js?v=127';
+import { tileStyle } from './list.js?v=127';
+import { section } from '../ui/section.js?v=127';
+import { t } from '../core/i18n.js?v=127';
 
 export function renderBills() {
   const rows = billsForMonth(state);
@@ -128,7 +130,11 @@ function billMeta(bill, paid, tx, overdue) {
     const date = tx?.date ? ` · ${tx.date.slice(8)}.${tx.date.slice(5, 7)}` : '';
     // Автоматическую оплату отмечаем: иначе непонятно, откуда взялся расход,
     // которого никто не подтверждал.
-    const how = tx?.id?.startsWith('auto-') ? t('bills.paidAuto') : t('bills.paidManual');
+    const how = tx?.id?.startsWith('auto-')
+      ? t('bills.paidAuto')
+      // Привязанная операция записана не здесь — так и говорим, иначе
+      // непонятно, почему её нельзя отменить одной кнопкой.
+      : tx?.source && tx.source !== 'bill' ? t('bills.paidLinked') : t('bills.paidManual');
     return `${how}${date}`;
   }
   if (overdue) {
@@ -161,8 +167,28 @@ function payBill(bill, expected) {
     mismatch: false,
   };
 
+  const attach = el('button', {
+    class: 'btn btn--ghost',
+    onclick: () => attachToBill(bill),
+  }, t('bills.alreadyPaid'));
+
+  /*
+   * У счёта с меняющейся суммой подтверждать нечего — её надо вписать. Но и
+   * здесь спрашиваем: расход мог быть уже записан чеком или SMS, и тогда
+   * вписывать его второй раз не нужно.
+   */
   if (!bill.fixed || !expected) {
-    openTxForm({ model });
+    openSheet({
+      title: bill.name,
+      body: el('p', { class: 'hint', style: 'text-align:center' }, t('bills.varyingAsk')),
+      footer: [
+        attach,
+        el('button', {
+          class: 'btn btn--primary',
+          onclick: () => openTxForm({ model }),
+        }, t('bills.writePayment')),
+      ],
+    });
     return;
   }
 
@@ -188,10 +214,7 @@ function payBill(bill, expected) {
         `Запишем расход за ${monthLabel(state.month)}. Сумму потом можно изменить или отменить оплату.`),
     ],
     footer: [
-      el('button', {
-        class: 'btn btn--ghost',
-        onclick: () => closeSheet(),
-      }, t('common.cancel')),
+      attach,
       el('button', {
         class: 'btn btn--ghost',
         onclick: () => openTxForm({ model }),
@@ -201,29 +224,112 @@ function payBill(bill, expected) {
   });
 }
 
+/**
+ * Счёт оплачен, но расход уже записан — чеком, SMS или руками.
+ *
+ * Раньше выход был один: записать оплату второй раз и стереть первую запись.
+ * Теперь операция просто привязывается к счёту: сумма и дата остаются теми,
+ * что были, счёт перестаёт гореть красным, и в отчётах ничего не двоится.
+ */
+function attachToBill(bill) {
+  const month = state.month;
+
+  /*
+   * Кандидаты — расходы того же месяца, ещё не привязанные ни к какому счёту.
+   * Сверху те, что похожи на оплату этого счёта: сначала своя категория,
+   * потом близкие по сумме. Угадывать за человека не беремся — выбирает он.
+   */
+  const expected = Number(bill.amount) || 0;
+  const list = (state.transactions || [])
+    .filter((tx) => tx.type === 'expense' && !tx.billId && (tx.date || '').slice(0, 7) === month)
+    .map((tx) => ({
+      tx,
+      sameCategory: tx.categoryId === bill.categoryId,
+      // Разница в долях: сто динаров при счёте в десять тысяч — это «похоже»,
+      // а при счёте в двести — нет.
+      gap: expected ? Math.abs((Number(tx.amount) || 0) - expected) / expected : 1,
+    }))
+    .sort((a, b) => (b.sameCategory - a.sameCategory) || (a.gap - b.gap))
+    .slice(0, 40);
+
+  const pick = async (tx) => {
+    try {
+      await linkTransactionToBill(tx.id, bill.id, state.user);
+      toastOk(t('bills.attached', { name: bill.name }));
+      closeSheet();
+    } catch (error) {
+      console.error(error);
+      toastError(t('bills.attachFailed'));
+    }
+  };
+
+  openSheet({
+    title: t('bills.attachTitle'),
+    body: list.length
+      ? [
+          el('p', { class: 'hint' }, t('bills.attachHint', { name: bill.name })),
+          el('div', { class: 'bills', style: 'margin-top:10px' }, list.map(({ tx, sameCategory }) => {
+            const category = state.categories.find((c) => c.id === tx.categoryId);
+            return el('button', { class: 'bill__main', onclick: () => pick(tx) }, [
+              el('span', {
+                class: 'bill__ico',
+                style: tileStyle(category?.color || '#5b9fff'),
+              }, category?.icon || '•'),
+              el('span', { class: 'bill__body' }, [
+                el('span', { class: 'bill__name' }, tx.merchant || tx.note || category?.name || t('tx.noCategory')),
+                el('span', { class: 'bill__meta' }, [
+                  `${tx.date.slice(8)}.${tx.date.slice(5, 7)}`,
+                  sameCategory ? ` · ${category?.name}` : '',
+                ].join('')),
+              ]),
+              el('span', { class: 'bill__amount num' }, formatAmount(tx.amount, tx.currency)),
+            ]);
+          })),
+        ]
+      : el('p', { class: 'hint' }, t('bills.attachEmpty', { month: monthLabel(month) })),
+    footer: [el('button', { class: 'btn btn--ghost', onclick: () => closeSheet() }, t('common.cancel'))],
+  });
+}
+
 /** Уже оплаченный счёт: посмотреть, поправить сумму или отменить оплату. */
 function openPaidBill(bill, tx) {
+  /*
+   * Операция могла быть записана как оплата счёта, а могла существовать сама
+   * по себе и быть привязанной позже — чек, SMS, ручная запись. Удалять
+   * такую нельзя: человек вносил её не ради счёта, и она ему нужна. Ему
+   * предлагается отвязка, а не удаление.
+   */
+  const attached = tx.source && tx.source !== 'bill';
+
+  const undo = el('button', {
+    class: 'btn btn--danger',
+    onclick: async () => {
+      try {
+        if (attached) {
+          await unlinkTransactionFromBill(tx.id, state.user);
+          toastOk(t('bills.detached'));
+        } else {
+          await deleteTransaction(tx.id, state.user);
+          toastOk(t('bills.paymentCancelled'));
+        }
+        closeSheet();
+      } catch (error) {
+        console.error(error);
+        toastError(t('bills.cancelFailed'));
+      }
+    },
+  }, t(attached ? 'bills.detach' : 'bills.cancelPayment'));
+
   openSheet({
     title: bill.name,
     body: [
       el('div', { class: 'confirm-sum num', style: 'color:var(--income)' },
         formatAmount(tx.amount, tx.currency)),
       el('p', { class: 'hint', style: 'text-align:center' },
-        `Оплачено ${tx.date}. Отмена уберёт эту операцию из бюджета — счёт снова станет неоплаченным.`),
+        t(attached ? 'bills.paidAttachedText' : 'bills.paidText', { date: tx.date })),
     ],
     footer: [
-      el('button', {
-        class: 'btn btn--danger',
-        onclick: async () => {
-          try {
-            await deleteTransaction(tx.id, state.user);
-            toastOk(t('bills.paymentCancelled'));
-            closeSheet();
-          } catch {
-            toastError(t('bills.cancelFailed'));
-          }
-        },
-      }, t('bills.cancelPayment')),
+      undo,
       el('button', {
         class: 'btn btn--primary',
         onclick: () => openTxForm({ tx }),

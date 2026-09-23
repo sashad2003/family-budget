@@ -3,21 +3,21 @@
  * после сканирования каждое поле и каждая строка товара остаются редактируемыми.
  */
 
-import { el, render } from '../core/dom.js?v=126';
-import { state, currencyChoices } from '../core/store.js?v=126';
-import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=126';
-import { today } from '../core/dates.js?v=126';
-import { guessCategory } from '../data/categories.js?v=126';
-import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=126';
-import { tileStyle } from './list.js?v=126';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=126';
-import { toastOk, toastError } from '../ui/toast.js?v=126';
-import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=126';
-import { openQuickPick } from './quickPick.js?v=126';
-import { openCategoryEditor } from './catForm.js?v=126';
-import { findDuplicates } from '../core/selectors.js?v=126';
-import { openDupCompare } from './dupCompare.js?v=126';
-import { t } from '../core/i18n.js?v=126';
+import { el, render } from '../core/dom.js?v=127';
+import { state, currencyChoices } from '../core/store.js?v=127';
+import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=127';
+import { today } from '../core/dates.js?v=127';
+import { guessCategory } from '../data/categories.js?v=127';
+import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=127';
+import { tileStyle } from './list.js?v=127';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=127';
+import { toastOk, toastError } from '../ui/toast.js?v=127';
+import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=127';
+import { openQuickPick } from './quickPick.js?v=127';
+import { openCategoryEditor } from './catForm.js?v=127';
+import { findDuplicates } from '../core/selectors.js?v=127';
+import { openDupCompare } from './dupCompare.js?v=127';
+import { t } from '../core/i18n.js?v=127';
 
 /**
  * openTxForm({ tx })          — правка существующей операции

@@ -40,12 +40,12 @@ import {
   writeBatch,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-import { db } from '../core/firebase.js?v=126';
-import { getFamilyId } from '../core/session.js?v=126';
-import { defaultCategories } from '../data/categories.js?v=126';
-import { countUsage } from './usage.js?v=126';
-import { amountsInAllCurrencies } from '../core/money.js?v=126';
-import { monthOf } from '../core/dates.js?v=126';
+import { db } from '../core/firebase.js?v=127';
+import { getFamilyId } from '../core/session.js?v=127';
+import { defaultCategories } from '../data/categories.js?v=127';
+import { countUsage } from './usage.js?v=127';
+import { amountsInAllCurrencies } from '../core/money.js?v=127';
+import { monthOf } from '../core/dates.js?v=127';
 
 const txCollection = () => collection(db, 'families', getFamilyId(), 'transactions');
 const catCollection = () => collection(db, 'families', getFamilyId(), 'categories');
@@ -278,7 +278,7 @@ export async function createAutoBillPayment(input, { rates, user }) {
  */
 async function shareItemPrices(txId, tx, user) {
   try {
-    const { publishPrices } = await import('./prices.js?v=126');
+    const { publishPrices } = await import('./prices.js?v=127');
     await publishPrices(txId, tx, user.uid);
   } catch (error) {
     console.error('Не удалось обновить базу цен', error);
@@ -308,12 +308,36 @@ export async function updateTransaction(id, input, { rates, user, previous }) {
   await shareItemPrices(id, patch, user);
 }
 
+/**
+ * Привязывает уже записанную операцию к регулярному платежу.
+ *
+ * Счёт считается оплаченным по наличию операции с его billId — отдельной
+ * отметки нет. Значит, чтобы «Электричество» перестало гореть красным после
+ * внесённой из SMS оплаты, достаточно проставить операции этот billId:
+ * переписывать сумму и дату заново не нужно, и в отчётах ничего не двоится.
+ *
+ * Остальные поля не трогаем: снимок курсов у операции свой, и пересчитывать
+ * его из-за привязки нельзя — отчёты за прошлое не должны меняться.
+ */
+export function linkTransactionToBill(id, billId, user = null) {
+  return updateDoc(doc(txCollection(), id), {
+    billId,
+    updatedAt: serverTimestamp(),
+    ...(user ? { updatedBy: { uid: user.uid, name: user.displayName || user.email } } : {}),
+  });
+}
+
+/** Снимает привязку: операция остаётся, счёт снова считается неоплаченным. */
+export function unlinkTransactionFromBill(id, user = null) {
+  return linkTransactionToBill(id, null, user);
+}
+
 export async function deleteTransaction(id, user = null) {
   await deleteDoc(doc(txCollection(), id));
 
   if (!user) return;
   try {
-    const { removePrices } = await import('./prices.js?v=126');
+    const { removePrices } = await import('./prices.js?v=127');
     await removePrices(id, user.uid);
   } catch (error) {
     console.error('Не удалось убрать цены удалённой операции', error);
