@@ -1,8 +1,8 @@
 /** Выборки и агрегаты над транзакциями. Чистые функции — их удобно переиспользовать. */
 
-import { txAmountIn, round } from './money.js?v=128';
-import { monthOf, shiftMonth } from './dates.js?v=128';
-import { t } from './i18n.js?v=128';
+import { txAmountIn, round } from './money.js?v=129';
+import { monthOf, shiftMonth } from './dates.js?v=129';
+import { t } from './i18n.js?v=129';
 
 /** Операции выбранного месяца с учётом фильтров экрана «Операции». */
 export function monthTransactions(state, filters = {}) {
@@ -10,7 +10,15 @@ export function monthTransactions(state, filters = {}) {
   const needle = query.trim().toLowerCase();
 
   return state.transactions.filter((tx) => {
-    if (monthOf(tx.date) !== state.month) return false;
+    /*
+     * Поиск идёт по всем месяцам, а не только по открытому.
+     *
+     * Человек ищет то, что не нашёл глазами, и чаще всего именно потому, что
+     * запись лежит в соседнем месяце: оплату внесли первого числа, а смотрят
+     * ещё прошлый месяц. Прятать её от поиска — значит уверять, что её нет,
+     * и толкать завести её второй раз.
+     */
+    if (!needle && monthOf(tx.date) !== state.month) return false;
     if (type !== 'all' && tx.type !== type) return false;
     if (categoryId && tx.categoryId !== categoryId) return false;
     if (needle) {

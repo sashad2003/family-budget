@@ -3,22 +3,22 @@
  * оплаченные отмечены галочкой, забытые горят красным.
  */
 
-import { el, render } from '../core/dom.js?v=128';
-import { state, set, currencyChoices } from '../core/store.js?v=128';
-import { formatAmount, parseAmount, currencyInfo, convert } from '../core/money.js?v=128';
-import { monthLabel, monthKey, today } from '../core/dates.js?v=128';
-import { billsForMonth } from '../core/selectors.js?v=128';
-import { createBill, updateBill, deleteBill } from '../services/bills.js?v=128';
-import { autoStartMark } from '../services/autoBills.js?v=128';
+import { el, render } from '../core/dom.js?v=129';
+import { state, set, currencyChoices } from '../core/store.js?v=129';
+import { formatAmount, parseAmount, currencyInfo, convert } from '../core/money.js?v=129';
+import { monthLabel, monthKey, today, shiftMonth } from '../core/dates.js?v=129';
+import { billsForMonth } from '../core/selectors.js?v=129';
+import { createBill, updateBill, deleteBill } from '../services/bills.js?v=129';
+import { autoStartMark } from '../services/autoBills.js?v=129';
 import {
   createTransaction, deleteTransaction, linkTransactionToBill, unlinkTransactionFromBill,
-} from '../services/transactions.js?v=128';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=128';
-import { toastOk, toastError } from '../ui/toast.js?v=128';
-import { openTxForm } from './txForm.js?v=128';
-import { tileStyle } from './list.js?v=128';
-import { section } from '../ui/section.js?v=128';
-import { t } from '../core/i18n.js?v=128';
+} from '../services/transactions.js?v=129';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=129';
+import { toastOk, toastError } from '../ui/toast.js?v=129';
+import { openTxForm } from './txForm.js?v=129';
+import { tileStyle } from './list.js?v=129';
+import { section } from '../ui/section.js?v=129';
+import { t } from '../core/i18n.js?v=129';
 
 export function renderBills() {
   const rows = billsForMonth(state);
@@ -240,16 +240,28 @@ function attachToBill(bill) {
    * потом близкие по сумме. Угадывать за человека не беремся — выбирает он.
    */
   const expected = Number(bill.amount) || 0;
+
+  /*
+   * Соседние месяцы тоже в выборе. Счёт за сентябрь часто оплачивают первого
+   * октября, и обратно: оплату вносят последним числом за уже наступивший
+   * месяц. Ограничение одним месяцем означало бы, что ровно в этих случаях
+   * привязать нечего — а именно в них привязка и нужна.
+   */
+  const months = [month, shiftMonth(month, -1), shiftMonth(month, 1)];
+
   const list = (state.transactions || [])
-    .filter((tx) => tx.type === 'expense' && !tx.billId && (tx.date || '').slice(0, 7) === month)
+    .filter((tx) => tx.type === 'expense' && !tx.billId && months.includes((tx.date || '').slice(0, 7)))
     .map((tx) => ({
       tx,
       sameCategory: tx.categoryId === bill.categoryId,
+      sameMonth: (tx.date || '').slice(0, 7) === month,
       // Разница в долях: сто динаров при счёте в десять тысяч — это «похоже»,
       // а при счёте в двести — нет.
       gap: expected ? Math.abs((Number(tx.amount) || 0) - expected) / expected : 1,
     }))
-    .sort((a, b) => (b.sameCategory - a.sameCategory) || (a.gap - b.gap))
+    .sort((a, b) => (b.sameMonth - a.sameMonth)
+      || (b.sameCategory - a.sameCategory)
+      || (a.gap - b.gap))
     .slice(0, 40);
 
   const pick = async (tx) => {
@@ -268,7 +280,7 @@ function attachToBill(bill) {
     body: list.length
       ? [
           el('p', { class: 'hint' }, t('bills.attachHint', { name: bill.name })),
-          el('div', { class: 'bills', style: 'margin-top:10px' }, list.map(({ tx, sameCategory }) => {
+          el('div', { class: 'bills', style: 'margin-top:10px' }, list.map(({ tx, sameCategory, sameMonth }) => {
             const category = state.categories.find((c) => c.id === tx.categoryId);
             return el('button', { class: 'bill__main', onclick: () => pick(tx) }, [
               el('span', {
@@ -279,6 +291,9 @@ function attachToBill(bill) {
                 el('span', { class: 'bill__name' }, tx.merchant || tx.note || category?.name || t('tx.noCategory')),
                 el('span', { class: 'bill__meta' }, [
                   `${tx.date.slice(8)}.${tx.date.slice(5, 7)}`,
+                  // У записи из соседнего месяца пишем месяц словом: иначе
+                  // «01.10» в списке за сентябрь выглядит опиской.
+                  sameMonth ? '' : ` · ${monthLabel((tx.date || '').slice(0, 7))}`,
                   sameCategory ? ` · ${category?.name}` : '',
                 ].join('')),
               ]),

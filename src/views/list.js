@@ -1,14 +1,14 @@
 /** Список операций с фильтрами по типу, категории и тексту. */
 
-import { el, render } from '../core/dom.js?v=128';
-import { state } from '../core/store.js?v=128';
-import { formatAmount, txAmountIn } from '../core/money.js?v=128';
-import { dayLabel } from '../core/dates.js?v=128';
-import { monthTransactions, groupByDate, totals } from '../core/selectors.js?v=128';
-import { openTxForm } from './txForm.js?v=128';
-import { section } from '../ui/section.js?v=128';
-import { t, getLocale } from '../core/i18n.js?v=128';
-import { activeTheme } from '../core/theme.js?v=128';
+import { el, render } from '../core/dom.js?v=129';
+import { state } from '../core/store.js?v=129';
+import { formatAmount, txAmountIn } from '../core/money.js?v=129';
+import { dayLabel } from '../core/dates.js?v=129';
+import { monthTransactions, groupByDate, totals } from '../core/selectors.js?v=129';
+import { openTxForm } from './txForm.js?v=129';
+import { section } from '../ui/section.js?v=129';
+import { t, getLocale } from '../core/i18n.js?v=129';
+import { activeTheme } from '../core/theme.js?v=129';
 
 /** Фильтры живут вне state: они локальны для экрана и не влияют на другие. */
 const filters = { type: 'all', categoryId: null, query: '' };
@@ -49,7 +49,14 @@ export function renderList() {
     const list = monthTransactions(state, filters);
     const { income, expense } = totals(list, state);
 
+    // Поиск смотрит по всем месяцам, и в выдаче может оказаться запись из
+    // другого. Об этом надо сказать: иначе непонятно, почему итог под списком
+    // не сходится с итогом месяца.
+    const other = filters.query.trim()
+      && list.some((tx) => (tx.date || '').slice(0, 7) !== state.month);
+
     render(results, [
+      other ? el('p', { class: 'hint', style: 'margin:0 0 8px' }, t('list.searchAllMonths')) : null,
       list.length
         ? section(
             countLabel(list.length),

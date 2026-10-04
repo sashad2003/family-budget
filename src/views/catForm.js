@@ -7,11 +7,11 @@
  * распознан, и уходить за ней в настройки значит потерять набранное.
  */
 
-import { el, render } from '../core/dom.js?v=128';
-import { saveCategory, deleteCategory } from '../services/transactions.js?v=128';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=128';
-import { toastOk, toastError } from '../ui/toast.js?v=128';
-import { t } from '../core/i18n.js?v=128';
+import { el, render } from '../core/dom.js?v=129';
+import { saveCategory, deleteCategory } from '../services/transactions.js?v=129';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=129';
+import { toastOk, toastError } from '../ui/toast.js?v=129';
+import { t } from '../core/i18n.js?v=129';
 
 export const PALETTE = ['#2dd98a', '#ff5b5b', '#5b9fff', '#ffb347', '#ff7eb3', '#8a8a94'];
 
@@ -74,7 +74,7 @@ export function openCategoryEditor(cat, onDone = () => {}, options = {}) {
   // потому что на остальных экранах он не нужен.
   const pickerBox = el('div', {}, el('p', { class: 'hint' }, t('cat.iconLoading')));
 
-  import('../ui/emojiPicker.js?v=128')
+  import('../ui/emojiPicker.js?v=129')
     .then(({ emojiPicker }) => render(pickerBox, emojiPicker({
       value: model.icon,
       onPick: (glyph) => { model.icon = glyph; preview.textContent = glyph; },

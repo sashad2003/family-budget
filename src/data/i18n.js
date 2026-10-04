@@ -550,6 +550,11 @@ export const DICT = {
   'dash.recent': { ru: 'Последние операции', en: 'Recent transactions', he: 'תנועות אחרונות' },
   'dash.where': { ru: 'Куда уходят деньги', en: 'Where the money goes', he: 'לאן הכסף הולך' },
   'dash.from': { ru: 'Откуда приходят деньги', en: 'Where the money comes from', he: 'מאיפה מגיע הכסף' },
+  'list.searchAllMonths': {
+    ru: 'Поиск идёт по всем месяцам — в списке есть записи не только из открытого.',
+    en: 'The search covers every month — the list includes entries from outside the open one.',
+    he: 'החיפוש מקיף את כל החודשים — ברשימה יש רשומות גם מחוץ לחודש הפתוח.',
+  },
   'list.searchPlaceholder': {
     ru: 'Поиск по описанию, магазину, товарам, сумме',
     en: 'Search by note, shop, item or amount',
@@ -1092,14 +1097,14 @@ export const DICT = {
   },
   'bills.attachTitle': { ru: 'Привязать операцию', en: 'Attach an entry', he: 'קישור פעולה' },
   'bills.attachHint': {
-    ru: 'Выберите расход, которым оплачен счёт «{name}». Сумма и дата останутся прежними — операция просто зачтётся как оплата.',
+    ru: 'Выберите расход, которым оплачен счёт «{name}» — из этого месяца или соседних. Сумма и дата останутся прежними, операция просто зачтётся как оплата.',
     en: 'Pick the expense that paid the “{name}” bill. Its amount and date stay as they are — it will simply count as the payment.',
     he: 'בחרו את ההוצאה ששילמה את החשבון «{name}». הסכום והתאריך יישארו כפי שהם — הפעולה פשוט תיחשב כתשלום.',
   },
   'bills.attachEmpty': {
-    ru: 'В {month} нет расходов, которые ещё не привязаны к счетам. Запишите оплату обычным способом.',
-    en: 'There are no expenses in {month} that are not yet attached to a bill. Record the payment the usual way.',
-    he: 'אין ב־{month} הוצאות שעדיין אינן מקושרות לחשבונות. רשמו את התשלום בדרך הרגילה.',
+    ru: 'Ни в {month}, ни в соседних месяцах нет расходов, не привязанных к счетам. Запишите оплату обычным способом.',
+    en: 'Neither {month} nor the neighbouring months have expenses that are not attached to a bill. Record the payment the usual way.',
+    he: 'לא ב־{month} ולא בחודשים הסמוכים יש הוצאות שאינן מקושרות לחשבונות. רשמו את התשלום בדרך הרגילה.',
   },
   'bills.attached': { ru: '{name} — оплачено', en: '{name} — paid', he: '{name} — שולם' },
   'bills.attachFailed': { ru: 'Не удалось привязать операцию', en: 'Could not attach the entry', he: 'לא ניתן לקשר את הפעולה' },
