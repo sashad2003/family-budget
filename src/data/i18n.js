@@ -1048,6 +1048,11 @@ export const DICT = {
     en: 'The “{name}” bill for this month is already paid by another entry. Linking adds a second payment.',
     he: 'החשבון «{name}» לחודש הזה כבר שולם בפעולה אחרת. הקישור יוסיף תשלום שני.',
   },
+  'form.dateGuessed': {
+    ru: 'Дату в чеке пришлось разбирать самим — проверьте, тот ли день.',
+    en: 'The date on the receipt had to be worked out — please check the day is right.',
+    he: 'היה צורך לפענח את התאריך שבקבלה — בדקו שהיום נכון.',
+  },
   'form.newCategory': { ru: 'Новая', en: 'New', he: 'חדשה' },
   'form.date': { ru: 'Дата', en: 'Date', he: 'תאריך' },
   'form.time': { ru: 'Время', en: 'Time', he: 'שעה' },

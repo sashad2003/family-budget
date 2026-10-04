@@ -10,9 +10,9 @@
  * одному письму на адрес, чтобы получатели не видели чужих почт.
  */
 
-import { PROXY_URL, SUPPORT_WHATSAPP } from '../config.js?v=129';
-import { idToken } from './auth.js?v=129';
-import { t, tIn, LOCALES } from '../core/i18n.js?v=129';
+import { PROXY_URL, SUPPORT_WHATSAPP } from '../config.js?v=130';
+import { idToken } from './auth.js?v=130';
+import { t, tIn, LOCALES } from '../core/i18n.js?v=130';
 
 /** Столько же, сколько прокси принимает за раз. */
 export const MAIL_BATCH = 50;

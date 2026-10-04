@@ -884,7 +884,11 @@ function extractReceipt(array $config, array $content): array
             // в Maxi, в Tempo или в Shop&Go — это всё одна компания.
             'merchant'      => ['type' => 'string', 'description' => 'Название магазина как на вывеске (Maxi, Shop&Go, Lidl, Idea), а не юридическое лицо владельца (DELHAIZE SERBIA DOO, MERCATOR-S). Если в чеке есть и то и другое — бери вывеску. "" если не видно'],
             'address'       => ['type' => 'string', 'description' => 'Улица и номер дома или район точки — коротко, чтобы отличить один магазин сети от другого. "" если не видно'],
-            'date'          => ['type' => 'string', 'description' => 'Дата чека в формате YYYY-MM-DD, "" если не видно'],
+            'date'          => ['type' => 'string', 'description' => 'Дата чека в формате YYYY-MM-DD, "" если не видно. Здесь день пишут первым: 04.10.2026 — это 4 октября, а не 10 апреля'],
+            // Дата ровно как напечатана. Перевод в YYYY-MM-DD модель делает
+            // по-разному и иногда читает день как месяц; имея исходную строку,
+            // приложение разбирает её само и одинаково.
+            'date_raw'      => ['type' => 'string', 'description' => 'Дата ровно как напечатана в чеке, без изменений: "04.10.2026", "4.10.26", "04/10/2026". "" если не видно'],
             'time'          => ['type' => 'string', 'description' => 'Время покупки в формате HH:MM (24 часа), "" если не видно'],
             'currency'      => ['type' => 'string', 'enum' => ['RSD', 'EUR', 'ILS', 'USD', '']],
             'total'         => ['type' => 'number', 'description' => 'Итоговая сумма, 0 если не видно'],
@@ -907,7 +911,7 @@ function extractReceipt(array $config, array $content): array
                 ],
             ],
         ],
-        'required' => ['merchant', 'address', 'date', 'time', 'currency', 'total', 'category_hint', 'items'],
+        'required' => ['merchant', 'address', 'date', 'date_raw', 'time', 'currency', 'total', 'category_hint', 'items'],
         'additionalProperties' => false,
     ];
 
@@ -919,6 +923,8 @@ function extractReceipt(array $config, array $content): array
 Валюту определяй по символу или коду: дин/RSD/РСД → RSD, ₪/ILS/ש"ח → ILS, €/EUR → EUR.
 Если поле не читается — ставь "" для строк и 0 для чисел, не выдумывай значения.
 Цены — числа без разделителей тысяч, десятичный разделитель — точка.
+Даты здесь пишут с днём впереди: 04.10.2026 — это 4 октября 2026, а не 10 апреля.
+В date_raw переноси дату ровно так, как она напечатана, ничего не переставляя.
 TXT;
 
     $payload = [

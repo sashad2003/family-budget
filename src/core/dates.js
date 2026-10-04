@@ -1,6 +1,6 @@
 /** Работа с датами. Дата транзакции хранится строкой 'YYYY-MM-DD' — без часовых поясов. */
 
-import { t, intlLocale } from './i18n.js?v=129';
+import { t, intlLocale } from './i18n.js?v=130';
 
 /**
  * Названия месяцев берём у браузера, а не держим списком.
@@ -60,6 +60,55 @@ export function dayLabel(isoStr) {
 
   const [y, m, d] = isoStr.split('-').map(Number);
   return monthName(y, m, d);
+}
+
+/**
+ * Дата покупки из того, что вернула модель.
+ *
+ * Модель переводит дату чека в YYYY-MM-DD сама и иногда читает её
+ * по-американски: «04.10.2026» в сербском чеке — это 4 октября, а не
+ * 10 апреля. Ошибка тихая: запись уходит в другой месяц, человек её не
+ * находит и заводит заново.
+ *
+ * Поэтому дату пересобираем здесь, а не доверяем переводу:
+ *   1. Если видна дата, как она напечатана, читаем день первым — так пишут
+ *      и в Сербии, и в Израиле.
+ *   2. Будущего у чека не бывает. Дата впереди сегодняшней означает, что
+ *      день и месяц переставлены местами: пробуем обратный порядок.
+ *   3. Ничего не вышло — сегодня: пусть человек поправит в форме, зато
+ *      запись не потеряется в чужом месяце.
+ *
+ * Возвращает { date, guessed }: guessed — что порядок пришлось менять, об
+ * этом в форме стоит предупредить.
+ */
+export function receiptDate(isoFromModel, rawAsPrinted = '', now = today()) {
+  const raw = String(rawAsPrinted || '').trim();
+
+  // Напечатанная дата числами: день первым, как принято здесь.
+  const printed = /^\d{1,2}[.\/-]\d{1,2}[.\/-]\d{2,4}$/.test(raw) ? normalizeDate(raw) : '';
+  const model = /^\d{4}-\d{2}-\d{2}$/.test(String(isoFromModel || '')) ? String(isoFromModel) : '';
+
+  for (const candidate of [printed, model]) {
+    if (!candidate) continue;
+    if (candidate <= now) return { date: candidate, guessed: false };
+
+    // Дата из будущего: скорее всего день и месяц переставлены.
+    const swapped = swapDayMonth(candidate);
+    if (swapped && swapped <= now) return { date: swapped, guessed: true };
+  }
+
+  return { date: now, guessed: Boolean(printed || model) };
+}
+
+/** '2026-04-10' → '2026-10-04'. Пустая строка, если так месяца не бывает. */
+function swapDayMonth(iso) {
+  const [y, m, d] = iso.split('-');
+  if (Number(d) < 1 || Number(d) > 12) return '';
+
+  const swapped = `${y}-${d}-${m}`;
+  const [, , dayNow] = swapped.split('-');
+  const last = new Date(Number(y), Number(d), 0).getDate();
+  return Number(dayNow) <= last ? swapped : '';
 }
 
 /** Границы месяца включительно: ['2026-01-01', '2026-01-31'] */

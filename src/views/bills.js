@@ -3,22 +3,22 @@
  * оплаченные отмечены галочкой, забытые горят красным.
  */
 
-import { el, render } from '../core/dom.js?v=129';
-import { state, set, currencyChoices } from '../core/store.js?v=129';
-import { formatAmount, parseAmount, currencyInfo, convert } from '../core/money.js?v=129';
-import { monthLabel, monthKey, today, shiftMonth } from '../core/dates.js?v=129';
-import { billsForMonth } from '../core/selectors.js?v=129';
-import { createBill, updateBill, deleteBill } from '../services/bills.js?v=129';
-import { autoStartMark } from '../services/autoBills.js?v=129';
+import { el, render } from '../core/dom.js?v=130';
+import { state, set, currencyChoices } from '../core/store.js?v=130';
+import { formatAmount, parseAmount, currencyInfo, convert } from '../core/money.js?v=130';
+import { monthLabel, monthKey, today, shiftMonth } from '../core/dates.js?v=130';
+import { billsForMonth } from '../core/selectors.js?v=130';
+import { createBill, updateBill, deleteBill } from '../services/bills.js?v=130';
+import { autoStartMark } from '../services/autoBills.js?v=130';
 import {
   createTransaction, deleteTransaction, linkTransactionToBill, unlinkTransactionFromBill,
-} from '../services/transactions.js?v=129';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=129';
-import { toastOk, toastError } from '../ui/toast.js?v=129';
-import { openTxForm } from './txForm.js?v=129';
-import { tileStyle } from './list.js?v=129';
-import { section } from '../ui/section.js?v=129';
-import { t } from '../core/i18n.js?v=129';
+} from '../services/transactions.js?v=130';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=130';
+import { toastOk, toastError } from '../ui/toast.js?v=130';
+import { openTxForm } from './txForm.js?v=130';
+import { tileStyle } from './list.js?v=130';
+import { section } from '../ui/section.js?v=130';
+import { t } from '../core/i18n.js?v=130';
 
 export function renderBills() {
   const rows = billsForMonth(state);
