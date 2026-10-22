@@ -8,15 +8,15 @@
  * таблице под ними были на месте.
  */
 
-import { el, render } from '../core/dom.js?v=133';
-import { state, set } from '../core/store.js?v=133';
-import { formatAmount } from '../core/money.js?v=133';
-import { monthLabel, shiftMonth } from '../core/dates.js?v=133';
-import { PERIODS, resolvePeriod, monthsBetween } from '../core/period.js?v=133';
-import { rangeTransactions, byCategory, totals, seriesForMonths } from '../core/selectors.js?v=133';
-import { t, getLocale } from '../core/i18n.js?v=133';
-import { themeColor } from '../core/theme.js?v=133';
-import { donut, lines, barsH } from '../ui/plot.js?v=133';
+import { el, render } from '../core/dom.js?v=134';
+import { state, set } from '../core/store.js?v=134';
+import { formatAmount } from '../core/money.js?v=134';
+import { monthLabel, shiftMonth } from '../core/dates.js?v=134';
+import { PERIODS, resolvePeriod, monthsBetween } from '../core/period.js?v=134';
+import { rangeTransactions, byCategory, totals, seriesForMonths } from '../core/selectors.js?v=134';
+import { t, getLocale } from '../core/i18n.js?v=134';
+import { themeColor } from '../core/theme.js?v=134';
+import { donut, lines, barsH } from '../ui/plot.js?v=134';
 
 /**
  * Раньше здесь уничтожались холсты Chart.js, иначе она держала их и текла

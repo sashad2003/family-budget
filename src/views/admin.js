@@ -5,27 +5,27 @@
  * Firestore — спрятанной кнопки мало, чужие профили закрывает база.
  */
 
-import { el, render } from '../core/dom.js?v=133';
-import { state } from '../core/store.js?v=133';
-import { formatAmount } from '../core/money.js?v=133';
-import { listUsers, wantsMail } from '../services/account.js?v=133';
+import { el, render } from '../core/dom.js?v=134';
+import { state } from '../core/store.js?v=134';
+import { formatAmount } from '../core/money.js?v=134';
+import { listUsers, wantsMail } from '../services/account.js?v=134';
 import {
   loadPriceRows, summarizePrices, summarizeUsers,
   ownPriceRows, summarizeOwnSources, summarizeUsage,
-} from '../services/adminStats.js?v=133';
-import { loadUsage } from '../services/usage.js?v=133';
-import { loadSpend, summarizeSpend, LOW_BALANCE_USD } from '../services/spend.js?v=133';
+} from '../services/adminStats.js?v=134';
+import { loadUsage } from '../services/usage.js?v=134';
+import { loadSpend, summarizeSpend, LOW_BALANCE_USD } from '../services/spend.js?v=134';
 import {
   saveDraft, loadDraft, listTemplates, saveTemplate, deleteTemplate,
-} from '../services/mailTemplates.js?v=133';
+} from '../services/mailTemplates.js?v=134';
 import {
   buildLetter, sendBatch, translateLetter, letterTexts, applyLetterTexts,
   localeOf, mailError, MAIL_BATCH,
-} from '../services/mail.js?v=133';
-import { toastError, toastOk } from '../ui/toast.js?v=133';
-import { section } from '../ui/section.js?v=133';
-import { richText } from '../ui/richText.js?v=133';
-import { t, plural, intlLocale, LOCALES } from '../core/i18n.js?v=133';
+} from '../services/mail.js?v=134';
+import { toastError, toastOk } from '../ui/toast.js?v=134';
+import { section } from '../ui/section.js?v=134';
+import { richText } from '../ui/richText.js?v=134';
+import { t, plural, intlLocale, LOCALES } from '../core/i18n.js?v=134';
 
 const cache = { users: null, query: '', prices: null, usage: null, spend: null, tab: 'mine' };
 

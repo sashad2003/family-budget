@@ -97,14 +97,19 @@ export function donut(items, { size = 220, thickness = 26 } = {}) {
       return ring;
     });
 
+  /*
+   * Размеры стоят числами, а тянется картинка стилем.
+   *
+   * С width="100%" и height="100%" Safari внутри гибкой раскладки считал
+   * высоту нулём, и кольцо просто не появлялось: место под него было, а
+   * рисунка не было.
+   */
   return svg('svg', {
     viewBox: `0 0 ${size} ${size}`,
-    width: '100%',
-    height: '100%',
+    width: size,
+    height: size,
     role: 'img',
-    // Кольцо круглое, и места ему выделено по высоте карточки: вписываем
-    // целиком и ставим посередине.
-    style: 'display:block;margin:0 auto',
+    style: 'display:block;max-width:100%;max-height:100%;height:auto',
   }, rings);
 }
 
@@ -179,13 +184,13 @@ export function lines({
 
   return svg('svg', {
     viewBox: `0 0 ${width} ${height}`,
-    width: '100%',
-    height: '100%',
+    width,
+    height,
     role: 'img',
     // Пропорции сохраняем: при растягивании по месту подписи осей
     // расплющивались бы вместе с полем.
     preserveAspectRatio: 'xMidYMid meet',
-    style: 'display:block',
+    style: 'display:block;width:100%;height:auto;max-height:100%',
   }, [gridLines, paths, months]);
 }
 
@@ -224,9 +229,9 @@ export function barsH({ items, ink, format, width = 520, rowHeight = 54 }) {
 
   return svg('svg', {
     viewBox: `0 0 ${width} ${height}`,
-    width: '100%',
-    height: '100%',
+    width,
+    height,
     role: 'img',
-    style: 'display:block;max-height:100%',
+    style: 'display:block;width:100%;height:auto;max-height:100%',
   }, rows);
 }

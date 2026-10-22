@@ -749,6 +749,15 @@ button { cursor: pointer; border: none; background: none; }
 .balance-block + .card,
 .balance-block + .empty { margin-top: 12px; }
 
+/*
+ * Сетка графиков — не карточка, и правило выше её не касалось: итог периода
+ * прилипал к первому графику вплотную. Отступ задаём ей самой, а внутренним
+ * карточкам его снимаем — расстояние между ними держит gap, иначе оно
+ * складывалось бы из двух.
+ */
+.chart-grid { display: grid; gap: 12px; margin-top: 12px; }
+.chart-grid .card + .card { margin-top: 0; }
+
 .card__label {
   font-size: 13px;
   font-weight: 400;
@@ -1608,7 +1617,7 @@ button { cursor: pointer; border: none; background: none; }
 .empty { text-align: center; padding: 52px 22px; color: var(--fg-2); font-size: 15px; }
 .empty__ico { display: block; margin-bottom: 12px; font-size: 38px; opacity: 0.45; }
 
-.chart-box { position: relative; height: 250px; }
+.chart-box { position: relative; height: 250px; display: flex; align-items: center; justify-content: center; }
 
 /* Итоги периода */
 .sum-rows {
@@ -2261,7 +2270,7 @@ button { cursor: pointer; border: none; background: none; }
 
 @media (min-width: 1280px) {
   .dash { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; }
-  .chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+  .chart-grid { grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
   .chart-grid > *:first-child { grid-column: 1 / -1; }
 }
 
