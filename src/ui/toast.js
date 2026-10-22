@@ -1,6 +1,6 @@
 /** Короткие уведомления внизу экрана. */
 
-import { el } from '../core/dom.js?v=130';
+import { el } from '../core/dom.js?v=131';
 
 const root = () => document.getElementById('toast-root');
 

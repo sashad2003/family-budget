@@ -782,6 +782,16 @@ export const DICT = {
   'charts.byCategory': { ru: 'Расходы по категориям', en: 'Spending by category', he: 'הוצאות לפי קטגוריה' },
   'charts.trend': { ru: 'Динамика', en: 'Trend', he: 'מגמה' },
   'charts.trendN': { ru: 'Динамика · {n} мес', en: 'Trend · {n} mo', he: 'מגמה · {n} חוד׳' },
+  'charts.trendWider': {
+    ru: 'Показаны последние шесть месяцев — по одному месяцу динамику не видно. Остальные карточки считают выбранный период.',
+    en: 'The last six months are shown — a single month shows no trend. The other cards count the selected period.',
+    he: 'מוצגים ששת החודשים האחרונים — בחודש אחד אין מגמה לראות. שאר הכרטיסים סופרים את התקופה שנבחרה.',
+  },
+  'charts.noIncome': {
+    ru: 'Доходов за этот период нет. Запишите зарплату или другое поступление — выберите в форме операции «Доходы», и линия появится.',
+    en: 'There is no income in this period. Record a salary or another incoming payment — pick “Income” in the entry form and the line will appear.',
+    he: 'אין הכנסות בתקופה הזו. רשמו משכורת או תקבול אחר — בחרו «הכנסות» בטופס הפעולה והקו יופיע.',
+  },
   'charts.inOut': { ru: 'Доходы и расходы за период', en: 'Income and spending over the period', he: 'הכנסות והוצאות בתקופה' },
   'charts.income': { ru: 'Доходы', en: 'Income', he: 'הכנסות' },
   'charts.expense': { ru: 'Расходы', en: 'Expenses', he: 'הוצאות' },

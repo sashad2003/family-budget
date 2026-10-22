@@ -2,47 +2,47 @@
  * Точка входа: авторизация → загрузка семьи → подписки на данные → роутинг.
  */
 
-import { $, el, render } from './core/dom.js?v=130';
+import { $, el, render } from './core/dom.js?v=131';
 import {
   t, localeInfo, isRTL, applyDocumentLocale, translateDocument,
-} from './core/i18n.js?v=130';
-import { state, set, subscribe } from './core/store.js?v=130';
-import { applyTheme } from './core/theme.js?v=130';
-import { SUPPORT_WHATSAPP } from './config.js?v=130';
-import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=130';
-import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=130';
-import { unpaidBills } from './core/selectors.js?v=130';
+} from './core/i18n.js?v=131';
+import { state, set, subscribe } from './core/store.js?v=131';
+import { applyTheme } from './core/theme.js?v=131';
+import { SUPPORT_WHATSAPP } from './config.js?v=131';
+import { openBaseCurrencyPicker } from './views/currencyPicker.js?v=131';
+import { monthKey, monthLabel, shiftMonth } from './core/dates.js?v=131';
+import { unpaidBills } from './core/selectors.js?v=131';
 
-import { watchAuth, signIn } from './services/auth.js?v=130';
+import { watchAuth, signIn } from './services/auth.js?v=131';
 import {
   loadAccount, isAdmin, joinByCode, listFamilies, watchFamily, setMarketing,
-} from './services/account.js?v=130';
-import { setFamilyId } from './core/session.js?v=130';
-import { askProfile } from './views/signup.js?v=130';
+} from './services/account.js?v=131';
+import { setFamilyId } from './core/session.js?v=131';
+import { askProfile } from './views/signup.js?v=131';
 import {
   watchTransactions,
   watchCategories,
   seedCategoriesIfEmpty,
   syncNewCategories,
   retireTealColor,
-} from './services/transactions.js?v=130';
-import { watchBills } from './services/bills.js?v=130';
-import { runAutoBills } from './services/autoBills.js?v=130';
-import { loadRates } from './services/rates.js?v=130';
+} from './services/transactions.js?v=131';
+import { watchBills } from './services/bills.js?v=131';
+import { runAutoBills } from './services/autoBills.js?v=131';
+import { loadRates } from './services/rates.js?v=131';
 
-import { renderDashboard } from './views/dashboard.js?v=130';
-import { renderList } from './views/list.js?v=130';
-import { renderBills } from './views/bills.js?v=130';
-import { renderPrices } from './views/prices.js?v=130';
-import { renderAdmin } from './views/admin.js?v=130';
-import { openBudgetMenu, budgetName } from './views/budgetMenu.js?v=130';
-import { renderCharts, destroyCharts } from './views/charts.js?v=130';
-import { renderSettings } from './views/settings.js?v=130';
-import { openTxForm } from './views/txForm.js?v=130';
-import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=130';
-import { initRoseButton, drawRoseButton, resetRose } from './views/roseGlasses.js?v=130';
-import { openSheet, closeSheet } from './ui/sheet.js?v=130';
-import { toastError, toastOk } from './ui/toast.js?v=130';
+import { renderDashboard } from './views/dashboard.js?v=131';
+import { renderList } from './views/list.js?v=131';
+import { renderBills } from './views/bills.js?v=131';
+import { renderPrices } from './views/prices.js?v=131';
+import { renderAdmin } from './views/admin.js?v=131';
+import { openBudgetMenu, budgetName } from './views/budgetMenu.js?v=131';
+import { renderCharts, destroyCharts } from './views/charts.js?v=131';
+import { renderSettings } from './views/settings.js?v=131';
+import { openTxForm } from './views/txForm.js?v=131';
+import { openMoreMenu, MORE_ROUTES } from './views/moreMenu.js?v=131';
+import { initRoseButton, drawRoseButton, resetRose } from './views/roseGlasses.js?v=131';
+import { openSheet, closeSheet } from './ui/sheet.js?v=131';
+import { toastError, toastOk } from './ui/toast.js?v=131';
 
 // Язык ставим до первой отрисовки: иначе видно, как надписи меняются на ходу.
 applyDocumentLocale();
@@ -282,7 +282,7 @@ function shareOldPrices(transactions) {
   if (backfillStarted || !state.user || !transactions.length) return;
   backfillStarted = true;
 
-  import('./services/prices.js?v=130')
+  import('./services/prices.js?v=131')
     .then(({ backfillPrices }) => backfillPrices(transactions, state.user.uid))
     .catch((error) => console.error('Не удалось перенести историю цен', error));
 }

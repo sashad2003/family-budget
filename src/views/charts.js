@@ -7,14 +7,14 @@
  * Chart.js грузится с CDN по требованию — на других экранах он не нужен.
  */
 
-import { el, render } from '../core/dom.js?v=130';
-import { state, set } from '../core/store.js?v=130';
-import { formatAmount } from '../core/money.js?v=130';
-import { monthLabel } from '../core/dates.js?v=130';
-import { PERIODS, resolvePeriod } from '../core/period.js?v=130';
-import { rangeTransactions, byCategory, totals, seriesForMonths } from '../core/selectors.js?v=130';
-import { t, getLocale } from '../core/i18n.js?v=130';
-import { themeColor } from '../core/theme.js?v=130';
+import { el, render } from '../core/dom.js?v=131';
+import { state, set } from '../core/store.js?v=131';
+import { formatAmount } from '../core/money.js?v=131';
+import { monthLabel, shiftMonth } from '../core/dates.js?v=131';
+import { PERIODS, resolvePeriod, monthsBetween } from '../core/period.js?v=131';
+import { rangeTransactions, byCategory, totals, seriesForMonths } from '../core/selectors.js?v=131';
+import { t, getLocale } from '../core/i18n.js?v=131';
+import { themeColor } from '../core/theme.js?v=131';
 
 const CHART_JS = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.7/+esm';
 
@@ -61,7 +61,21 @@ export function renderCharts() {
 
   const expenses = list.filter((tx) => tx.type === 'expense');
   const cats = byCategory(expenses, state);
-  const series = seriesForMonths(state, period.months);
+
+  /*
+   * Динамику всегда показываем на нескольких месяцах, даже когда выбран один.
+   *
+   * «Месяц» стоит по умолчанию, и график из одной точки выглядел поломкой:
+   * линии нет, таблицы под ним нет, и непонятно, то ли данных не хватает, то
+   * ли что-то сломалось. Полгода назад — это контекст, ради которого на
+   * график и смотрят; остальные карточки по-прежнему считают ровно период.
+   */
+  const trendMonths = period.months.length > 1
+    ? period.months
+    : monthsBetween(shiftMonth(state.month, -5), state.month);
+  const wider = trendMonths.length > period.months.length;
+
+  const series = seriesForMonths(state, trendMonths);
   const { income, expense, balance } = totals(list, state);
 
   const donutCanvas = el('canvas');
@@ -92,11 +106,17 @@ export function renderCharts() {
         el('div', { class: 'card__label' },
           series.length > 1 ? t('charts.trendN', { n: series.length }) : t('charts.trend')),
         el('div', { class: 'chart-box' }, trendCanvas),
+        // Период один месяц, а на графике их шесть — говорим об этом, иначе
+        // цифры под ним не сойдутся с итогом периода.
+        wider ? el('p', { class: 'hint', style: 'margin-top:10px' }, t('charts.trendWider')) : null,
       ]),
 
       el('div', { class: 'card' }, [
         el('div', { class: 'card__label' }, t('charts.inOut')),
         el('div', { class: 'chart-box', style: 'height:190px' }, compareCanvas),
+        // Пустая половина круга ничего не объясняет: доходов может не быть
+        // вовсе, и тогда дело не в графике, а в том, что их не записывают.
+        income ? null : el('p', { class: 'hint', style: 'margin-top:10px' }, t('charts.noIncome')),
       ]),
     ]),
 
