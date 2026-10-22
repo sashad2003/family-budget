@@ -16,8 +16,8 @@
  * пор; работает он везде, где работает приложение.
  */
 
-import { el } from '../core/dom.js?v=131';
-import { t } from '../core/i18n.js?v=131';
+import { el } from '../core/dom.js?v=133';
+import { t } from '../core/i18n.js?v=133';
 
 /** Стили писем: те же, что в готовых письмах, чтобы вид совпадал с отправкой. */
 const STYLE = {

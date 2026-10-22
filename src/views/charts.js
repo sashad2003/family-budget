@@ -1,44 +1,30 @@
 /**
- * Статистика за выбранный период: итоги, расходы по категориям,
- * динамика по месяцам, доходы против расходов.
+ * Статистика: круг расходов по категориям, динамика по месяцам и сравнение
+ * доходов с расходами.
  *
- * Период задаётся здесь же: месяц может быть в плюсе, а год — в минусе,
- * поэтому итог по одному месяцу ничего не говорит о картине в целом.
- * Chart.js грузится с CDN по требованию — на других экранах он не нужен.
+ * Графики рисуются своими силами, обычным SVG (см. ui/plot.js). Раньше их
+ * рисовала Chart.js с внешнего адреса, и там, где этот адрес недоступен,
+ * весь экран оставался пустыми прямоугольниками — при том что цифры в
+ * таблице под ними были на месте.
  */
 
-import { el, render } from '../core/dom.js?v=131';
-import { state, set } from '../core/store.js?v=131';
-import { formatAmount } from '../core/money.js?v=131';
-import { monthLabel, shiftMonth } from '../core/dates.js?v=131';
-import { PERIODS, resolvePeriod, monthsBetween } from '../core/period.js?v=131';
-import { rangeTransactions, byCategory, totals, seriesForMonths } from '../core/selectors.js?v=131';
-import { t, getLocale } from '../core/i18n.js?v=131';
-import { themeColor } from '../core/theme.js?v=131';
+import { el, render } from '../core/dom.js?v=133';
+import { state, set } from '../core/store.js?v=133';
+import { formatAmount } from '../core/money.js?v=133';
+import { monthLabel, shiftMonth } from '../core/dates.js?v=133';
+import { PERIODS, resolvePeriod, monthsBetween } from '../core/period.js?v=133';
+import { rangeTransactions, byCategory, totals, seriesForMonths } from '../core/selectors.js?v=133';
+import { t, getLocale } from '../core/i18n.js?v=133';
+import { themeColor } from '../core/theme.js?v=133';
+import { donut, lines, barsH } from '../ui/plot.js?v=133';
 
-const CHART_JS = 'https://cdn.jsdelivr.net/npm/chart.js@4.4.7/+esm';
-
-let ChartLib = null;
-const charts = [];
-
-async function loadChartJs() {
-  if (!ChartLib) {
-    const module = await import(CHART_JS);
-    ChartLib = module.default || module.Chart;
-    ChartLib.defaults.font.family = "'Geologica', sans-serif";
-    ChartLib.defaults.font.size = 13;
-  }
-
-  // Цвет подписей ставим при каждой отрисовке: на светлой теме они должны
-  // быть тёмными, а тему меняют, не перезагружая приложение.
-  ChartLib.defaults.color = themeColor('--fg-1', '#8a8a94');
-  return ChartLib;
-}
-
-/** Уничтожает предыдущие графики — иначе Chart.js держит canvas и течёт память. */
-export function destroyCharts() {
-  while (charts.length) charts.pop().destroy();
-}
+/**
+ * Раньше здесь уничтожались холсты Chart.js, иначе она держала их и текла
+ * памятью. SVG живёт сам и исчезает вместе с разметкой, но вызовы остались
+ * в main.js при смене экрана — пусть ничего не делают, чем править четыре
+ * места ради пустоты.
+ */
+export function destroyCharts() {}
 
 export function renderCharts() {
   destroyCharts();
@@ -78,9 +64,10 @@ export function renderCharts() {
   const series = seriesForMonths(state, trendMonths);
   const { income, expense, balance } = totals(list, state);
 
-  const donutCanvas = el('canvas');
-  const trendCanvas = el('canvas');
-  const compareCanvas = el('canvas');
+  const grid = themeColor('--edge', 'rgba(255,255,255,0.09)');
+  const ink = themeColor('--fg-1', '#8a8a94');
+  const incomeColor = themeColor('--income', '#2dd98a');
+  const expenseColor = themeColor('--expense', '#ff5b5b');
 
   render(container, [
     ...head,
@@ -89,7 +76,8 @@ export function renderCharts() {
     el('div', { class: 'chart-grid' }, [
       el('div', { class: 'card' }, [
         el('div', { class: 'card__label' }, t('charts.byCategory')),
-        el('div', { class: 'chart-box' }, donutCanvas),
+        el('div', { class: 'chart-box' },
+          donut(cats.map((row) => ({ value: row.total, color: row.color, label: row.name })))),
         el('div', { class: 'bar-legend', style: 'margin-top:16px' }, cats.map((row) =>
           el('div', { class: 'legend-row' }, [
             el('span', { class: 'legend-dot', style: `background:${row.color}` }),
@@ -105,7 +93,19 @@ export function renderCharts() {
       el('div', { class: 'card' }, [
         el('div', { class: 'card__label' },
           series.length > 1 ? t('charts.trendN', { n: series.length }) : t('charts.trend')),
-        el('div', { class: 'chart-box' }, trendCanvas),
+        el('div', { class: 'chart-box' }, lines({
+          labels: series.map((row) => shortMonth(row.month)),
+          lines: [
+            { label: t('charts.income'), color: incomeColor, values: series.map((r) => r.income) },
+            { label: t('charts.expense'), color: expenseColor, values: series.map((r) => r.expense) },
+          ],
+          grid,
+          ink,
+        })),
+        el('div', { class: 'bar-legend', style: 'margin-top:12px' }, [
+          legendRow(t('charts.income'), incomeColor),
+          legendRow(t('charts.expense'), expenseColor),
+        ]),
         // Период один месяц, а на графике их шесть — говорим об этом, иначе
         // цифры под ним не сойдутся с итогом периода.
         wider ? el('p', { class: 'hint', style: 'margin-top:10px' }, t('charts.trendWider')) : null,
@@ -113,7 +113,14 @@ export function renderCharts() {
 
       el('div', { class: 'card' }, [
         el('div', { class: 'card__label' }, t('charts.inOut')),
-        el('div', { class: 'chart-box', style: 'height:190px' }, compareCanvas),
+        el('div', { class: 'chart-box', style: 'height:130px' }, barsH({
+          items: [
+            { label: t('charts.income'), value: income, color: incomeColor },
+            { label: t('charts.expense'), value: expense, color: expenseColor },
+          ],
+          ink,
+          format: (value) => formatAmount(value, state.base, { whole: true }),
+        })),
         // Пустая половина круга ничего не объясняет: доходов может не быть
         // вовсе, и тогда дело не в графике, а в том, что их не записывают.
         income ? null : el('p', { class: 'hint', style: 'margin-top:10px' }, t('charts.noIncome')),
@@ -122,70 +129,6 @@ export function renderCharts() {
 
     series.length > 1 ? monthTable(series) : null,
   ]);
-
-  // Рисуем после того, как узлы попали в документ, иначе canvas не знает размеров.
-  loadChartJs().then((Chart) => {
-    if (!donutCanvas.isConnected) return;
-
-    charts.push(new Chart(donutCanvas, {
-      type: 'doughnut',
-      data: {
-        labels: cats.map((c) => c.name),
-        datasets: [{
-          data: cats.map((c) => Math.round(c.total)),
-          backgroundColor: cats.map((c) => c.color),
-          borderWidth: 0,
-          hoverOffset: 6,
-        }],
-      },
-      options: {
-        ...baseOptions(),
-        cutout: '62%',
-        plugins: { legend: { display: false }, tooltip: moneyTooltip() },
-      },
-    }));
-
-    charts.push(new Chart(trendCanvas, {
-      type: 'line',
-      data: {
-        labels: series.map((row) => shortMonth(row.month)),
-        datasets: [
-          lineSet(t('charts.income'), series.map((r) => Math.round(r.income)), themeColor('--income', '#2dd98a')),
-          lineSet(t('charts.expense'), series.map((r) => Math.round(r.expense)), themeColor('--expense', '#ff5b5b')),
-        ],
-      },
-      options: {
-        ...baseOptions(),
-        plugins: {
-          legend: { display: true, labels: { boxWidth: 8, boxHeight: 8, usePointStyle: true } },
-          tooltip: moneyTooltip(),
-        },
-        scales: gridScales(),
-      },
-    }));
-
-    charts.push(new Chart(compareCanvas, {
-      type: 'bar',
-      data: {
-        labels: [t('charts.income'), t('charts.expense')],
-        datasets: [{
-          data: [Math.round(income), Math.round(expense)],
-          backgroundColor: [themeColor('--income', '#2dd98a'), themeColor('--expense', '#ff5b5b')],
-          borderRadius: 8,
-          barThickness: 44,
-        }],
-      },
-      options: {
-        ...baseOptions(),
-        indexAxis: 'y',
-        plugins: { legend: { display: false }, tooltip: moneyTooltip() },
-        scales: gridScales(),
-      },
-    }));
-  }).catch((error) => {
-    console.error(error);
-    container.append(el('p', { class: 'hint' }, t('charts.libFailed')));
-  });
 
   return container;
 }
@@ -292,53 +235,12 @@ function monthTable(series) {
 
 // ---------------------------------------------------------------- графики
 
-const baseOptions = () => ({ responsive: true, maintainAspectRatio: false });
-
-function lineSet(label, data, color) {
-  return {
-    label,
-    data,
-    borderColor: color,
-    backgroundColor: `${color}22`,
-    fill: true,
-    tension: 0.35,
-    borderWidth: 2,
-    // На длинных периодах точки сливаются в кашу.
-    pointRadius: data.length > 14 ? 0 : 3,
-    pointBackgroundColor: color,
-  };
-}
-
-function gridScales() {
-  // Сетка — тот же токен кромки, что у карточек: на светлой теме она тёмная.
-  const grid = themeColor('--edge', 'rgba(255,255,255,0.05)');
-
-  return {
-    x: { grid: { color: grid }, border: { display: false } },
-    y: {
-      grid: { color: grid },
-      border: { display: false },
-      ticks: { callback: (value) => compact(value) },
-    },
-  };
-}
-
-function moneyTooltip() {
-  return {
-    callbacks: {
-      label: (ctx) => {
-        const value = ctx.parsed?.y ?? ctx.parsed?.x ?? ctx.parsed;
-        return ` ${formatAmount(value, state.base)}`;
-      },
-    },
-  };
-}
-
-function compact(value) {
-  const abs = Math.abs(value);
-  if (abs >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
-  if (abs >= 1000) return `${Math.round(value / 1000)}k`;
-  return String(value);
+/** Строка легенды: точка цвета и подпись — одна на каждую линию графика. */
+function legendRow(label, color) {
+  return el('div', { class: 'legend-row' }, [
+    el('span', { class: 'legend-dot', style: `background:${color}` }),
+    el('span', { class: 'legend-name' }, label),
+  ]);
 }
 
 /** 'июл' на коротком периоде, 'июл 25' — когда важен год. */

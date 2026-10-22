@@ -795,11 +795,6 @@ export const DICT = {
   'charts.inOut': { ru: 'Доходы и расходы за период', en: 'Income and spending over the period', he: 'הכנסות והוצאות בתקופה' },
   'charts.income': { ru: 'Доходы', en: 'Income', he: 'הכנסות' },
   'charts.expense': { ru: 'Расходы', en: 'Expenses', he: 'הוצאות' },
-  'charts.libFailed': {
-    ru: 'Не удалось загрузить библиотеку графиков',
-    en: 'Could not load the charting library',
-    he: 'לא הצלחנו לטעון את ספריית הגרפים',
-  },
   'charts.from': { ru: 'С даты', en: 'From', he: 'מתאריך' },
   'charts.to': { ru: 'По дату', en: 'To', he: 'עד תאריך' },
   'charts.txCount': { ru: '{n} операций', en: '{n} transactions', he: '{n} תנועות' },
