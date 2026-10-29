@@ -1071,6 +1071,11 @@ export const DICT = {
   'form.items': { ru: 'Товары ({n})', en: 'Items ({n})', he: 'מוצרים ({n})' },
   'form.pick': { ru: '⚡ выбрать', en: '⚡ pick', he: '⚡ בחירה' },
   'form.addRow': { ru: '＋ строка', en: '＋ row', he: '＋ שורה' },
+  'form.itemsPartial': {
+    ru: 'Прочитаны не все строки: они дают {sum} при итоге {total}. Длинный чек в один кадр не помещается — снимите его частями (до {n} кадров подряд) или допишите строки руками. Итог оставьте как на чеке.',
+    en: 'Not all rows were read: they add up to {sum} against a total of {total}. A long receipt does not fit one frame — shoot it in parts (up to {n} frames in order) or add the rows by hand. Leave the total as printed.',
+    he: 'לא כל השורות נקראו: הן מסתכמות ב־{sum} מול סך של {total}. קבלה ארוכה אינה נכנסת לפריים אחד — צלמו אותה בחלקים (עד {n} פריימים לפי הסדר) או הוסיפו שורות ידנית. השאירו את הסך כפי שמודפס.',
+  },
   'form.mismatch': {
     ru: 'AI не сошёлся: сумма строк отличается от итога на чеке. Проверьте строки.',
     en: 'The AI did not add up: the item total differs from the receipt total. Check the rows.',

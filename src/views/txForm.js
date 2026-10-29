@@ -3,21 +3,22 @@
  * после сканирования каждое поле и каждая строка товара остаются редактируемыми.
  */
 
-import { el, render } from '../core/dom.js?v=134';
-import { state, currencyChoices } from '../core/store.js?v=134';
-import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=134';
-import { today } from '../core/dates.js?v=134';
-import { guessCategory } from '../data/categories.js?v=134';
-import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=134';
-import { tileStyle } from './list.js?v=134';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=134';
-import { toastOk, toastError } from '../ui/toast.js?v=134';
-import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=134';
-import { openQuickPick } from './quickPick.js?v=134';
-import { openCategoryEditor } from './catForm.js?v=134';
-import { findDuplicates } from '../core/selectors.js?v=134';
-import { openDupCompare } from './dupCompare.js?v=134';
-import { t } from '../core/i18n.js?v=134';
+import { el, render } from '../core/dom.js?v=135';
+import { state, currencyChoices } from '../core/store.js?v=135';
+import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=135';
+import { today } from '../core/dates.js?v=135';
+import { guessCategory } from '../data/categories.js?v=135';
+import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=135';
+import { tileStyle } from './list.js?v=135';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=135';
+import { toastOk, toastError } from '../ui/toast.js?v=135';
+import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=135';
+import { MAX_RECEIPT_IMAGES } from '../services/receipts.js?v=135';
+import { openQuickPick } from './quickPick.js?v=135';
+import { openCategoryEditor } from './catForm.js?v=135';
+import { findDuplicates } from '../core/selectors.js?v=135';
+import { openDupCompare } from './dupCompare.js?v=135';
+import { t } from '../core/i18n.js?v=135';
 
 /**
  * openTxForm({ tx })          — правка существующей операции
@@ -124,6 +125,8 @@ function fromDraft(draft) {
     billId: draft.billId || null,
     showItems: (draft.items || []).length > 0,
     mismatch: Boolean(draft.mismatch),
+    /** Строки покрывают заметно меньше итога — похоже, прочитана часть чека. */
+    partialItems: Boolean(draft.partialItems),
     /** Дату в чеке пришлось толковать: день и месяц могли стоять наоборот. */
     dateGuessed: Boolean(draft.dateGuessed),
   };
@@ -469,10 +472,16 @@ function buildReceiptBlock(model, rerender, tx) {
       ]),
     ]),
 
-    model.mismatch
+    model.partialItems
       ? el('p', { class: 'hint', style: 'color:var(--yellow)' },
-          t('form.mismatch'))
-      : null,
+          t('form.itemsPartial', {
+            sum: formatAmount(sum, model.currency, { exact: true }),
+            total: formatAmount(model.amount, model.currency, { exact: true }),
+            n: MAX_RECEIPT_IMAGES,
+          }))
+      : model.mismatch
+        ? el('p', { class: 'hint', style: 'color:var(--yellow)' }, t('form.mismatch'))
+        : null,
 
     el('div', { class: 'items' }, model.items.map((item, index) =>
       itemRow(item, index, model, rerender),
@@ -485,7 +494,12 @@ function buildReceiptBlock(model, rerender, tx) {
       el('span', { class: 'num' }, formatAmount(sum, model.currency, { exact: true })),
     ]),
 
-    diff
+    /*
+     * «Взять сумму строк как итог» — только когда расхождение мелкое.
+     * При недочитанном чеке эта кнопка записала бы расход втрое меньше
+     * настоящего, и ошибку потом никто бы не заметил.
+     */
+    diff && !model.partialItems
       ? el('button', {
           class: 'btn btn--ghost btn--wide',
           style: 'margin-top:10px',

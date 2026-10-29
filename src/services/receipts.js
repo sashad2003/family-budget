@@ -5,12 +5,12 @@
  * AI ошибается в названиях товаров, поэтому ни одно поле не считается финальным.
  */
 
-import { PROXY_URL, CURRENCY_CODES } from '../config.js?v=134';
-import { idToken } from './auth.js?v=134';
-import { receiptDate } from '../core/dates.js?v=134';
-import { parseBankSms } from '../core/smsParse.js?v=134';
-import { t } from '../core/i18n.js?v=134';
-import { blockScan, unblockScan } from './scanGate.js?v=134';
+import { PROXY_URL, CURRENCY_CODES } from '../config.js?v=135';
+import { idToken } from './auth.js?v=135';
+import { receiptDate } from '../core/dates.js?v=135';
+import { parseBankSms } from '../core/smsParse.js?v=135';
+import { t } from '../core/i18n.js?v=135';
+import { blockScan, unblockScan } from './scanGate.js?v=135';
 
 /** Сколько пикселей по длинной стороне отправляем. Больше — дороже и медленнее без выигрыша. */
 const MAX_EDGE = 1600;
@@ -181,6 +181,13 @@ function normalizeReceipt(raw, source) {
     receiptUrl: '',
     /** Расхождение между суммой строк и итогом — повод показать подсказку. */
     mismatch: normalizedItems.length > 0 && Math.abs(itemsSum - total) > Math.max(1, total * 0.02),
+    /*
+     * Строки заметно не добирают до итога — значит прочитана часть ленты:
+     * длинный чек в кадр целиком не помещается, и модель переносит то, что
+     * видно. Это другой случай, чем ошибка в одной цифре, и советовать тут
+     * надо другое — доснять чек, а не сверять строки.
+     */
+    partialItems: normalizedItems.length > 0 && total > 0 && itemsSum < total * 0.85,
   };
 }
 
