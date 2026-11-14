@@ -129,7 +129,8 @@ switch ($action) {
 
     case 'receipt_url':
         $url = (string)($req['url'] ?? '');
-        respond(200, extractReceipt($config, fetchReceiptContent($url)));
+        $page = fetchReceiptContent($url);
+        respond(200, extractReceipt($config, $page['content'], $page['items']));
 
     case 'sms_text':
         $sms = trim((string)($req['text'] ?? ''));
@@ -845,21 +846,38 @@ function fetchReceiptContent(string $url): array
         if (strlen($res['body']) > MAX_PDF_BYTES) {
             respond(413, ['error' => 'pdf_too_large']);
         }
-        return [
+        // В PDF журнала нет — там всё читает модель, как раньше.
+        return ['content' => [
             ['type' => 'document', 'source' => [
                 'type'       => 'base64',
                 'media_type' => 'application/pdf',
                 'data'       => base64_encode($res['body']),
             ]],
             ['type' => 'text', 'text' => 'Извлеки данные из этой квитанции.'],
-        ];
+        ], 'items' => []];
     }
 
     $html = substr($res['body'], 0, MAX_PAGE_BYTES);
 
-    // Список товаров на сербском портале приходит отдельным запросом, и в
-    // самой странице его может не быть вовсе — см. receiptItemsText().
-    $items = receiptItemsText($url, $html);
+    /*
+     * Строки товаров берём сами, двумя путями.
+     *
+     * Сначала журнал — печатный вид чека, спрятанный на странице под
+     * кнопкой: он машинный, читается однозначно и ничего не стоит. Если
+     * журнала нет, спрашиваем список отдельным запросом, как это делает
+     * сама страница в браузере.
+     *
+     * Модели список передаётся готовым и ею же не переписывается: раньше
+     * она читала журнал из общего текста и порой возвращала пустой список,
+     * а сумма при этом записывалась верно — ошибку было не видно.
+     */
+    $parsed = parseFiscalJournal($html);
+    $items = $parsed
+        ? implode("\n", array_map(
+            static fn (array $it): string => "{$it['name']} | {$it['qty']} | {$it['price']} | {$it['total']}",
+            $parsed,
+        ))
+        : receiptItemsText($url, $html);
 
     $html = preg_replace('#<(script|style|noscript)\b.*?</\1>#is', ' ', $html) ?? $html;
     $text = html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8');
@@ -876,7 +894,96 @@ function fetchReceiptContent(string $url): array
             . "Бери товары отсюда и перенеси их все, ничего не пропуская:\n" . $items;
     }
 
-    return [['type' => 'text', 'text' => $prompt]];
+    return ['content' => [['type' => 'text', 'text' => $prompt]], 'items' => $parsed];
+}
+
+/**
+ * Журнал сербского фискального чека: печатный вид ленты со всеми товарами.
+ *
+ * На странице он лежит в <pre> под свёрнутой кнопкой «Журнал». Формат
+ * машинный: название товара (длинное переносится на вторую строку), затем
+ * строка «цена количество сумма». Ширина ленты — сорок знаков, и по тому,
+ * занята ли строка целиком, видно, разорвано слово переносом или нет:
+ * «WELLNESS 21» + «0G» склеивается в «WELLNESS 210G», а «... (KOM)» + «(Е)»
+ * остаётся с пробелом.
+ *
+ * Тот же разбор на JavaScript лежит в tools/fiscal-journal.mjs — им сверяют
+ * старые записи; здесь он работает в бою.
+ */
+function parseFiscalJournal(string $html): array
+{
+    if (!preg_match('#<pre[^>]*>([\s\S]*?)</pre>#i', $html, $block)) {
+        return [];
+    }
+
+    $text = html_entity_decode($block[1], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+    $raw = array_map(static fn (string $line): string => rtrim($line), explode("\n", $text));
+    $lines = array_map('trim', $raw);
+
+    $start = -1;
+    foreach ($lines as $i => $line) {
+        if (preg_match('/^Артикли$/ui', $line)) {
+            $start = $i;
+            break;
+        }
+    }
+    if ($start === -1) {
+        return [];
+    }
+
+    $width = 40;
+    $items = [];
+    $name = '';
+    $prevFull = false;
+
+    for ($i = $start + 1, $n = count($lines); $i < $n; $i++) {
+        $line = $lines[$i];
+
+        // Черта под списком его закрывает, черта над ним — ещё нет.
+        if (preg_match('/^[=-]{5,}$/', $line)) {
+            if ($items) {
+                break;
+            }
+            continue;
+        }
+        if ($line === '' || preg_match('/^Назив/ui', $line)) {
+            continue;
+        }
+        if (preg_match('/^(Укупан износ|Ознака|Име|Порез|Укупно)/ui', $line)) {
+            break;
+        }
+
+        if (preg_match('/^([\d.]+,\d{2})\s+([\d.]+(?:,\d+)?)\s+([\d.]+,\d{2})$/u', $line, $m)) {
+            $items[] = [
+                'name'  => trim((string)preg_replace('/\s+/u', ' ', $name)),
+                'price' => serbianNumber($m[1]),
+                'qty'   => serbianNumber($m[2]),
+                'total' => serbianNumber($m[3]),
+            ];
+            $name = '';
+            $prevFull = false;
+            continue;
+        }
+
+        $full = mb_strlen($raw[$i]) >= $width;
+        if ($name === '') {
+            $name = $line;
+        } else {
+            $name .= $prevFull ? $line : ' ' . $line;
+        }
+        $prevFull = $full;
+    }
+
+    return array_values(array_filter(
+        $items,
+        static fn (array $it): bool => $it['name'] !== '' && $it['total'] > 0,
+    ));
+}
+
+/** Сербское число: «1.299,00» → 1299.0 */
+function serbianNumber(string $value): float
+{
+    return (float)str_replace(',', '.', str_replace('.', '', $value));
 }
 
 /**
@@ -956,7 +1063,14 @@ function receiptItemsText(string $url, string $html): string
 }
 
 /** Один вызов Claude с жёсткой схемой ответа — на выходе всегда валидный JSON. */
-function extractReceipt(array $config, array $content): array
+/**
+ * Один вызов Claude с жёсткой схемой ответа.
+ *
+ * $knownItems — строки, разобранные нами из журнала чека. Они точнее любого
+ * прочтения: модель эти же строки иногда возвращала пустым списком. Если
+ * они есть, ответ модели по товарам заменяется ими целиком.
+ */
+function extractReceipt(array $config, array $content, array $knownItems = []): array
 {
     // Денег нет — не тратим ни времени человека, ни запроса: Anthropic
     // ответит отказом, только на десяток секунд позже.
@@ -1071,6 +1185,18 @@ TXT;
         if (($block['type'] ?? '') === 'text') {
             $parsed = json_decode((string)$block['text'], true);
             if (is_array($parsed)) {
+                if ($knownItems) {
+                    $parsed['items'] = array_map(static fn (array $it): array => [
+                        'name'  => $it['name'],
+                        // Понятное название модель даёт только своим строкам;
+                        // нашим его заполнить некому, и это не беда: оно нужно
+                        // базе цен, а не записи.
+                        'norm'  => '',
+                        'qty'   => $it['qty'],
+                        'price' => $it['price'],
+                        'total' => $it['total'],
+                    ], $knownItems);
+                }
                 return ['ok' => true, 'receipt' => $parsed, 'usage' => $usage];
             }
         }

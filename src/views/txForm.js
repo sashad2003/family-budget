@@ -3,22 +3,22 @@
  * после сканирования каждое поле и каждая строка товара остаются редактируемыми.
  */
 
-import { el, render } from '../core/dom.js?v=138';
-import { state, currencyChoices } from '../core/store.js?v=138';
-import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=138';
-import { today } from '../core/dates.js?v=138';
-import { guessCategory } from '../data/categories.js?v=138';
-import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=138';
-import { tileStyle } from './list.js?v=138';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=138';
-import { toastOk, toastError } from '../ui/toast.js?v=138';
-import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=138';
-import { MAX_RECEIPT_IMAGES } from '../services/receipts.js?v=138';
-import { openQuickPick } from './quickPick.js?v=138';
-import { openCategoryEditor } from './catForm.js?v=138';
-import { findDuplicates } from '../core/selectors.js?v=138';
-import { openDupCompare } from './dupCompare.js?v=138';
-import { t } from '../core/i18n.js?v=138';
+import { el, render } from '../core/dom.js?v=139';
+import { state, currencyChoices } from '../core/store.js?v=139';
+import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=139';
+import { today } from '../core/dates.js?v=139';
+import { guessCategory } from '../data/categories.js?v=139';
+import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=139';
+import { tileStyle } from './list.js?v=139';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=139';
+import { toastOk, toastError } from '../ui/toast.js?v=139';
+import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=139';
+import { MAX_RECEIPT_IMAGES } from '../services/receipts.js?v=139';
+import { openQuickPick } from './quickPick.js?v=139';
+import { openCategoryEditor } from './catForm.js?v=139';
+import { findDuplicates } from '../core/selectors.js?v=139';
+import { openDupCompare } from './dupCompare.js?v=139';
+import { t } from '../core/i18n.js?v=139';
 
 /**
  * openTxForm({ tx })          — правка существующей операции

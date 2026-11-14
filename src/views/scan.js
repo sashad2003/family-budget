@@ -4,17 +4,17 @@
  * открывается в редактируемой форме.
  */
 
-import { el, render } from '../core/dom.js?v=138';
-import { openSheet, closeSheet } from '../ui/sheet.js?v=138';
-import { toastError } from '../ui/toast.js?v=138';
-import { state } from '../core/store.js?v=138';
-import { findDuplicates } from '../core/selectors.js?v=138';
-import { guessCategory } from '../data/categories.js?v=138';
-import { openDupCompare } from './dupCompare.js?v=138';
-import { scanReceiptImages, scanReceiptUrl, scanSmsText, MAX_RECEIPT_IMAGES } from '../services/receipts.js?v=138';
-import { t } from '../core/i18n.js?v=138';
-import { qrSupported, openQrScanner } from '../ui/qrScanner.js?v=138';
-import { scanBlocked } from '../services/scanGate.js?v=138';
+import { el, render } from '../core/dom.js?v=139';
+import { openSheet, closeSheet } from '../ui/sheet.js?v=139';
+import { toastError } from '../ui/toast.js?v=139';
+import { state } from '../core/store.js?v=139';
+import { findDuplicates } from '../core/selectors.js?v=139';
+import { guessCategory } from '../data/categories.js?v=139';
+import { openDupCompare } from './dupCompare.js?v=139';
+import { scanReceiptImages, scanReceiptUrl, scanSmsText, MAX_RECEIPT_IMAGES } from '../services/receipts.js?v=139';
+import { t } from '../core/i18n.js?v=139';
+import { qrSupported, openQrScanner } from '../ui/qrScanner.js?v=139';
+import { scanBlocked } from '../services/scanGate.js?v=139';
 
 /** Шторка «распознаём…» — на время запроса заменяет собой форму. */
 function showBusy(text) {
