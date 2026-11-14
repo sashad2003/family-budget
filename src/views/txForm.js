@@ -3,22 +3,22 @@
  * после сканирования каждое поле и каждая строка товара остаются редактируемыми.
  */
 
-import { el, render } from '../core/dom.js?v=136';
-import { state, currencyChoices } from '../core/store.js?v=136';
-import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=136';
-import { today } from '../core/dates.js?v=136';
-import { guessCategory } from '../data/categories.js?v=136';
-import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=136';
-import { tileStyle } from './list.js?v=136';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=136';
-import { toastOk, toastError } from '../ui/toast.js?v=136';
-import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=136';
-import { MAX_RECEIPT_IMAGES } from '../services/receipts.js?v=136';
-import { openQuickPick } from './quickPick.js?v=136';
-import { openCategoryEditor } from './catForm.js?v=136';
-import { findDuplicates } from '../core/selectors.js?v=136';
-import { openDupCompare } from './dupCompare.js?v=136';
-import { t } from '../core/i18n.js?v=136';
+import { el, render } from '../core/dom.js?v=137';
+import { state, currencyChoices } from '../core/store.js?v=137';
+import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=137';
+import { today } from '../core/dates.js?v=137';
+import { guessCategory } from '../data/categories.js?v=137';
+import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=137';
+import { tileStyle } from './list.js?v=137';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=137';
+import { toastOk, toastError } from '../ui/toast.js?v=137';
+import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=137';
+import { MAX_RECEIPT_IMAGES } from '../services/receipts.js?v=137';
+import { openQuickPick } from './quickPick.js?v=137';
+import { openCategoryEditor } from './catForm.js?v=137';
+import { findDuplicates } from '../core/selectors.js?v=137';
+import { openDupCompare } from './dupCompare.js?v=137';
+import { t } from '../core/i18n.js?v=137';
 
 /**
  * openTxForm({ tx })          — правка существующей операции
@@ -467,6 +467,18 @@ function typeButton(value, label, model, rerender) {
 }
 
 function buildReceiptBlock(model, rerender, tx) {
+  /*
+   * Чек внесён по ссылке, а строк нет вовсе.
+   *
+   * Так бывает, когда портал не отдал список товаров: на экране телефона он
+   * подгружается скриптом, а нам страница приходит без него. Молчать тут
+   * нельзя — человек видел цены своими глазами и вправе ждать их в записи.
+   */
+  if (!model.items.length && model.source === 'receipt-url') {
+    nodes.push(el('p', { class: 'hint', style: 'color:var(--yellow);margin-top:14px' },
+      t('form.noItemsFromPage')));
+  }
+
   if (!model.showItems) {
     return el('div', {}, [
       el('div', { class: 'divider' }, t('form.itemsDivider')),

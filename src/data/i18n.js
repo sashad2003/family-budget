@@ -1053,6 +1053,11 @@ export const DICT = {
     en: 'The “{name}” bill for this month is already paid by another entry. Linking adds a second payment.',
     he: 'החשבון «{name}» לחודש הזה כבר שולם בפעולה אחרת. הקישור יוסיף תשלום שני.',
   },
+  'form.noItemsFromPage': {
+    ru: 'Страница чека не отдала список товаров — записана только сумма. Попробуйте внести чек по ссылке ещё раз: список приходит отдельным запросом и иногда не успевает.',
+    en: 'The receipt page returned no item list — only the total was recorded. Try the link once more: the list comes in a separate request and sometimes does not arrive in time.',
+    he: 'עמוד הקבלה לא החזיר רשימת מוצרים — נרשם רק הסכום. נסו שוב דרך הקישור: הרשימה מגיעה בבקשה נפרדת ולעתים אינה מספיקה להגיע.',
+  },
   'form.receiptLink': { ru: 'Чек по ссылке из QR', en: 'Receipt page from the QR', he: 'עמוד הקבלה מה־QR' },
   'form.receiptOpen': { ru: 'Открыть чек', en: 'Open the receipt', he: 'פתיחת הקבלה' },
   'form.receiptForget': { ru: 'Убрать ссылку', en: 'Remove the link', he: 'הסרת הקישור' },

@@ -10,8 +10,8 @@
  * Считает именно сервер: он один видит каждый вызов, а браузер — только свои.
  */
 
-import { PROXY_URL } from '../config.js?v=136';
-import { idToken } from './auth.js?v=136';
+import { PROXY_URL } from '../config.js?v=137';
+import { idToken } from './auth.js?v=137';
 
 /**
  * Расход и остаток. Если передать balanceUsd — сервер сначала запомнит эту
