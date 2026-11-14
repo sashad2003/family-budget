@@ -1053,6 +1053,11 @@ export const DICT = {
     en: 'The “{name}” bill for this month is already paid by another entry. Linking adds a second payment.',
     he: 'החשבון «{name}» לחודש הזה כבר שולם בפעולה אחרת. הקישור יוסיף תשלום שני.',
   },
+  'form.brokenForm': {
+    ru: 'Эту операцию не удалось показать — в ней что-то, чего форма не ожидала. Сообщите об этом: запись цела, но открыть её пока нельзя.',
+    en: 'This entry could not be shown — something in it the form did not expect. Please report it: the record is intact, but it cannot be opened yet.',
+    he: 'לא ניתן להציג את הפעולה הזו — יש בה משהו שהטופס לא ציפה לו. דווחו על כך: הרשומה שלמה, אך כרגע אי אפשר לפתוח אותה.',
+  },
   'form.noItemsFromPage': {
     ru: 'Страница чека не отдала список товаров — записана только сумма. Попробуйте внести чек по ссылке ещё раз: список приходит отдельным запросом и иногда не успевает.',
     en: 'The receipt page returned no item list — only the total was recorded. Try the link once more: the list comes in a separate request and sometimes does not arrive in time.',

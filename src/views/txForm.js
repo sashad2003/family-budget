@@ -3,22 +3,22 @@
  * после сканирования каждое поле и каждая строка товара остаются редактируемыми.
  */
 
-import { el, render } from '../core/dom.js?v=137';
-import { state, currencyChoices } from '../core/store.js?v=137';
-import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=137';
-import { today } from '../core/dates.js?v=137';
-import { guessCategory } from '../data/categories.js?v=137';
-import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=137';
-import { tileStyle } from './list.js?v=137';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=137';
-import { toastOk, toastError } from '../ui/toast.js?v=137';
-import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=137';
-import { MAX_RECEIPT_IMAGES } from '../services/receipts.js?v=137';
-import { openQuickPick } from './quickPick.js?v=137';
-import { openCategoryEditor } from './catForm.js?v=137';
-import { findDuplicates } from '../core/selectors.js?v=137';
-import { openDupCompare } from './dupCompare.js?v=137';
-import { t } from '../core/i18n.js?v=137';
+import { el, render } from '../core/dom.js?v=138';
+import { state, currencyChoices } from '../core/store.js?v=138';
+import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=138';
+import { today } from '../core/dates.js?v=138';
+import { guessCategory } from '../data/categories.js?v=138';
+import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=138';
+import { tileStyle } from './list.js?v=138';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=138';
+import { toastOk, toastError } from '../ui/toast.js?v=138';
+import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=138';
+import { MAX_RECEIPT_IMAGES } from '../services/receipts.js?v=138';
+import { openQuickPick } from './quickPick.js?v=138';
+import { openCategoryEditor } from './catForm.js?v=138';
+import { findDuplicates } from '../core/selectors.js?v=138';
+import { openDupCompare } from './dupCompare.js?v=138';
+import { t } from '../core/i18n.js?v=138';
 
 /**
  * openTxForm({ tx })          — правка существующей операции
@@ -45,9 +45,23 @@ export function openTxForm({ tx = null, draft = null, model: restored = null, ba
   // Перенос — как в подвале шторки: длинные подписи не должны уезжать за край.
   const footer = el('div', { style: 'display:flex;flex-wrap:wrap;gap:10px;flex:1' });
 
+  /*
+   * Сборка формы под присмотром.
+   *
+   * Ошибка в разметке одной строки раньше гасила всю форму: нажатие на
+   * операцию просто ничего не делало, и понять, что сломалось, человек не
+   * мог — ни окна, ни сообщения. Пусть лучше скажет прямо и покажет то, что
+   * собралось: сохранять в такой форме нельзя, но и молчать нельзя тоже.
+   */
   const rerender = () => {
-    render(body, buildBody(model, rerender, tx, backTo));
-    render(footer, buildFooter(model, tx));
+    try {
+      render(body, buildBody(model, rerender, tx, backTo));
+      render(footer, buildFooter(model, tx));
+    } catch (error) {
+      console.error('Форма операции не собралась', error);
+      render(body, el('p', { class: 'hint', style: 'color:var(--expense)' }, t('form.brokenForm')));
+      render(footer, el('button', { class: 'btn btn--ghost', onclick: () => closeSheet() }, t('common.close')));
+    }
   };
   rerender();
 
@@ -474,13 +488,14 @@ function buildReceiptBlock(model, rerender, tx) {
    * подгружается скриптом, а нам страница приходит без него. Молчать тут
    * нельзя — человек видел цены своими глазами и вправе ждать их в записи.
    */
-  if (!model.items.length && model.source === 'receipt-url') {
-    nodes.push(el('p', { class: 'hint', style: 'color:var(--yellow);margin-top:14px' },
-      t('form.noItemsFromPage')));
-  }
+  const noItemsHint = !model.items.length && model.source === 'receipt-url'
+    ? el('p', { class: 'hint', style: 'color:var(--yellow);margin-top:14px' },
+        t('form.noItemsFromPage'))
+    : null;
 
   if (!model.showItems) {
     return el('div', {}, [
+      noItemsHint,
       el('div', { class: 'divider' }, t('form.itemsDivider')),
       el('button', {
         class: 'btn btn--primary btn--wide',
