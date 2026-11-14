@@ -856,16 +856,103 @@ function fetchReceiptContent(string $url): array
     }
 
     $html = substr($res['body'], 0, MAX_PAGE_BYTES);
+
+    // Список товаров на сербском портале приходит отдельным запросом, и в
+    // самой странице его может не быть вовсе — см. receiptItemsText().
+    $items = receiptItemsText($url, $html);
+
     $html = preg_replace('#<(script|style|noscript)\b.*?</\1>#is', ' ', $html) ?? $html;
     $text = html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8');
     $text = trim((string)preg_replace('/[ \t]*\R+[ \t]*/u', "\n", (string)preg_replace('/[ \t]+/u', ' ', $text)));
 
-    if ($text === '') {
+    if ($text === '' && $items === '') {
         respond(422, ['error' => 'page_empty']);
     }
-    return [
-        ['type' => 'text', 'text' => "Извлеки данные из текста страницы чека:\n\n" . mb_substr($text, 0, 20000)],
-    ];
+
+    $prompt = "Извлеки данные из текста страницы чека:\n\n" . mb_substr($text, 0, 20000);
+    if ($items !== '') {
+        $prompt .= "\n\nСписок товаров этого чека, полученный от самой налоговой службы "
+            . "(поля: название, количество, цена за единицу, сумма строки). "
+            . "Бери товары отсюда и перенеси их все, ничего не пропуская:\n" . $items;
+    }
+
+    return [['type' => 'text', 'text' => $prompt]];
+}
+
+/**
+ * Список товаров с сербского портала проверки чеков.
+ *
+ * Страница по ссылке из QR показывает шапку и итог, а строки товаров
+ * подставляет скрипт в браузере: он спрашивает их отдельным запросом по
+ * номеру чека и разовому токену. Мы страницу не выполняем, поэтому у части
+ * чеков список товаров не доезжал вовсе — сумма записывалась, товары нет.
+ *
+ * Спрашиваем тот же запрос сами. Это не обход защиты: и номер, и токен
+ * лежат в выданной нам странице, а отвечает портал всем.
+ *
+ * Возвращает готовые строки или '' — тогда остаётся прежний путь, разбор
+ * текста страницы.
+ */
+function receiptItemsText(string $url, string $html): string
+{
+    if (!preg_match("/InvoiceNumber\('([^']+)'\)/", $html, $invoice)
+        || !preg_match("/Token\('([^']+)'\)/", $html, $token)) {
+        return '';
+    }
+
+    $parts = parse_url($url);
+    $endpoint = 'https://' . $parts['host'] . '/specifications';
+
+    $ch = curl_init($endpoint);
+    curl_setopt_array($ch, [
+        CURLOPT_POST           => true,
+        CURLOPT_POSTFIELDS     => http_build_query([
+            'invoiceNumber' => $invoice[1],
+            'token'         => $token[1],
+        ]),
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_TIMEOUT        => 15,
+        CURLOPT_FOLLOWLOCATION => false,
+        CURLOPT_USERAGENT      => 'family-budget/2.0',
+        CURLOPT_HTTPHEADER     => [
+            'Content-Type: application/x-www-form-urlencoded',
+            'X-Requested-With: XMLHttpRequest',
+            'Accept: application/json',
+        ],
+    ]);
+    $body = curl_exec($ch);
+    $code = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    curl_close($ch);
+
+    if ($code !== 200 || !is_string($body)) {
+        error_log('receipt specifications: код ' . $code);
+        return '';
+    }
+
+    $data = json_decode($body, true);
+    $items = is_array($data['items'] ?? null) ? $data['items'] : [];
+    if (!$items) {
+        return '';
+    }
+
+    $lines = [];
+    foreach ($items as $item) {
+        if (!is_array($item)) {
+            continue;
+        }
+        // Названия полей портала оставляем как есть: гадать по ним незачем,
+        // дальше их читает модель, а не наш код.
+        $lines[] = implode(' | ', [
+            (string)($item['name'] ?? ''),
+            (string)($item['quantity'] ?? ''),
+            (string)($item['unitPrice'] ?? ''),
+            (string)($item['total'] ?? ''),
+        ]);
+    }
+
+    error_log('receipt specifications: строк ' . count($lines));
+
+    return implode("\n", array_slice($lines, 0, 300));
 }
 
 /** Один вызов Claude с жёсткой схемой ответа — на выходе всегда валидный JSON. */

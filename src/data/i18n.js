@@ -1053,6 +1053,9 @@ export const DICT = {
     en: 'The “{name}” bill for this month is already paid by another entry. Linking adds a second payment.',
     he: 'החשבון «{name}» לחודש הזה כבר שולם בפעולה אחרת. הקישור יוסיף תשלום שני.',
   },
+  'form.receiptLink': { ru: 'Чек по ссылке из QR', en: 'Receipt page from the QR', he: 'עמוד הקבלה מה־QR' },
+  'form.receiptOpen': { ru: 'Открыть чек', en: 'Open the receipt', he: 'פתיחת הקבלה' },
+  'form.receiptForget': { ru: 'Убрать ссылку', en: 'Remove the link', he: 'הסרת הקישור' },
   'form.dateGuessed': {
     ru: 'Дату в чеке пришлось разбирать самим — проверьте, тот ли день.',
     en: 'The date on the receipt had to be worked out — please check the day is right.',

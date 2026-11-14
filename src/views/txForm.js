@@ -3,22 +3,22 @@
  * после сканирования каждое поле и каждая строка товара остаются редактируемыми.
  */
 
-import { el, render } from '../core/dom.js?v=135';
-import { state, currencyChoices } from '../core/store.js?v=135';
-import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=135';
-import { today } from '../core/dates.js?v=135';
-import { guessCategory } from '../data/categories.js?v=135';
-import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=135';
-import { tileStyle } from './list.js?v=135';
-import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=135';
-import { toastOk, toastError } from '../ui/toast.js?v=135';
-import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=135';
-import { MAX_RECEIPT_IMAGES } from '../services/receipts.js?v=135';
-import { openQuickPick } from './quickPick.js?v=135';
-import { openCategoryEditor } from './catForm.js?v=135';
-import { findDuplicates } from '../core/selectors.js?v=135';
-import { openDupCompare } from './dupCompare.js?v=135';
-import { t } from '../core/i18n.js?v=135';
+import { el, render } from '../core/dom.js?v=136';
+import { state, currencyChoices } from '../core/store.js?v=136';
+import { formatAmount, parseAmount, roundCents, convert, currencyInfo } from '../core/money.js?v=136';
+import { today } from '../core/dates.js?v=136';
+import { guessCategory } from '../data/categories.js?v=136';
+import { createTransaction, updateTransaction, deleteTransaction } from '../services/transactions.js?v=136';
+import { tileStyle } from './list.js?v=136';
+import { openSheet, closeSheet, confirmSheet } from '../ui/sheet.js?v=136';
+import { toastOk, toastError } from '../ui/toast.js?v=136';
+import { scanFromCamera, scanFromGallery, openScanUrlSheet, openScanSmsSheet } from './scan.js?v=136';
+import { MAX_RECEIPT_IMAGES } from '../services/receipts.js?v=136';
+import { openQuickPick } from './quickPick.js?v=136';
+import { openCategoryEditor } from './catForm.js?v=136';
+import { findDuplicates } from '../core/selectors.js?v=136';
+import { openDupCompare } from './dupCompare.js?v=136';
+import { t } from '../core/i18n.js?v=136';
 
 /**
  * openTxForm({ tx })          — правка существующей операции
@@ -356,6 +356,31 @@ function buildBody(model, rerender, tx, backTo = null) {
       ]),
     ]),
   );
+
+  /*
+   * Ссылка на страницу фискального чека — та, что была в QR.
+   *
+   * Она и раньше сохранялась в записи, но нигде не показывалась: открыть
+   * исходный чек, сверить строки или показать его продавцу было нельзя.
+   * Теперь она на виду и открывается в соседней вкладке.
+   */
+  if (model.receiptUrl) {
+    nodes.push(el('div', { class: 'field' }, [
+      el('label', { class: 'field__label' }, t('form.receiptLink')),
+      el('div', { class: 'chip-row' }, [
+        el('a', {
+          class: 'chip',
+          href: model.receiptUrl,
+          target: '_blank',
+          rel: 'noopener',
+        }, t('form.receiptOpen')),
+        el('button', {
+          class: 'chip',
+          onclick: () => { model.receiptUrl = ''; rerender(); },
+        }, t('form.receiptForget')),
+      ]),
+    ]));
+  }
 
   /*
    * Дату пришлось толковать самим: в чеке она стояла в порядке, который
